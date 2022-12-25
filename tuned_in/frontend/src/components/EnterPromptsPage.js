@@ -1,4 +1,7 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { TextField, Button, Grid, Typography } from "@material-ui/core";
+
 
 export default class CreatePromptsPage extends React.Component {
 
@@ -18,7 +21,7 @@ export default class CreatePromptsPage extends React.Component {
     let formValues = this.state.formValues;
     console.log(e.target.value);
     console.log(formValues);
-    formValues[i][e.target.name] = e.target.value;
+    formValues[i].text = e.target.value;
     console.log(formValues);
     this.setState({ formValues });
   }
@@ -48,7 +51,40 @@ export default class CreatePromptsPage extends React.Component {
   render() {
 
     return (
-        <form  onSubmit={this.handleSubmit}>
+        <Grid container spacing={1} align="center">
+          <Grid item xs={12}>
+            <Typography variant="h4" component="h4">
+              Enter Prompts
+            </Typography>
+          </Grid>
+          {this.state.formValues.map((element, index) => (
+            <Grid item xs={12}>
+              <TextField
+                  label={"Prompt" + index + 1}
+                  placeholder="Enter a Prompt"
+                  value={element.text}
+                  variant="outlined"
+                  onChange={e => this.handleChange(index, e)}
+              />
+            </Grid>
+          ))}
+          <Grid item xs={12}>
+            <Button variant="contained" color="primary" onClick={this.handleSubmit}>
+              Submit Prompts
+            </Button>
+          </Grid>
+          <Grid item xs={12}>
+            <Button variant="contained" color="secondary" to="/" component={Link}>
+              Home
+            </Button>
+          </Grid>
+        </Grid>
+      );
+    }
+}
+
+/*
+<form  onSubmit={this.handleSubmit}>
           {this.state.formValues.map((element, index) => (
             <div className="form-inline" key={index}>
               <label>Prompt {index + 1}</label>
@@ -56,10 +92,8 @@ export default class CreatePromptsPage extends React.Component {
             </div>
           ))}
           <div className="button-section">
-              {/* <button className="button add" type="button" onClick={() => this.addFormFields()}>Add</button> */}
+              
               <button className="button submit" type="submit">Submit</button>
           </div>
       </form>
-    );
-  }
-}
+*/
