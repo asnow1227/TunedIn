@@ -21,4 +21,10 @@ class Room(models.Model):
     votes_to_skip = models.IntegerField(null=False, default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    
+class Prompt(models.Model):
+    user = models.TextField(null=False)
+    room_code = models.CharField(max_length=8, null=False)
+    prompt_text = models.TextField(null=False)
+    prompt_key = models.IntegerField(null=False)
+    assigned_user = models.TextField(null=True)
+    assigned_round = models.IntegerField(null=True)

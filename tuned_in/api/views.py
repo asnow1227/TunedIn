@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from rest_framework import generics, status
-from .serializers import RoomSerializer, CreateRoomSerializer
-from .models import Room
+from .serializers import (
+    RoomSerializer, CreateRoomSerializer, SubmitPromptsSerializer
+)
+from .models import Room, Prompt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import JsonResponse
@@ -76,7 +78,7 @@ class JoinRoom(APIView):
             
             return Response({'Bad Request': 'Invalid Room Code'}, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response({'Bad Request': 'Invalid post data, did not fined a room code in request'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'Bad Request': 'Invalid post data, did not find a room code in request'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserInRoom(APIView):
@@ -100,3 +102,81 @@ class LeaveRoom(APIView):
                 room.delete()
             
         return Response({'Message': 'Success'}, status=status.HTTP_200_OK)
+
+
+class SubmitPrompt(APIView):
+    serializer_class = SubmitPromptsSerializer
+    def post(self, request, format=None):
+        if not self.request.session.session_key:
+            self.request.session.create()
+        
+        serializer = self.serializer_class(data=self.request.data)
+        if 'room_code' not in self.request.session:
+            return Response(
+                {'Bad Request': 'Current User Not in a Room'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not serializer.is_valid():
+            return Response(
+                {'Bad Request': 'Invalid Post Data'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        room_code = self.request.session.get('room_code')
+        user = self.request.session.session_key
+        prompt_text = serializer.data.get('prompt_text')
+        prompt_key = serializer.data.get('prompt_key')
+        
+        prompt_found = Prompt.objects.filter(
+            user=self.request.session.session_key,
+            prompt_key=prompt_key
+        )
+
+        if prompt_found:
+            prompt = prompt_found[0]
+            prompt.prompt_text = prompt_text
+            prompt.save(update_fields=['prompt_text'])
+            return Response(
+                {'Message': 'Successfully Updated Prompt'},
+                status=status.HTTP_200_OK
+            )
+
+        prompt = Prompt(
+            user=user, 
+            room_code=room_code, 
+            prompt_text=prompt_text,
+            prompt_key=prompt_key
+        )
+        prompt.save()
+
+        return Response(
+            {'Message': 'Successfully Submitted Prompt'},
+            status=status.HTTP_200_OK
+        )
+
+
+class DeletePrompts(APIView):
+    def post(self, request, format=None):
+        if not self.request.session.session_key:
+            self.request.session.create()
+            return Response({
+                'Invalid Request': 'No Session Recorded for User'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        prompt_set = Prompt.objects.filter(user=self.request.session.session_key)
+        
+        if not prompt_set:
+            return Response({
+                'Message': 'Post Submitted Successfully, No Prompts Recorded for User'
+            }, status=status.HTTP_200_OK)
+        
+        for prompt in prompt_set:
+            prompt.delete()
+        
+        return Response({
+            'Message': 'Succesffuly Deleted Prompts for User'
+        }, status=status.HTTP_200_OK)
+
+
+        
