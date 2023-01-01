@@ -29,23 +29,6 @@ export default class CreatePromptsPage extends React.Component {
     this.setState({ formValues });
   }
 
-  addFormFields() {
-    if (this.state.formValues.length >= this.max_prompts) {
-        alert("Max Prompts Has Been Achieved, Please Remove or Edit an Existing Prompt");
-    }
-    else {
-        this.setState(({
-            formValues: [...this.state.formValues, { text: "",}]
-        }))
-    };
-  }
-
-  removeFormFields(i) {
-    let formValues = this.state.formValues;
-    formValues.splice(i, 1);
-    this.setState({ formValues });
-  }
-
   handleSubmitButtonPressed(event) {
     if (this.state.submitted) {
       this.handleUnsubmit(event);

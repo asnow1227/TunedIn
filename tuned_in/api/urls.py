@@ -7,7 +7,8 @@ from .views import (
     UserInRoom, 
     LeaveRoom,
     SubmitPrompt,
-    DeletePrompts
+    DeletePrompts, 
+    UpdateRoom
 )
 
 urlpatterns = [
@@ -18,5 +19,6 @@ urlpatterns = [
     path('user-in-room', UserInRoom.as_view()),
     path('leave-room', LeaveRoom.as_view()),
     path('submit-prompt', SubmitPrompt.as_view()),
-    path('delete-prompts', DeletePrompts.as_view())
+    path('delete-prompts', DeletePrompts.as_view()),
+    path('update-room', UpdateRoom.as_view())
 ]

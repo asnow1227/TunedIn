@@ -22,3 +22,11 @@ class SubmitPromptsSerializer(serializers.ModelSerializer):
             'prompt_text',
             'prompt_key',
         )
+
+class UpdateRoomSerializer(serializers.ModelSerializer):
+    code = serializers.CharField(validators=[])
+
+    class Meta:
+        model = Room
+        #ensures that when we send a post request, these fields are handled and included
+        fields = ('guest_can_pause', 'votes_to_skip', 'code')
