@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useParams } from "react-router-dom";  
 import { Grid, Button, Typography } from '@material-ui/core';
 import { useNavigate } from "react-router-dom";
 import CreateRoomPage from "./CreateRoomPage";
-
+import MusicPlayer from "./MusicPlayer";
 
 export default function Room(props) {
     
@@ -12,6 +12,7 @@ export default function Room(props) {
     const[isHost, setIsHost] = useState(false);
     const[showSettings, setShowSettings] = useState(false);
     const[spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
+    const[song, setSong] = useState({})
 
     const navigate = useNavigate();
     
@@ -44,6 +45,21 @@ export default function Room(props) {
             });
         }
     });
+
+    const getCurrentSong = () => {
+        fetch('/spotify/current-song').then((response) => {
+            if (!response.ok){
+                return {};
+            } else {
+                return response.json();
+            }
+        }).then((data) => setSong(data));
+    };
+
+    useEffect(() => {
+        const interval = setInterval(getCurrentSong, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const renderSettings = () => {
         return (
@@ -87,21 +103,7 @@ export default function Room(props) {
                     Code: {roomCode}
                 </Typography>
             </Grid>
-            <Grid item xs={12}>
-                <Typography variant="h6" component="h6">
-                    Votes: {votesToSkip}
-                </Typography>
-            </Grid>
-            <Grid item xs={12}>
-                <Typography variant="h6" component="h6">
-                    Guest Can Pause: {String(guestCanPause)}
-                </Typography>
-            </Grid>
-            <Grid item xs={12}>
-                <Typography variant="h6" component="h6">
-                    Host: {String(isHost)}
-                </Typography>
-            </Grid>
+            <MusicPlayer {...song} />
             {isHost ? renderSettingsButton() : null}
             <Grid item xs={12}>
                 <Button variant="contained" color="secondary" onClick={() => {
