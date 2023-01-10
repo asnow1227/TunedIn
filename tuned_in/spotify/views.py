@@ -6,10 +6,14 @@ from api.models import Room
 from requests import Request, post
 from rest_framework import status
 from rest_framework.response import Response
-from .util import (
+from .utils import (
     update_or_create_user_tokens, 
     is_spotify_authenticated,
-    execute_spotify_api_request
+    execute_spotify_api_request,
+    pause_song,
+    play_song,
+    skip_song,
+    get_songs
 )
 
 # Create your views here.
@@ -36,8 +40,6 @@ def spotify_callback(request, format=None):
         'client_id': CLIENT_ID,
         'client_secret': CLIENT_SECRET
     }).json()
-
-    print(response)
 
     access_token = response.get('access_token')
     token_type = response.get('token_type')
@@ -106,3 +108,47 @@ class CurrentSong(APIView):
 
         return Response(song, status=status.HTTP_200_OK)
 
+
+class PauseSong(APIView):
+    def put(self, request, format=None):
+        room_code = self.request.session.get('room_code')
+        room = Room.objects.filter(code=room_code)[0]
+        if self.request.session.session_key == room.host or room.guest_can_pause:
+            pause_song(room.host)
+            return Response({}, status=status.HTTP_204_NO_CONTENT)
+        
+        return Response({}, status=status.HTTP_403_FORBIDDEN)
+
+
+class PlaySong(APIView):
+    def put(self, request, format=None):
+        room_code = self.request.session.get('room_code')
+        room = Room.objects.filter(code=room_code)[0]
+        if self.request.session.session_key == room.host or room.guest_can_pause:
+            play_song(room.host)
+            return Response({}, status=status.HTTP_204_NO_CONTENT)
+        
+        return Response({}, status=status.HTTP_403_FORBIDDEN)
+
+
+class SkipSong(APIView):
+    def post(self, request, format=None):
+        room_code = self.request.session.get('room_code')
+        room = Room.objects.filter(code=room_code)[0]
+
+        if self.request.session.session_key == room.host:
+            skip_song(room.host)
+            return Response({}, status=status.HTTP_204_NO_CONTENT)
+        
+        return Response({}, status=status.HTTP_403_FORBIDDEN)
+
+
+class GetSongs(APIView):
+    def get(self, request, format=None):
+        q = request.GET.get('query')
+        room_code = self.request.session.get('room_code')
+        room = Room.objects.filter(code=room_code)[0]
+        if not q:
+            return Response({}, status=status.HTTP_204_NO_CONTENT)
+        
+        return Response({'data': get_songs(room.host, q)}, status=status.HTTP_200_OK)

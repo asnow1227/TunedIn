@@ -10,6 +10,30 @@ export default class MusicPlayer extends Component {
         super(props);
     }
 
+    pauseSong(){
+        const requestOptions = {
+            method: "PUT",
+            headers: {"Content-Type": "application/json"},
+        };
+        fetch("/spotify/pause", requestOptions);
+    }
+
+    playSong() {
+        const requestOptions = {
+            method: "PUT",
+            headers: {"Content-Type": "application/json"},
+        };
+        fetch("/spotify/play", requestOptions);
+    }
+
+    skipSong() {
+        const requestOptions = {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+        };
+        fetch("/spotify/skip", requestOptions);
+    }
+
     render() {
         const songProgress = (this.props.time / this.props.duration) * 100;
         return (
@@ -26,10 +50,10 @@ export default class MusicPlayer extends Component {
                             {this.props.artist}
                         </Typography>
                         <div>
-                            <IconButton>
+                            <IconButton onClick={() => {this.props.is_playing ? this.pauseSong() : this.playSong()}}>
                                 {this.props.is_playing ? <PauseIcon /> : <PlayArrowIcon />}
                             </IconButton>
-                            <IconButton>
+                            <IconButton onClick={this.skipSong}>
                                 <SkipNextIcon />
                             </IconButton>
                         </div>

@@ -57,7 +57,7 @@ export default function Room(props) {
     };
 
     useEffect(() => {
-        const interval = setInterval(getCurrentSong, 1000);
+        const interval = setInterval(getCurrentSong, 500);
         return () => clearInterval(interval);
     }, []);
 

@@ -1,9 +1,10 @@
 import React, { Component } from "react";
 import RoomJoinPage from "./RoomJoinPage";
 import CreateRoomPage from "./CreateRoomPage";
-import CreatePromptsPage from "./EnterPromptsPage"
+import CreatePromptsPage from "./EnterPromptsPage";
 import Room from "./Room";
 import { Grid, Button, ButtonGroup, Typography } from '@material-ui/core';
+import SelectSongPage from "./SelectSongPage";
 import {
   BrowserRouter as Router,
   Route,
@@ -77,6 +78,7 @@ export default class HomePage extends Component {
           <Route exact path="/create" element={<CreateRoomPage />} />
           <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
           <Route path='room/:roomCode' element={this.renderRoomPage(this.props)} />
+          <Route exact path="/select-song" element={<SelectSongPage />} />
         </Routes>
       </Router>
     );

@@ -71,6 +71,8 @@ class JoinRoom(APIView):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
+        print(request.uri)
+
         code = request.data.get(self.lookup_url_kwarg)
         if code != None:
             room_result = Room.objects.filter(code=code)
