@@ -100,9 +100,10 @@ def skip_song(session_id):
     return execute_spotify_api_request(session_id, "player/next", post_=True)
 
 
-def get_songs(session_id, q):
+def get_songs(session_id, q, offset, limit):
     base = BASE_URL.replace('me', 'search')
     tokens = get_user_tokens(session_id)
+    print(limit, offset)
     headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + tokens.access_token
@@ -110,19 +111,21 @@ def get_songs(session_id, q):
     params = {
         "q": q,
         "type": "track",
-        "limit": 10,
-        "offset": 5
+        "limit": limit,
+        "offset": offset
     }
     response = get(base, headers=headers, params=params).json()
+    if not response.get('tracks'):
+        return []
     items = response.get('tracks').get('items')
     formatted_items = [
         {
-            'artists': ', '.join([
+            'artist': ', '.join([
                 artist.get('name') for artist in item.get('artists')
             ]),
-            'image_url': item.get('album').get('images')[0].get('url'),
+            'image_url': item.get('album').get('images')[2].get('url'),
             'duration': item.get('duration_ms'),
-            'name': item.get('name'),
+            'title': item.get('name'),
             'id': item.get('id')
         }
         for item in items

@@ -63,6 +63,7 @@ export default function Room(props) {
 
     const renderSettings = () => {
         return (
+            <div className="center">
             <Grid container spacing={1}>
                 <Grid item xs={12} align="center">
                     <CreateRoomPage {...props}
@@ -79,6 +80,7 @@ export default function Room(props) {
                     </Button>
                 </Grid>
             </Grid>
+            </div>
         )
     };
 
@@ -97,29 +99,30 @@ export default function Room(props) {
     };
 
     return (
-        <Grid container spacing={1} align="center">
-            <Grid item xs={12}>
-                <Typography variant="h4" component="h4">
-                    Code: {roomCode}
-                </Typography>
+        <div className="center">
+            <Grid container spacing={1} align="center">
+                <Grid item xs={12}>
+                    <Typography variant="h4" component="h4">
+                        Code: {roomCode}
+                    </Typography>
+                </Grid>
+                <MusicPlayer {...song} />
+                {isHost ? renderSettingsButton() : null}
+                <Grid item xs={12}>
+                    <Button variant="contained" color="secondary" onClick={() => {
+                        const requestOptions = {
+                            method: "POST",
+                            headers: {'Content-Type': 'application/json'},
+                        }
+                        fetch('/api/leave-room', requestOptions).then((_response) => {
+                            props.leaveRoomCallback();
+                            return navigate('/')
+                        })
+                    }}> 
+                        Leave Room
+                    </Button>
+                </Grid>
             </Grid>
-            <MusicPlayer {...song} />
-            {isHost ? renderSettingsButton() : null}
-            <Grid item xs={12}>
-                <Button variant="contained" color="secondary" onClick={() => {
-                    const requestOptions = {
-                        method: "POST",
-                        headers: {'Content-Type': 'application/json'},
-                    }
-                    fetch('/api/leave-room', requestOptions).then((_response) => {
-                        props.leaveRoomCallback();
-                        return navigate('/')
-                    })
-                }}> 
-                    Leave Room
-                </Button>
-            </Grid>
-        </Grid>
-        
+        </div> 
     )
 }

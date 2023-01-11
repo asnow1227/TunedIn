@@ -26,3 +26,52 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.center-div {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
+.scroll-div {
+  height: 300px;
+  width: 600px;
+  overflow-y: auto;
+}
+
+.box {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.box .row {
+  border: 1px solid white;
+}
+
+.box .row.header {
+  flex: 0 1 auto;
+  width: 50%;
+  /* The above is shorthand for:
+  flex-grow: 0,
+  flex-shrink: 1,
+  flex-basis: auto
+  */
+}
+
+.box .row.content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  width: 50%;
+}
+
+.box .row.footer {
+  flex: 0 1 40px;
+  width: 50%;
+}
+
+.white-outline{
+  border: solid white;
+}

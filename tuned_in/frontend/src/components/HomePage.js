@@ -38,6 +38,7 @@ export default class HomePage extends Component {
       return <Navigate to={`/room/${this.state.roomCode}`} replace={true}/>
     } else {
       return (
+        <div className="center">
         <Grid container spacing={3} align="center">
             <Grid item xs={12}>
               <Typography variant="h3" compact="h3">
@@ -55,6 +56,7 @@ export default class HomePage extends Component {
               </ButtonGroup>
             </Grid>
         </Grid>
+        </div>
       );
     };
   }

@@ -146,9 +146,15 @@ class SkipSong(APIView):
 class GetSongs(APIView):
     def get(self, request, format=None):
         q = request.GET.get('query')
+        page = int(request.GET.get('page'))
+        if request.GET.get('limit') is None:
+            limit = 0
+        else:
+            limit = int(request.GET.get('limit'))
+        offset = (page - 1) * limit
         room_code = self.request.session.get('room_code')
         room = Room.objects.filter(code=room_code)[0]
         if not q:
             return Response({}, status=status.HTTP_204_NO_CONTENT)
         
-        return Response({'data': get_songs(room.host, q)}, status=status.HTTP_200_OK)
+        return Response({'data': get_songs(room.host, q, offset, limit)}, status=status.HTTP_200_OK)
