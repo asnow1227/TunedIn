@@ -16,7 +16,6 @@ export default function Room(props) {
     const[isHost, setIsHost] = useState(false);
     const[showSettings, setShowSettings] = useState(false);
     const[spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
-    // const[song, setSong] = useState({})
     const[isConnected, setIsConnected] = useState(false)
 
     const navigate = useNavigate();
@@ -31,44 +30,6 @@ export default function Room(props) {
         let data = JSON.parse(e.data)
         console.log(data)
     }
-
-
-    // const chatSocket = props.socket;
-
-    // chatSocket.onmessage = function(e){
-    //     let data = JSON.parse(e.data)
-    //     console.log(data)
-    // }
-
-    // const socket = io(
-    //     'ws://' +
-    //     window.location.host +
-    //     '/ws/chat/' +
-    //     roomCode +
-    //     '/'
-    // )
-
-    // useEffect(() => {
-    //     socket.onmessage = (e) => {
-    //       setIsConnected(true);
-    //       console.log('connected');
-    //     };
-    
-    // //     // socket.on('disconnect', () => {
-    // //     //   setIsConnected(false);
-    // //     // });
-    
-    //     // socket.on('message', (e) => {
-    //     //   let data = JSON.parse(e.data);
-    //     //   console.log('Data:', data)
-    //     // });
-    
-    //     return () => {
-    //     //   socket.off('connect');
-    //     // //   socket.off('disconnect');
-    //     //   socket.off('message');
-    //     };
-    //   }, []);
 
     fetch('/api/get-room?code='+roomCode)
     .then((response) => {
@@ -97,21 +58,6 @@ export default function Room(props) {
             });
         }
     });
-
-    // const getCurrentSong = () => {
-    //     fetch('/spotify/current-song').then((response) => {
-    //         if (!response.ok){
-    //             return {};
-    //         } else {
-    //             return response.json();
-    //         }
-    //     }).then((data) => setSong(data));
-    // };
-
-    // useEffect(() => {
-    //     const interval = setInterval(getCurrentSong, 500);
-    //     return () => clearInterval(interval);
-    // }, []);
 
     const renderSettings = () => {
         return (
