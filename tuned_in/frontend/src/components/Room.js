@@ -4,6 +4,10 @@ import { Grid, Button, Typography } from '@material-ui/core';
 import { useNavigate } from "react-router-dom";
 import CreateRoomPage from "./CreateRoomPage";
 import MusicPlayer from "./MusicPlayer";
+import io from "socket.io-client";
+
+
+// const socket = io.connect(`ws://${window.location.host}/ws/socket-server`);
 
 export default function Room(props) {
     
@@ -12,11 +16,59 @@ export default function Room(props) {
     const[isHost, setIsHost] = useState(false);
     const[showSettings, setShowSettings] = useState(false);
     const[spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
-    const[song, setSong] = useState({})
+    // const[song, setSong] = useState({})
+    const[isConnected, setIsConnected] = useState(false)
 
     const navigate = useNavigate();
     
     const { roomCode } = useParams();
+
+    console.log("refreshed");
+
+    const chatSocket = new WebSocket(`ws://${window.location.host}/ws/socket-server`)
+
+    chatSocket.onmessage = function(e){
+        let data = JSON.parse(e.data)
+        console.log(data)
+    }
+
+
+    // const chatSocket = props.socket;
+
+    // chatSocket.onmessage = function(e){
+    //     let data = JSON.parse(e.data)
+    //     console.log(data)
+    // }
+
+    // const socket = io(
+    //     'ws://' +
+    //     window.location.host +
+    //     '/ws/chat/' +
+    //     roomCode +
+    //     '/'
+    // )
+
+    // useEffect(() => {
+    //     socket.onmessage = (e) => {
+    //       setIsConnected(true);
+    //       console.log('connected');
+    //     };
+    
+    // //     // socket.on('disconnect', () => {
+    // //     //   setIsConnected(false);
+    // //     // });
+    
+    //     // socket.on('message', (e) => {
+    //     //   let data = JSON.parse(e.data);
+    //     //   console.log('Data:', data)
+    //     // });
+    
+    //     return () => {
+    //     //   socket.off('connect');
+    //     // //   socket.off('disconnect');
+    //     //   socket.off('message');
+    //     };
+    //   }, []);
 
     fetch('/api/get-room?code='+roomCode)
     .then((response) => {
@@ -46,20 +98,20 @@ export default function Room(props) {
         }
     });
 
-    const getCurrentSong = () => {
-        fetch('/spotify/current-song').then((response) => {
-            if (!response.ok){
-                return {};
-            } else {
-                return response.json();
-            }
-        }).then((data) => setSong(data));
-    };
+    // const getCurrentSong = () => {
+    //     fetch('/spotify/current-song').then((response) => {
+    //         if (!response.ok){
+    //             return {};
+    //         } else {
+    //             return response.json();
+    //         }
+    //     }).then((data) => setSong(data));
+    // };
 
-    useEffect(() => {
-        const interval = setInterval(getCurrentSong, 500);
-        return () => clearInterval(interval);
-    }, []);
+    // useEffect(() => {
+    //     const interval = setInterval(getCurrentSong, 500);
+    //     return () => clearInterval(interval);
+    // }, []);
 
     const renderSettings = () => {
         return (
@@ -106,7 +158,7 @@ export default function Room(props) {
                         Code: {roomCode}
                     </Typography>
                 </Grid>
-                <MusicPlayer {...song} />
+                <MusicPlayer />
                 {isHost ? renderSettingsButton() : null}
                 <Grid item xs={12}>
                     <Button variant="contained" color="secondary" onClick={() => {

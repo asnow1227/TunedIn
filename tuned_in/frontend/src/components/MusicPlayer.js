@@ -8,7 +8,36 @@ import SkipNextIcon from "@material-ui/icons/SkipNext";
 export default class MusicPlayer extends Component {
     constructor(props) {
         super(props);
+        this.getCurrentSong = this.getCurrentSong.bind(this)
+        this.state = {
+            song: {},
+            intervalId: null,
+        }
+        this.componentDidMount = this.componentDidMount.bind(this);
     }
+
+    componentDidMount() {
+        const intervalId = setInterval(this.getCurrentSong, 500);
+        this.setState({
+            intervalId: intervalId,
+        })
+    }
+  
+    componentWillUnmount() {
+        clearInterval(this.state.intervalId);
+    }
+
+    getCurrentSong = () => {
+        fetch('/spotify/current-song').then((response) => {
+            if (!response.ok){
+                return {};
+            } else {
+                return response.json();
+            }
+        }).then((data) => this.setState({
+            song: data,
+        }))
+    };
 
     pauseSong(){
         const requestOptions = {
@@ -35,23 +64,23 @@ export default class MusicPlayer extends Component {
     }
 
     render() {
-        const songProgress = (this.props.time / this.props.duration) * 100;
+        const songProgress = (this.state.song.time / this.state.song.duration) * 100;
         return (
             <Card>
                 <Grid container alignItems="center">
                     <Grid item align="center" xs={4}>
-                        <img src={this.props.image_url} height="100%" width="100%" />
+                        <img src={this.state.song.image_url} height="100%" width="100%" />
                     </Grid>
                     <Grid item align="center" xs={8}>
                         <Typography component="h5" variant="h5">
-                            {this.props.title}
+                            {this.state.song.title}
                         </Typography>
                         <Typography color="textSecondary" variant="subtitle1">
-                            {this.props.artist}
+                            {this.state.song.artist}
                         </Typography>
                         <div>
-                            <IconButton onClick={() => {this.props.is_playing ? this.pauseSong() : this.playSong()}}>
-                                {this.props.is_playing ? <PauseIcon /> : <PlayArrowIcon />}
+                            <IconButton onClick={() => {this.state.song.is_playing ? this.pauseSong() : this.playSong()}}>
+                                {this.state.song.is_playing ? <PauseIcon /> : <PlayArrowIcon />}
                             </IconButton>
                             <IconButton onClick={this.skipSong}>
                                 <SkipNextIcon />
