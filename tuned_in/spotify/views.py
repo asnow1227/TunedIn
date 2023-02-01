@@ -54,7 +54,6 @@ def spotify_callback(request, format=None):
 
     return redirect('frontend:')
 
-
 class IsAuthenticated(APIView):
     def get(self, request, format=None):
         is_authenticated = is_spotify_authenticated(self.request.session.session_key)
@@ -157,4 +156,8 @@ class GetSongs(APIView):
         if not q:
             return Response({}, status=status.HTTP_204_NO_CONTENT)
         
-        return Response({'data': get_songs(room.host, q, offset, limit)}, status=status.HTTP_200_OK)
+        data = get_songs(room.host, q, offset, limit)
+        if data is None:
+            return Response({'Bad Request': 'No Client Auth Token Found'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({'data': data}, status=status.HTTP_200_OK)

@@ -3,8 +3,16 @@ from django.utils import timezone
 from datetime import timedelta
 from .credentials import CLIENT_ID, CLIENT_SECRET
 from requests import post, put, get
+import base64
+
+
+def b64e(s):
+    return base64.b64encode(s.encode()).decode()
+
 
 BASE_URL = "https://api.spotify.com/v1/me/"
+
+CLIENT_URL = "https://accounts.spotify.com/api/token"
 
 
 def get_user_tokens(session_id):
@@ -100,13 +108,60 @@ def skip_song(session_id):
     return execute_spotify_api_request(session_id, "player/next", post_=True)
 
 
+def request_spotify_client_token():
+    headers = {
+        'Authorization': 'Basic ' + b64e(f"{CLIENT_ID}:{CLIENT_SECRET}"),
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+    params = {
+        'grant_type': 'client_credentials'
+    }
+    response = post(CLIENT_URL, headers=headers, params=params)
+    return response
+
+def get_or_refresh_spotify_client_token():
+    tokens = SpotifyToken.objects.filter(user='client')
+    if tokens and tokens[0].expires_in > timezone.now():
+        return tokens[0]
+    response = request_spotify_client_token()
+    if not response.ok:
+        return None
+    data = response.json()
+    access_token = data.get('access_token')
+    expires_in = timezone.now() + timedelta(seconds=data.get('expires_in'))
+    token_type = data.get('token_type')
+    if not tokens:
+        token = SpotifyToken(
+            user='client',
+            refresh_token='None',
+            access_token=access_token,
+            expires_in=expires_in,
+            token_type=token_type
+        )
+        token.save()
+    else:
+        token = tokens[0]
+        token.expires_in = expires_in
+        token.token_type = token_type
+        token.access_token = access_token
+        token.save(update_fields=[
+            'expires_in',
+            'token_type',
+            'access_token'
+        ])
+    return token
+
+
+
 def get_songs(session_id, q, offset, limit):
     base = BASE_URL.replace('me', 'search')
-    tokens = get_user_tokens(session_id)
+    token = get_or_refresh_spotify_client_token()
+    if not token:
+        return None
     print(limit, offset)
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + tokens.access_token
+        'Authorization': 'Bearer ' + token.access_token
     }
     params = {
         "q": q,

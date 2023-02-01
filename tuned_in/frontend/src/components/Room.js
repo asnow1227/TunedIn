@@ -17,47 +17,52 @@ export default function Room(props) {
     const[showSettings, setShowSettings] = useState(false);
     const[spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
     const[isConnected, setIsConnected] = useState(false)
+    const[socket, setSocket] = useState(null);
 
     const navigate = useNavigate();
     
     const { roomCode } = useParams();
 
+    var chatSocket = null;
+
     console.log("refreshed");
 
-    const chatSocket = new WebSocket(`ws://${window.location.host}/ws/socket-server`)
-
-    chatSocket.onmessage = function(e){
-        let data = JSON.parse(e.data)
-        console.log(data)
-    }
-
-    fetch('/api/get-room?code='+roomCode)
-    .then((response) => {
-        if (!response.ok) {
-            props.leaveRoomCallback();
-            return navigate('/')
-        }
-        return response.json();
-        })
-    .then((data) => {
-        setVotesToSkip(data.votes_to_skip);
-        setGuestCanPause(data.guest_can_pause);
-        setIsHost(data.is_host);
-        if (isHost){
-            fetch('/spotify/is-authenticated')
-            .then((response) => response.json())
-            .then((data) => {
-                setSpotifyAuthenticated(data.status);
-                if(!data.status) {
-                    fetch('/spotify/get-auth-url')
-                    .then((response) => response.json())
-                    .then((data) => {
-                        window.location.replace(data.url);
-                    });
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const roomResponse = await fetch('/api/get-room?code=' + roomCode);
+                if (!roomResponse.ok) {
+                    props.leaveRoomCallback();
+                    return navigate('/')
                 }
-            });
+                const roomData = await roomResponse.json();
+                setVotesToSkip(roomData.votes_to_skip);
+                setGuestCanPause(roomData.guest_can_pause);
+                setIsHost(roomData.is_host);
+                if (!roomData.is_host) return;
+                const authenicatedResponse = await fetch('/spotify/is-authenticated');
+                const authenticatedData = await authenicatedResponse.json();
+                setSpotifyAuthenticated(authenticatedData.status);
+                if (authenticatedData.status) return;
+                authUrlResponse = await fetch('/spotify/get-auth-url');
+                authUrlData = await authUrlResponse.json();
+                window.location.replace(authUrlData.url);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+    
+    fetchData();
+    }, []);
+
+    useEffect(() => {
+        const chatSocket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
+        chatSocket.onmessage = function(e) {
+            let data = JSON.parse(e.data)
+            console.log(data)
         }
-    });
+        setSocket(chatSocket);
+    }, []);
 
     const renderSettings = () => {
         return (

@@ -14,6 +14,7 @@ export default class MusicPlayer extends Component {
             intervalId: null,
         }
         this.componentDidMount = this.componentDidMount.bind(this);
+        this.componentWillUnmount = this.componentWillUnmount.bind(this);
     }
 
     componentDidMount() {
