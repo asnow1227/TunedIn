@@ -23,8 +23,6 @@ export default function Room(props) {
     
     const { roomCode } = useParams();
 
-    var chatSocket = null;
-
     console.log("refreshed");
 
     useEffect(() => {
@@ -87,10 +85,22 @@ export default function Room(props) {
         )
     };
 
+    const sendSocketMessage = () => {
+        if (socket == null){
+            console.log('oops')
+            return
+        }
+        const username = isHost ? 'host' : 'guest';
+        socket.send(JSON.stringify({
+            'message': 'hello!',
+            'username': username
+        }));
+    }
+
     const renderSettingsButton = () => {
         return (
             <Grid item xs={12} align="center">
-                <Button variant="contained" color="primary" onClick={() => setShowSettings(true)}>
+                <Button variant="contained" color="primary" onClick={sendSocketMessage}>
                     Settings
                 </Button>
             </Grid>
@@ -110,7 +120,8 @@ export default function Room(props) {
                     </Typography>
                 </Grid>
                 <MusicPlayer />
-                {isHost ? renderSettingsButton() : null}
+                {renderSettingsButton()
+                /* isHost ? renderSettingsButton() : null */}
                 <Grid item xs={12}>
                     <Button variant="contained" color="secondary" onClick={() => {
                         const requestOptions = {
