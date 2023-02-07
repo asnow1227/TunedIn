@@ -26,7 +26,7 @@ class AuthURL(APIView):
             'redirect_uri': REDIRECT_URI,
             'client_id': CLIENT_ID
         }).prepare().url
-
+        print(url)
         return Response({'url': url}, status=status.HTTP_200_OK)
 
 def spotify_callback(request, format=None):
@@ -69,6 +69,8 @@ class CurrentSong(APIView):
         else:
             return Response({'Ivalid Request': 'User not currently in a room'}, status=status.HTTP_400_BAD_REQUEST)
         host = room.host
+        if not is_spotify_authenticated(host):
+            return Response({'Invalid Request': 'Host not Currently Authenticated'}, status=status.HTTP_400_BAD_REQUEST)
         endpoint = "player/currently-playing"
         response = execute_spotify_api_request(host, endpoint)
         

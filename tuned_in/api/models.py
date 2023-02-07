@@ -11,20 +11,38 @@ def generate_unique_code():
             break
 
     return code
-        
+
 
 # Create your models here.
 class Room(models.Model):
     code = models.CharField(max_length=8, default=generate_unique_code, unique=True)
     host = models.CharField(max_length=50, unique=True)
-    guest_can_pause = models.BooleanField(null=False, default=False)
-    votes_to_skip = models.IntegerField(null=False, default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
 class Prompt(models.Model):
-    user = models.TextField(null=False)
+    user = models.CharField(max_length=50)
+    host = models.CharField(max_length=50)
     room_code = models.CharField(max_length=8, null=False)
     prompt_text = models.TextField(null=False)
     prompt_key = models.IntegerField(null=False)
     assigned_user = models.TextField(null=True)
     assigned_round = models.IntegerField(null=True)
+
+
+class Alias(models.Model):
+    user = models.CharField(max_length=50)
+    room_code =  models.CharField(max_length=8, null=False)
+    alias = models.CharField(max_length=10)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['alias', 'room_code'],
+                name='unique_aliasing'
+            )
+        ]
+
+
+    
+

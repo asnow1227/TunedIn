@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import RoomJoinPage from "./RoomJoinPage";
-import CreateRoomPage from "./CreateRoomPage";
+import RoomJoinOrCreatePage from "./RoomJoinPage";
 import CreatePromptsPage from "./EnterPromptsPage";
 import Room from "./Room";
 import { Grid, Button, ButtonGroup, Typography } from '@material-ui/core';
@@ -77,8 +76,8 @@ export default class HomePage extends Component {
       <Router>
         <Routes>
           <Route exact path="/" element={this.renderHomePage()} />
-          <Route exact path="/join" element={<RoomJoinPage />} />
-          <Route exact path="/create" element={<CreateRoomPage />} />
+          <Route exact path="/join" element={<RoomJoinOrCreatePage join={true}/>} />
+          <Route exact path="/create" element={<RoomJoinOrCreatePage join={false}/>} />
           <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
           <Route path='room/:roomCode' element={this.renderRoomPage(this.props)} />
           <Route exact path="/select-song" element={<SelectSongPage />} />

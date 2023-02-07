@@ -1,7 +1,12 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-# from asgiref.sync import async_to_sync
+from api.models import Alias
+from asgiref.sync import sync_to_async
 
+@sync_to_async
+def delete_all_aliases_in_room(room_code):
+    Alias.objects.filter(room_code=room_code).all().delete()
+    print('success')
 
 class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -25,18 +30,25 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-        username = text_data_json['username']
+        message_type = text_data_json['type']
+        data = text_data_json['data']
 
         await self.channel_layer.group_send(
             self.group_name,
             {
-                'type': 'game_message',
-                'message': message,
-                'username': username
+                'type': message_type,
+                'data': data
             }
         )
-    
+
+    async def host_leave(self, event):
+        room_code = event['data']['room_code']
+        await delete_all_aliases_in_room(room_code)
+
+        await self.send(text_data=json.dumps({
+            'event_type': 'host_leave'
+        }))
+        
     async def game_message(self, event):
         message = event['message']
         username = event['username']

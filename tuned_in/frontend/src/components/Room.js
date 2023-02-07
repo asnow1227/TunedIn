@@ -23,8 +23,6 @@ export default function Room(props) {
     
     const { roomCode } = useParams();
 
-    console.log("refreshed");
-
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -42,8 +40,8 @@ export default function Room(props) {
                 const authenticatedData = await authenicatedResponse.json();
                 setSpotifyAuthenticated(authenticatedData.status);
                 if (authenticatedData.status) return;
-                authUrlResponse = await fetch('/spotify/get-auth-url');
-                authUrlData = await authUrlResponse.json();
+                const authUrlResponse = await fetch('/spotify/get-auth-url');
+                const authUrlData = await authUrlResponse.json();
                 window.location.replace(authUrlData.url);
             } catch (error) {
                 console.log(error);
@@ -57,7 +55,11 @@ export default function Room(props) {
         const chatSocket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
         chatSocket.onmessage = function(e) {
             let data = JSON.parse(e.data)
-            console.log(data)
+            console.log(data);
+            if (data.event_type == 'host_leave' & !isHost){
+                props.leaveRoomCallback();
+                navigate('/');
+            }
         }
         setSocket(chatSocket);
     }, []);
@@ -107,6 +109,25 @@ export default function Room(props) {
         )
     };
 
+    const leaveRoom = async () => {
+        const requestOptions = {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+        }
+        fetch('/api/leave-room', requestOptions).then((_response) => {
+            if (isHost){
+                socket.send(JSON.stringify({
+                    type: 'host_leave',
+                    data: {
+                        room_code: roomCode
+                    }
+                }));
+            }
+            props.leaveRoomCallback();
+            return navigate('/')
+        })
+    };
+
     if (showSettings) {
         return renderSettings();
     };
@@ -123,16 +144,7 @@ export default function Room(props) {
                 {renderSettingsButton()
                 /* isHost ? renderSettingsButton() : null */}
                 <Grid item xs={12}>
-                    <Button variant="contained" color="secondary" onClick={() => {
-                        const requestOptions = {
-                            method: "POST",
-                            headers: {'Content-Type': 'application/json'},
-                        }
-                        fetch('/api/leave-room', requestOptions).then((_response) => {
-                            props.leaveRoomCallback();
-                            return navigate('/')
-                        })
-                    }}> 
+                    <Button variant="contained" color="secondary" onClick={leaveRoom}> 
                         Leave Room
                     </Button>
                 </Grid>

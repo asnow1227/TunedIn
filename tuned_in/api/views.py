@@ -2,14 +2,16 @@ from django.shortcuts import render
 from rest_framework import generics, status
 from .serializers import (
     RoomSerializer, 
-    CreateRoomSerializer, 
+    CreateOrJoinRoomSerializer, 
     SubmitPromptsSerializer,
     UpdateRoomSerializer
 )
-from .models import Room, Prompt
+from .models import Room, Prompt, Alias
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import JsonResponse
+import django
+import json
 
 # Create your views here.
 
@@ -20,31 +22,45 @@ class RoomView(generics.ListAPIView):
 
 class CreateRoomView(APIView):
     #APIView allows us to overwrite request methods, e.g get, post
-    serializer_class = CreateRoomSerializer
+    serializer_class = CreateOrJoinRoomSerializer
     
     def post(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            guest_can_pause = serializer.data.get('guest_can_pause')
-            votes_to_skip = serializer.data.get('votes_to_skip')
-            host = self.request.session.session_key
-            query_set = Room.objects.filter(host=host)
-            if query_set.exists():
-                room = query_set[0]
-                room.guest_can_pause = guest_can_pause
-                room.votes_to_skip = votes_to_skip
-                room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
+        alias_name = request.data.get('alias')
+        if alias_name is None:
+            return Response({
+                'Bad Request': 'No Alias provided for User'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        # serializer = self.serializer_class(data=request.data)
+        # if serializer.is_valid():
+            # guest_can_pause = serializer.data.get('guest_can_pause')
+            # votes_to_skip = serializer.data.get('votes_to_skip')
+        host = self.request.session.session_key
+        room_query_set = Room.objects.filter(host=host)
+        if room_query_set.exists():
+            room = room_query_set[0]
+            alias_query_set = Alias.objects.filter(user=host, room_code=room.code)
+            if alias_query_set.exists():
+                alias = alias_query_set[0]
+                alias.alias = alias_name
+                alias.save(update_fields=['alias'])
+            # room.guest_can_pause = guest_can_pause
+            # room.votes_to_skip = votes_to_skip
+            # room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
+            self.request.session['room_code'] = room.code
+            return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
+        else:
+            room = Room(host=host)
+            room.save()
+            request.data['room_code'] = room.code
+            if self.serializer_class(data=request.data).is_valid():
+                alias = Alias(user=host, room_code=room.code, alias=alias_name)
+                alias.save()
                 self.request.session['room_code'] = room.code
                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
-            else:
-                room = Room(host=host, guest_can_pause=guest_can_pause, votes_to_skip=votes_to_skip)
-                room.save()
-                self.request.session['room_code'] = room.code
-                return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
-
+        
         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -65,23 +81,54 @@ class GetRoom(APIView):
 
 
 class JoinRoom(APIView):
-    lookup_url_kwarg = 'code'
+    serializer_class = CreateOrJoinRoomSerializer
 
     def post(self, request, format=None):
+        print(request.data)
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
-        code = request.data.get(self.lookup_url_kwarg)
-        if code != None:
-            room_result = Room.objects.filter(code=code)
-            if room_result:
-                room = room_result[0]
-                self.request.session['room_code'] = code
-                return Response({'message': 'Room Joined'}, status=status.HTTP_200_OK)
-            
-            return Response({'Bad Request': 'Invalid Room Code'}, status=status.HTTP_400_BAD_REQUEST)
+        room_code = request.data.get('room_code')
         
-        return Response({'Bad Request': 'Invalid post data, did not find a room code in request'}, status=status.HTTP_400_BAD_REQUEST)
+        if room_code is None:
+            return Response({
+                'type': 'room_code',
+                'message': 'Room Not Found'
+            }, status=status.HTTP_200_OK)
+        
+        room_result = Room.objects.filter(code=room_code)
+        
+        if not room_result.exists():
+            print('wtf')
+            return Response({
+                'type': 'room_code',
+                'message': 'Room Not Found'
+        }, status=status.HTTP_400_BAD_REQUEST)
+            
+        if not self.serializer_class(data=request.data).is_valid():
+            print('wtf')
+            return Response({
+                'type': 'alias',
+                'message': 'Invalid Alias'
+        }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            alias = Alias(
+                user=self.request.session.session_key,
+                alias=request.data.get('alias'),
+                room_code=room_code
+            )
+            alias.save()
+        except django.db.utils.IntegrityError:
+            return Response({
+                'type': 'alias',
+                'message': 'Alias exists in Room'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+        self.request.session['room_code'] = room_code
+        return Response({'message': 'Room Joined'}, status=status.HTTP_200_OK)
+        
+ 
 
 
 class UserInRoom(APIView):
@@ -97,12 +144,16 @@ class UserInRoom(APIView):
 class LeaveRoom(APIView):
     def post(self, request, format=None):
         if 'room_code' in self.request.session:
-            self.request.session.pop('room_code')
+            room_code = self.request.session.pop('room_code')
             session_id = self.request.session.session_key
             room_results = Room.objects.filter(host=session_id)
             if len(room_results) > 0:
                 room = room_results[0]
                 room.delete()
+            alias_results = Alias.objects.filter(user=session_id, room_code=room_code)
+            if len(alias_results) > 0:
+                alias = alias_results[0]
+                alias.delete()
             
         return Response({'Message': 'Success'}, status=status.HTTP_200_OK)
 

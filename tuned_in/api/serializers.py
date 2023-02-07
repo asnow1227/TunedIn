@@ -1,18 +1,25 @@
 from rest_framework import serializers
-from .models import Room, Prompt
+from .models import Room, Prompt, Alias
 
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = ('id', 'code', 'host', 'guest_can_pause', 
-            'votes_to_skip', 'created_at')
+        fields = (
+            'id', 
+            'code', 
+            'host', 
+            'created_at'
+        )
 
 
-class CreateRoomSerializer(serializers.ModelSerializer):
+class CreateOrJoinRoomSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Room
+        model = Alias
         #ensures that when we send a post request, these fields are handled and included
-        fields = ('guest_can_pause', 'votes_to_skip')
+        fields = (
+            'alias',
+            'room_code'
+        )
 
 
 class SubmitPromptsSerializer(serializers.ModelSerializer):
@@ -24,9 +31,18 @@ class SubmitPromptsSerializer(serializers.ModelSerializer):
         )
 
 class UpdateRoomSerializer(serializers.ModelSerializer):
+    #allows us to get away with code not being unique
     code = serializers.CharField(validators=[])
 
     class Meta:
         model = Room
         #ensures that when we send a post request, these fields are handled and included
         fields = ('guest_can_pause', 'votes_to_skip', 'code')
+
+    
+class SubmitAliasSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Alias
+        fields = (
+            'alias'
+        )
