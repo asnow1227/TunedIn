@@ -14,6 +14,8 @@ BASE_URL = "https://api.spotify.com/v1/me/"
 
 CLIENT_URL = "https://accounts.spotify.com/api/token"
 
+OEMBED_URL = "https://open.spotify.com/oembed"
+
 
 def get_user_tokens(session_id):
     user_tokens = SpotifyToken.objects.filter(user=session_id)
@@ -158,7 +160,7 @@ def get_songs(session_id, q, offset, limit):
     token = get_or_refresh_spotify_client_token()
     if not token:
         return None
-    print(limit, offset)
+    print(token.access_token)
     headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token.access_token
@@ -186,3 +188,20 @@ def get_songs(session_id, q, offset, limit):
         for item in items
     ]
     return formatted_items
+
+
+def get_track(track_id):
+    pass
+
+
+def get_oembed():
+    headers = {
+        'Content-Type': 'application/json',
+    }
+
+    params = {
+        'url': "https://open.spotify.com/track/3vd0wM0US4JSCKJi5Q8Bd6"
+    }
+
+    response = get(OEMBED_URL, headers=headers, params=params)
+    return response.json()

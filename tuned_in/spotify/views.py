@@ -13,7 +13,8 @@ from .utils import (
     pause_song,
     play_song,
     skip_song,
-    get_songs
+    get_songs,
+    get_oembed
 )
 
 # Create your views here.
@@ -144,6 +145,9 @@ class SkipSong(APIView):
         return Response({}, status=status.HTTP_403_FORBIDDEN)
 
 
+class GetTrack(APIView):
+    pass
+
 class GetSongs(APIView):
     def get(self, request, format=None):
         q = request.GET.get('query')
@@ -163,3 +167,8 @@ class GetSongs(APIView):
             return Response({'Bad Request': 'No Client Auth Token Found'}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response({'data': data}, status=status.HTTP_200_OK)
+
+
+class GetOembed(APIView):
+    def get(self, request, format=None):
+        return Response({'data' : get_oembed()}, status=status.HTTP_200_OK)

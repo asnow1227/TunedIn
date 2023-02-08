@@ -7,7 +7,8 @@ from .views import (
     PauseSong,
     PlaySong,
     SkipSong,
-    GetSongs
+    GetSongs,
+    GetOembed
 )
 
 urlpatterns = [
@@ -18,5 +19,6 @@ urlpatterns = [
     path('pause', PauseSong.as_view()),
     path('play', PlaySong.as_view()),
     path('skip', SkipSong.as_view()),
-    path('get-songs', GetSongs.as_view())
+    path('get-songs', GetSongs.as_view()),
+    path('get-oembed', GetOembed.as_view())
 ]
