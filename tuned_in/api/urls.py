@@ -8,7 +8,8 @@ from .views import (
     LeaveRoom,
     SubmitPrompt,
     DeletePrompts, 
-    UpdateRoom
+    UpdateRoom,
+    GetCurrentPlayers
 )
 
 urlpatterns = [
@@ -20,5 +21,6 @@ urlpatterns = [
     path('leave-room', LeaveRoom.as_view()),
     path('submit-prompt', SubmitPrompt.as_view()),
     path('delete-prompts', DeletePrompts.as_view()),
-    path('update-room', UpdateRoom.as_view())
+    path('update-room', UpdateRoom.as_view()),
+    path('get-current-players', GetCurrentPlayers.as_view())
 ]

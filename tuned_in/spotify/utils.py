@@ -155,7 +155,7 @@ def get_or_refresh_spotify_client_token():
 
 
 
-def get_songs(session_id, q, offset, limit):
+def get_songs(q, offset, limit):
     base = BASE_URL.replace('me', 'search')
     token = get_or_refresh_spotify_client_token()
     if not token:
@@ -191,7 +191,19 @@ def get_songs(session_id, q, offset, limit):
 
 
 def get_track(track_id):
-    pass
+    base = BASE_URL.replace('me', 'tracks')
+    url = base + track_id
+    token = get_or_refresh_spotify_client_token()
+    if not token:
+        return None
+    print(token.access_token)
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token.access_token
+    }
+    response = get(url, headers=headers).json()
+    return response
+    
 
 
 def get_oembed():

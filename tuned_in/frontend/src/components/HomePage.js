@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import RoomJoinOrCreatePage from "./RoomJoinPage";
 import CreatePromptsPage from "./EnterPromptsPage";
+import EmbedSpotify from "./SpotifyEmbed";
 import Room from "./Room";
 import { Grid, Button, ButtonGroup, Typography } from '@material-ui/core';
 import SelectSongPage from "./SelectSongPage";
@@ -79,6 +80,7 @@ export default class HomePage extends Component {
           <Route exact path="/join" element={<RoomJoinOrCreatePage join={true}/>} />
           <Route exact path="/create" element={<RoomJoinOrCreatePage join={false}/>} />
           <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
+          <Route exact path="/embed" element={<EmbedSpotify />} />
           <Route path='room/:roomCode' element={this.renderRoomPage(this.props)} />
           <Route exact path="/select-song" element={<SelectSongPage />} />
         </Routes>

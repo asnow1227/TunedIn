@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { TextField, Button, Grid, Typography } from "@material-ui/core";
 import { Link } from "react-router-dom";
-import { withRouter } from "./withRouter";
+import { withRouter } from "../wrappers/withRouter";
 
 class RoomJoinOrCreatePage extends Component {
   constructor(props) {

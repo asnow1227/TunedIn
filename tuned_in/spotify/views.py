@@ -14,7 +14,8 @@ from .utils import (
     play_song,
     skip_song,
     get_songs,
-    get_oembed
+    get_oembed,
+    get_track
 )
 
 # Create your views here.
@@ -146,6 +147,9 @@ class SkipSong(APIView):
 
 
 class GetTrack(APIView):
+    def get(self, request, format=None):
+        track_id = request.GET.get('id')
+        return Response({'data': get_track(track_id)}, status=status.HTTP_200_OK)
     pass
 
 class GetSongs(APIView):
@@ -157,12 +161,11 @@ class GetSongs(APIView):
         else:
             limit = int(request.GET.get('limit'))
         offset = (page - 1) * limit
-        room_code = self.request.session.get('room_code')
-        room = Room.objects.filter(code=room_code)[0]
+
         if not q:
             return Response({}, status=status.HTTP_204_NO_CONTENT)
-        
-        data = get_songs(room.host, q, offset, limit)
+            
+        data = get_songs(q, offset, limit)
         if data is None:
             return Response({'Bad Request': 'No Client Auth Token Found'}, status=status.HTTP_400_BAD_REQUEST)
         
