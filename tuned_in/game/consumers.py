@@ -3,6 +3,18 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from api.models import Alias
 from asgiref.sync import sync_to_async
 
+
+def jsonSocketMessage(message_type, data=None):
+    return json.dumps(SocketMessage(message_type, data=data))
+
+class SocketMessage(dict):
+    def __init__(self, message_type, data=None):
+        super().__init__()
+        self['type'] = message_type
+        if data is None:
+            data = {}
+        self['data'] = data
+
 @sync_to_async
 def delete_all_aliases_in_room(room_code):
     Alias.objects.filter(room_code=room_code).all().delete()
@@ -17,8 +29,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
-        await self.send(text_data=json.dumps({
-            'type': 'connection_established',
+        await self.send(text_data=jsonSocketMessage('connection_established', data={
             'message': f'You are now connected to room {self.room_code}'
         }))
 
@@ -32,30 +43,40 @@ class GameConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message_type = text_data_json['type']
         data = text_data_json['data']
+        print(data)
 
         await self.channel_layer.group_send(
             self.group_name,
-            {
-                'type': message_type,
-                'data': data
-            }
+            SocketMessage(message_type, data)
         )
 
     async def host_leave(self, event):
         room_code = event['data']['room_code']
         await delete_all_aliases_in_room(room_code)
 
-        await self.send(text_data=json.dumps({
-            'event_type': 'host_leave'
-        }))
+        await self.send(text_data=jsonSocketMessage('host_leave'))
         
-    async def game_message(self, event):
-        message = event['message']
-        username = event['username']
+    async def message(self, event):
+        username = event['data']['username']
         await self.send(
-            text_data=json.dumps({
-                'message': message,
+            text_data=jsonSocketMessage('message', data={
                 'username': username
+            })
+        )
+
+    async def player_add(self, event):
+        alias = event['data']['alias']
+        await self.send(
+            text_data=jsonSocketMessage('player_add', data={
+                'alias': alias
+            })
+        )
+
+    async def player_leave(self, event):
+        alias = event['data']['alias']
+        await self.send(
+            text_data=jsonSocketMessage('player_leave', data={
+                'alias': alias
             })
         )
 
