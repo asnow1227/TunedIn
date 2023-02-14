@@ -12,15 +12,20 @@ export default function QueuePage(props){
     const[players, setPlayers] = useState(new Array());
 
     useEffect(() => {
-
-        const setUp = async () => {
-            try {
-                const response = await fetch('/api/get-current-players');
-                if (!response.ok){
-                    return
+        const setup = async () => {
+            const fetchPlayers = async () => {
+                try {
+                    const response = await fetch('/api/get-current-players');
+                    if (!response.ok){
+                        return
+                    }
+                    const data = await response.json();
+                    setPlayers(data.data);
+                } catch (error) {
+                    console.log(error);
                 }
-                const data = await response.json();
-                setPlayers(data.data);
+            };
+            const addSocketEvents = async () => {
                 props.socketManager.onEvent('player_leave', (data) => {
                     setPlayers(previous => previous.filter(alias => alias != data.alias));
                 });
@@ -29,22 +34,19 @@ export default function QueuePage(props){
                         new Set([...previous, data.alias])
                     ));
                 });
-            } catch (error) {
-                console.log(error);
-            }
-        };
-
-        if (!props.alias == ""){
-            setUp();
+            };
+            await fetchPlayers();
+            await addSocketEvents();
             props.socketManager.send('player_add', {
                 'alias': props.alias,
             });
-        }
+        };
+        setup();
 
         return () => {
             props.socketManager.removeEvents(['player_add', 'player_leave']);
         }
-    }, [props]);
+    }, []);
 
     return (
         <div align="center">

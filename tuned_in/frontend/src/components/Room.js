@@ -74,13 +74,14 @@ export default function Room(props) {
     const[spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
     const[socketManager, setSocketManager] = useState(new SocketManager());
     const[alias, setAlias] = useState("");
+    const[isLoading, setIsLoading] = useState(true);
 
     const navigate = useNavigate();
     
     const { roomCode } = useParams();
 
     useEffect(() => {
-        const fetchData = async () => {
+        const setupRoomDetails = async () => {
             try {
                 const roomResponse = await fetch('/api/get-room?code=' + roomCode);
                 if (!roomResponse.ok) {
@@ -102,13 +103,9 @@ export default function Room(props) {
                 window.location.replace(authUrlData.url);
             } catch (error) {
                 console.log(error);
-            }
+            } 
         };
-    
-    fetchData();
-    }, []);
 
-    useEffect(() => {
         const setupSocket = async () => {
             const chatSocket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
             socketManager.onEvent('connection_established', (data) => {
@@ -125,7 +122,20 @@ export default function Room(props) {
                 console.log(data);
             });
         }
-        setupSocket();
+
+        const setup = async () => {
+            //isLoading is used to control the render of different components, we want all our 
+            //state variables to be loaded on this page before any child components are rendered that 
+            //depend on them as props. We place the operations to set up the state variables in async functions
+            //and await their resolve before setting the isLoading variable to false here.
+            setIsLoading(true);
+            await setupRoomDetails();
+            await setupSocket();
+            setIsLoading(false);
+        }
+
+        setup();
+
     }, []);
 
     const renderSettings = () => {
@@ -168,26 +178,31 @@ export default function Room(props) {
         )
     };
 
-    const leaveRoom = async () => {
-        const requestOptions = {
-            method: "POST",
-            headers: {'Content-Type': 'application/json'},
-        }
-        await fetch('/api/leave-room', requestOptions);
-        if (isHost){
-            socketManager.send('host_leave', {
-                room_code: roomCode,
-            })
-        } else {
-            socketManager.send('player_leave', {
-                alias: alias,
-            })
-        }
-        socketManager.close();
-        setAlias("");
-        props.leaveRoomCallback();
-        return navigate('/')
-    };
+    const leaveRoom = () => {
+        //set isLoading to true here as this function as an async alone was rerendering child components
+        setIsLoading(true);
+        const leave = async () => {
+            const requestOptions = {
+                method: "POST",
+                headers: {'Content-Type': 'application/json'},
+            }
+            await fetch('/api/leave-room', requestOptions);
+            if (isHost){
+                socketManager.send('host_leave', {
+                    room_code: roomCode,
+                })
+            } else {
+                socketManager.send('player_leave', {
+                    alias: alias,
+                })
+            }
+            socketManager.close();
+            setAlias("");
+            props.leaveRoomCallback();
+            return navigate('/')
+        };
+        leave();
+    }
 
     if (showSettings) {
         return renderSettings();
@@ -202,7 +217,7 @@ export default function Room(props) {
                     </Typography>
                 </Grid>
                 <Grid item xs={12} align="center">
-                    {socketManager.socket == null ? null : <QueuePage alias={alias} socketManager={socketManager} />}
+                    {isLoading ? null : <QueuePage alias={alias} socketManager={socketManager} />}
                 </Grid>
                 {renderSettingsButton()
                 /* isHost ? renderSettingsButton() : null */}
