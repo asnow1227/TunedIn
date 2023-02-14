@@ -47,6 +47,9 @@ class CreateRoomView(APIView):
                 alias = alias_query_set[0]
                 alias.alias = alias_name
                 alias.save(update_fields=['alias'])
+            else:
+                alias = Alias(room_code=room.code, user=host, alias=alias_name)
+                alias.save()
             # room.guest_can_pause = guest_can_pause
             # room.votes_to_skip = votes_to_skip
             # room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
@@ -77,7 +80,9 @@ class GetRoom(APIView):
             room = Room.objects.filter(code=code)
             if len(room) > 0:
                 data = RoomSerializer(room[0]).data
+                alias = Alias.objects.filter(room_code=room[0].code, user=self.request.session.session_key)[0]
                 data['is_host'] = self.request.session.session_key == room[0].host
+                data['alias'] = alias.alias
                 return Response(data, status=status.HTTP_200_OK)
             return Response({'Room Not Found': 'Invalid Room Code'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST)
@@ -274,8 +279,9 @@ class GetCurrentPlayers(APIView):
         
         player_id = self.request.session.session_key
         query_set = Alias.objects.filter(user=player_id)
+        print(query_set.exists())
         if not query_set.exists():
-            return Response({'Bad Request': 'Player Not in Room'})
+            return Response({'Bad Request': 'Player Not in Room'}, status=status.HTTP_400_BAD_REQUEST)
         
         player_alias = query_set[0]
         player_room = player_alias.room_code

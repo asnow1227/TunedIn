@@ -17,18 +17,22 @@ class SocketManager {
         this.onEvent = this.onEvent.bind(this);
         this.send = this.send.bind(this);
         this.removeEvents = this.removeEvents.bind(this);
+        this.setSocket = this.setSocket.bind(this);
         if (this.socket != null){
             this.socket.onmessage = this.routeMessage;
         }
     }
-    addSocket(socket){
+    setSocket(socket){
         this.socket = socket;
         this.socket.onmessage = this.routeMessage;
     }
     routeMessage(e){
         let data = JSON.parse(e.data);
-        console.log(data);
-        return this.functions[data.type](data.data)
+        try {
+            return this.functions[data.type](data.data)
+        } catch (error) {
+            console.log(data.type);
+        }
     }
     onEvent(event_type, func){
         this.functions[event_type] = func;
@@ -53,6 +57,12 @@ class SocketManager {
             this.socket.onopen = () => this.socket.send(message);
         }
     }
+    close(){
+        if (this.socket == null){
+            return
+        }
+        this.socket.close();
+    }
 }
 
 export default function Room(props) {
@@ -62,17 +72,12 @@ export default function Room(props) {
     const[isHost, setIsHost] = useState(false);
     const[showSettings, setShowSettings] = useState(false);
     const[spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
-    const[isConnected, setIsConnected] = useState(false)
-    // const[socket, setSocket] = useState(null);
     const[socketManager, setSocketManager] = useState(new SocketManager());
-    const[players, setPlayers] = useState(new Set());
     const[alias, setAlias] = useState("");
 
     const navigate = useNavigate();
     
     const { roomCode } = useParams();
-
-    console.log(`alias: ${alias}`)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -86,6 +91,7 @@ export default function Room(props) {
                 setVotesToSkip(roomData.votes_to_skip);
                 setGuestCanPause(roomData.guest_can_pause);
                 setIsHost(roomData.is_host);
+                setAlias(roomData.alias); 
                 if (!roomData.is_host) return;
                 const authenicatedResponse = await fetch('/spotify/is-authenticated');
                 const authenticatedData = await authenicatedResponse.json();
@@ -103,33 +109,12 @@ export default function Room(props) {
     }, []);
 
     useEffect(() => {
-        const fetchPlayers = async () => {
-            const response = await fetch('/api/get-current-players');
-            if (!response.ok){
-                return
-            }
-            const data = await response.json();
-            data.data.forEach(alias => players.add(alias))
-            setPlayers(players);
-            const alias = data.data[0];
-            setAlias(alias);
-
+        const setupSocket = async () => {
             const chatSocket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
             socketManager.onEvent('connection_established', (data) => {
                 console.log(data);
             });
-            socketManager.onEvent('player_leave', (data) => {
-                console.log(data);
-                const previous = players;
-                previous.delete(data.alias);
-                setPlayers(new Set(previous));
-            });
-            socketManager.onEvent('player_add', (data) => {
-                const previous = players;
-                previous.add(data.alias);
-                setPlayers(new Set(previous))
-            });
-            socketManager.addSocket(chatSocket);
+            socketManager.setSocket(chatSocket);
             socketManager.onEvent('host_leave', function(_data){
                 if (!isHost){
                     props.leaveRoomCallback();
@@ -139,11 +124,8 @@ export default function Room(props) {
             socketManager.onEvent('message', function(data){
                 console.log(data);
             });
-            socketManager.send('player_add', {
-                'alias': alias
-            });
         }
-        fetchPlayers();
+        setupSocket();
     }, []);
 
     const renderSettings = () => {
@@ -187,25 +169,24 @@ export default function Room(props) {
     };
 
     const leaveRoom = async () => {
-        console.log(alias);
         const requestOptions = {
             method: "POST",
             headers: {'Content-Type': 'application/json'},
         }
-        fetch('/api/leave-room', requestOptions).then((_response) => {
-            if (isHost){
-                socketManager.send('host_leave', {
-                    room_code: roomCode,
-                })
-            } else {
-                console.log(alias);
-                socketManager.send('player_leave', {
-                    alias: alias,
-                })
-            }
-            props.leaveRoomCallback();
-            return navigate('/')
-        })
+        await fetch('/api/leave-room', requestOptions);
+        if (isHost){
+            socketManager.send('host_leave', {
+                room_code: roomCode,
+            })
+        } else {
+            socketManager.send('player_leave', {
+                alias: alias,
+            })
+        }
+        socketManager.close();
+        setAlias("");
+        props.leaveRoomCallback();
+        return navigate('/')
     };
 
     if (showSettings) {
@@ -221,7 +202,7 @@ export default function Room(props) {
                     </Typography>
                 </Grid>
                 <Grid item xs={12} align="center">
-                    <QueuePage players={players} />
+                    {socketManager.socket == null ? null : <QueuePage alias={alias} socketManager={socketManager} />}
                 </Grid>
                 {renderSettingsButton()
                 /* isHost ? renderSettingsButton() : null */}
