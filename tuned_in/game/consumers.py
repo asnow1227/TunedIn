@@ -1,11 +1,21 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from api.models import Alias
+from api.models import Alias, Prompt
 from asgiref.sync import sync_to_async
+
+
+@sync_to_async
+def update_gamestate(room_code, gamestate):
+    room_set = Room.objects.filter(room_code=room_code)
+    if room_set.exists():
+        room = room[0]
+        room.gamestate = gamestate
+        room.save(update_fields=['gamestate'])
 
 
 def jsonSocketMessage(message_type, data=None):
     return json.dumps(SocketMessage(message_type, data=data))
+
 
 class SocketMessage(dict):
     def __init__(self, message_type, data=None):
@@ -15,10 +25,13 @@ class SocketMessage(dict):
             data = {}
         self['data'] = data
 
+
 @sync_to_async
-def delete_all_aliases_in_room(room_code):
+def clear_room_data(room_code):
     Alias.objects.filter(room_code=room_code).all().delete()
+    Prompt.objects.filter(room_code=room_code).all().delete()
     print('success')
+
 
 class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -43,7 +56,6 @@ class GameConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message_type = text_data_json['type']
         data = text_data_json['data']
-        print(data)
 
         await self.channel_layer.group_send(
             self.group_name,
@@ -52,7 +64,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def host_leave(self, event):
         room_code = event['data']['room_code']
-        await delete_all_aliases_in_room(room_code)
+        await clear_room_data(room_code)
 
         await self.send(text_data=jsonSocketMessage('host_leave'))
         
@@ -77,6 +89,14 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.send(
             text_data=jsonSocketMessage('player_leave', data={
                 'alias': alias
+            })
+        )
+
+    async def gamestate_update(self, event):
+        gamestate = event['data']['gamestate']
+        await self.send(
+            text_data=jsonSocketMessage('gamestate_update', data={
+                'gamestate': gamestate
             })
         )
 

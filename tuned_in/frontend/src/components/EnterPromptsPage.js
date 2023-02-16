@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { TextField, Button, Grid, Typography, ListItemText, IconButton } from "@material-ui/core";
+import { TextField, Button, Grid, Typography, ButtonGroup, ListItemText, IconButton } from "@material-ui/core";
 import NavigateBeforeIcon from '@material-ui/icons/NavigateBefore';
 import NavigateNextIcon from '@material-ui/icons/NavigateNext';
 
@@ -19,20 +19,98 @@ export default function CreatePromptsPage(props) {
   const [formValues, setFormValues] = useState(makeArray(4));
   const [currIndex, setCurrIndex] = useState(0);
 
-  console.log(formValues);
-
-  const handleChange = (i, e) => {
+  const handleChange = (e) => {
     let formVals = formValues;
-    formVals[i].text = e.target.value;
+    formVals[currIndex].text = e.target.value;
     setFormValues([...formVals]);
   }
 
-  const handleSubmitButtonPressed = () => {
+  const submitPrompt = async (formVals, index) => {
+    if (formVals[index] == ""){
+      alert("Prompt Cannot be Blank");
+      return
+    }
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt_text: formVals[index].text,
+        prompt_key: formVals[index].key,
+      })
+    };
+    const response = await fetch('/api/submit-prompt', requestOptions);
+    if (!response.ok){
+      alert("Error Submitting Prompt")
+      return
+    }
+    formVals[index].submitted = true;
+    setFormValues([...formVals]);
+  };
+
+  const unsubmitPrompt = async (formVals, index) => {
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt_key: formVals[index].key,
+      })
+    };
+    const response = await fetch('/api/delete-prompt', requestOptions);
+    if (!response.ok) {
+      alert("Unable to delete prompt sucessfully")
+      return
+    }
+    formVals[index].submitted = false;
+    setFormValues([...formVals]);
+  }
+
+  const handleSubmitButtonPressed = async (e) => {
+    e.preventDefault();
+    let formVals = formValues;
+    let index = currIndex
+    if (formVals[currIndex].submitted){
+      unsubmitPrompt(formVals, index);
+    } else {
+      submitPrompt(formVals, index);
+    }
     console.log(formValues[currIndex]);
   }
 
+  const submitAll = () => {
+    let anyBlank = false;
+    let formVals = formValues;
+    for (let i=0; i < formVals.length; i++) {
+      if (formVals[i].text == ""){
+        anyBlank = true;
+        break;
+      }
+    };
+    if (anyBlank) {
+      alert("No Prompts can be Blank");
+      return
+    }
+    for (let i=0; i < formVals.length; i++) {
+      if (!formValues[i].submitted){
+        submitPrompt(formVals, i);
+      }
+    };
+  };
+
+  const unsubmitAll = () => {
+    let formVals = formValues;
+    for (let i=0; i < formVals.length; i++) {
+      if (formVals[i].submitted){
+        unsubmitPrompt(formVals, i);
+      };
+    };
+  }
+
   return (
-    <div className="center">
+    <div>
       <Grid container spacing={1} align="center">
         <Grid item xs={12}>
           <Typography variant="h4" component="h4">
@@ -56,7 +134,7 @@ export default function CreatePromptsPage(props) {
               value={formValues[currIndex].text}
               multiline="true"
               variant="outlined"
-              onChange={e => handleChange(currIndex, e)}
+              onChange={e => handleChange(e)}
           />
         </Grid>
         <Grid item xs={2}>
@@ -70,14 +148,19 @@ export default function CreatePromptsPage(props) {
           }
         </Grid>
         <Grid item xs={12}>
-          <Button variant="contained" color="primary" onClick={handleSubmitButtonPressed}>
+          <Button variant="contained" color={!formValues[currIndex].submitted ? "primary" : "secondary"} onClick={handleSubmitButtonPressed}>
             {formValues[currIndex].submitted ? "Unsubmit" : "Submit"}
           </Button>
         </Grid>
         <Grid item xs={12}>
-          <Button variant="contained" color="secondary" to="/" component={Link}>
-            Home
-          </Button>
+          <ButtonGroup disableElevation variant="contained" color="primary">
+            <Button color="primary" onClick={submitAll}>
+              Submit All
+            </Button>
+            <Button color="secondary" onClick={unsubmitAll}>
+              Unsubmit All
+            </Button>
+          </ButtonGroup>
         </Grid>
       </Grid>
     </div>
@@ -85,160 +168,3 @@ export default function CreatePromptsPage(props) {
 }
 
 
-// export default class CreatePromptsPage extends React.Component {
-
-//   num_prompts = 4; 
-
-//   constructor(props) {
-//     super(props)
-//     this.state = { 
-//         formValues: Array.apply(null, Array(this.num_prompts)).map(function(e, i){
-//            return { key: i, text: ""}
-//         }),
-//         submitted: false,
-//     };
-//     this.handleSubmit = this.handleSubmit.bind(this);
-//     this.handleSubmitButtonPressed = this.handleSubmitButtonPressed.bind(this);
-//     this.handleUnsubmit = this.handleUnsubmit.bind(this);
-//   }
-  
-//   handleChange(i, e) {
-//     let formValues = this.state.formValues;
-//     console.log(e.target.value);
-//     console.log(formValues);
-//     formValues[i].text = e.target.value;
-//     console.log(formValues);
-//     this.setState({ formValues });
-//   }
-
-//   handleSubmitButtonPressed(event) {
-//     if (this.state.submitted) {
-//       this.handleUnsubmit(event);
-//     } else {
-//       this.handleSubmit(event);
-//     }
-//   }
-
-//   async handleUnsubmit(event) {
-//     event.preventDefault();
-//     const requestOptions = {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//     };
-//     await fetch('/api/delete-prompts', requestOptions)
-//     .then((response) => {
-//       if (response.ok){
-//         alert("Deleted Prompts for User")
-//         this.setState({submitted: false});
-//       } else {
-//         this.setState({submitted: true});
-//       }
-//       return response.json()
-//     })
-//     .then((data) => {
-//       console.log(data);
-//     });
-//   }
-
-//   async handleSubmit(event) {
-//     const formValues = this.state.formValues;
-//     var foundBlank = false;
-//     for (let i = 0; i < formValues.length; i++) {
-//       if (formValues[i].text == ""){
-//         foundBlank = true;
-//         break;
-//       };
-//     };
-//     if (foundBlank) {
-//       alert("Prompts cannot be blank");
-//       event.preventDefault();
-//     } else {
-//       var Ok = true;
-//       var lastResponse = "";
-//       var requestOptions = {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json'
-//         },
-//         body: "",
-//       };
-//       for (let i = 0; i < formValues.length; i++) {
-//         if (!Ok) break;
-
-//         requestOptions.body = JSON.stringify({
-//           prompt_text: formValues[i].text,
-//           prompt_key: formValues[i].key,
-//         });
-
-//         await fetch('/api/submit-prompt', requestOptions)
-//         .then((response) => {
-//           if (!response.ok) {
-//             Ok = false;
-//           }
-//           return response.json()
-//         })
-//         .then((data) => lastResponse = JSON.stringify(data))
-//       };
-//     };
-//     if (Ok) {
-//       alert("Prompts Submitted Successfully");
-//       this.setState({submitted: true})
-//     } else {
-//       alert(lastResponse);
-//       this.setState({submitted: false})
-//     }
-//     event.preventDefault();
-//   }
-
-//   render() {
-
-//     return (
-//         <Grid container spacing={1} align="center">
-//           <Grid item xs={12}>
-//             <Typography variant="h4" component="h4">
-//               Enter Prompts
-//             </Typography>
-//           </Grid>
-//           {this.state.formValues.map((element, index) => (
-//             <Grid item xs={12}>
-//               <TextField
-//                   label={"Prompt " + String(index + 1)}
-//                   placeholder="Enter a Prompt"
-//                   value={element.text}
-//                   multiline="true"
-//                   variant="outlined"
-//                   onChange={e => this.handleChange(index, e)}
-//               />
-//             </Grid>
-//           ))}
-//           <Grid item xs={12}>
-//             <Button variant="contained" color="primary" onClick={this.handleSubmitButtonPressed}>
-//               {this.state.submitted ? "Unsubmit" : "Submit"}
-//             </Button>
-//           </Grid>
-//           <Grid item xs={12}>
-//             <Button variant="contained" color="secondary" to="/" component={Link}>
-//               Home
-//             </Button>
-//           </Grid>
-//         </Grid>
-//       );
-//     }
-// }
-
-/*
-<form  onSubmit={this.handleSubmit}>
-          {this.state.formValues.map((element, index) => (
-            <div className="form-inline" key={index}>
-              <label>Prompt {index + 1}</label>
-              <input type="text" name="text" value={element.text || ""} onChange={e => this.handleChange(index, e)} />
-            </div>
-          ))}
-          <div className="button-section">
-              
-              <button className="button submit" type="submit">Submit</button>
-          </div>
-      </form>
-*/

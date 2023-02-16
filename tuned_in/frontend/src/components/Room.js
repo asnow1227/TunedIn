@@ -6,6 +6,7 @@ import CreateRoomPage from "./CreateRoomPage";
 import MusicPlayer from "./MusicPlayer";
 import io from "socket.io-client";
 import QueuePage from "./QueuePage";
+import CreatePromptsPage from "./EnterPromptsPage"
 
 
 class SocketManager {
@@ -65,16 +66,40 @@ class SocketManager {
     }
 }
 
+// const GameStateMap = {
+//     'queue': QueuePage,
+//     'prompts': CreatePromptsPage,
+//     'round': null,
+//     'listen': null,
+//     'voting': null,
+//     'score': null
+// }
+
+// class GameStateRouter {
+//     static dependencies = new Map();
+//     static mapGamestate(gamestate) {
+//         //add logic for the rounds and voting here
+//         var props = {}
+//         if (GameStateRouter.dependencies.has(gamestate)){
+//             props = GameStateRouter.dependencies[gamestate]
+//         }
+//         return GameStateMap[gamestate](props)
+//     }
+//     static setDependencies(gamestate, props) {
+//         GameStateRouter.dependencies[gamestate] = props
+//     }
+// }
+
 export default function Room(props) {
     
     const[votesToSkip, setVotesToSkip] = useState(2);
     const[guestCanPause, setGuestCanPause] = useState(false);
     const[isHost, setIsHost] = useState(false);
-    const[showSettings, setShowSettings] = useState(false);
     const[spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
     const[socketManager, setSocketManager] = useState(new SocketManager());
     const[alias, setAlias] = useState("");
     const[isLoading, setIsLoading] = useState(true);
+    const[gamestate, setGamestate] = useState("");
 
     const navigate = useNavigate();
     
@@ -93,6 +118,7 @@ export default function Room(props) {
                 setGuestCanPause(roomData.guest_can_pause);
                 setIsHost(roomData.is_host);
                 setAlias(roomData.alias); 
+                setGamestate(roomData.gamestate);
                 if (!roomData.is_host) return;
                 const authenicatedResponse = await fetch('/spotify/is-authenticated');
                 const authenticatedData = await authenicatedResponse.json();
@@ -121,6 +147,9 @@ export default function Room(props) {
             socketManager.onEvent('message', function(data){
                 console.log(data);
             });
+            socketManager.onEvent('gamestate_update', function(data){
+                setGamestate(data.gamestate);
+            })
         }
 
         const setup = async () => {
@@ -137,46 +166,6 @@ export default function Room(props) {
         setup();
 
     }, []);
-
-    const renderSettings = () => {
-        return (
-            <div className="center">
-            <Grid container spacing={1}>
-                <Grid item xs={12} align="center">
-                    <CreateRoomPage {...props}
-                        update={true} 
-                        votesToSkip={votesToSkip} 
-                        guestCanPause={guestCanPause} 
-                        roomCode={roomCode}
-                        updateCallback={null}
-                    />
-                </Grid>
-                <Grid item xs={12} align="center">
-                    <Button variant="contained" color="secondary" onClick={() => setShowSettings(false)}>
-                        Close
-                    </Button>
-                </Grid>
-            </Grid>
-            </div>
-        )
-    };
-
-    const sendSocketMessage = () => {
-        const username = isHost ? 'host' : 'guest';
-        socketManager.send('message', {
-            username: username,
-        })
-    }
-
-    const renderSettingsButton = () => {
-        return (
-            <Grid item xs={12} align="center">
-                <Button variant="contained" color="primary" onClick={sendSocketMessage}>
-                    Settings
-                </Button>
-            </Grid>
-        )
-    };
 
     const leaveRoom = () => {
         //set isLoading to true here as this function as an async alone was rerendering child components
@@ -204,9 +193,17 @@ export default function Room(props) {
         leave();
     }
 
-    if (showSettings) {
-        return renderSettings();
-    };
+    const renderGameState = () => {
+        if (gamestate == ""){
+            return null
+        }
+        if (gamestate == 'queue'){
+            return <QueuePage alias={alias} isHost={isHost} socketManager={socketManager} />
+        }
+        if (gamestate == 'prompts'){
+            return <CreatePromptsPage />
+        }
+    }
 
     return (
         <div className="center">
@@ -217,10 +214,9 @@ export default function Room(props) {
                     </Typography>
                 </Grid>
                 <Grid item xs={12} align="center">
-                    {isLoading ? null : <QueuePage alias={alias} socketManager={socketManager} />}
+                    {
+                    isLoading ? null : renderGameState()}
                 </Grid>
-                {renderSettingsButton()
-                /* isHost ? renderSettingsButton() : null */}
                 <Grid item xs={12}>
                     <Button variant="contained" color="secondary" onClick={leaveRoom}> 
                         Leave Room

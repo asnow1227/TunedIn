@@ -18,6 +18,7 @@ class Room(models.Model):
     code = models.CharField(max_length=8, default=generate_unique_code, unique=True)
     host = models.CharField(max_length=50, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    gamestate = models.CharField(max_length=50, default='queue')
 
 
 class Prompt(models.Model):
@@ -34,6 +35,7 @@ class Alias(models.Model):
     user = models.CharField(max_length=50)
     room_code =  models.CharField(max_length=8, null=False)
     alias = models.CharField(max_length=10)
+    ready = models.BooleanField(default=False)
 
     class Meta:
         constraints = [

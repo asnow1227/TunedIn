@@ -48,6 +48,24 @@ export default function QueuePage(props){
         }
     }, []);
 
+    const updateGamestate = async () => {
+        const requestOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }
+        
+        const response = await fetch('/api/next-gamestate', requestOptions);
+        if (!response.ok){
+            return
+        }
+        const data = await response.json();
+        props.socketManager.send('gamestate_update', {
+            gamestate: data.gamestate
+        });
+    }
+
     return (
         <div align="center">
             <Typography variant="h3" component="h3">
@@ -62,6 +80,11 @@ export default function QueuePage(props){
                     </div>
                 )
             })}
+            {props.isHost ? 
+                <Button variant="contained" color="primary" onClick={updateGamestate}> 
+                    Ready
+                </Button>
+             : null}
         </div>
     )
 }

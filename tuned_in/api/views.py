@@ -12,9 +12,9 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 import django
 import json
+from game.gamestate import GameState
 
 # Create your views here.
-
 class RoomView(generics.ListAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
@@ -29,7 +29,6 @@ class CreateRoomView(APIView):
             self.request.session.create()
 
         alias_name = request.data.get('alias')
-        print(alias_name)
         if alias_name is None:
             return Response({
                 'Bad Request': 'No Alias provided for User'
@@ -60,9 +59,7 @@ class CreateRoomView(APIView):
             room.save()
             request.data['room_code'] = room.code
             if self.serializer_class(data=request.data).is_valid():
-                print('hello')
                 alias = Alias(user=host, room_code=room.code, alias=alias_name)
-                print(alias.alias)
                 alias.save()
                 self.request.session['room_code'] = room.code
                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
@@ -83,6 +80,7 @@ class GetRoom(APIView):
                 alias = Alias.objects.filter(room_code=room[0].code, user=self.request.session.session_key)[0]
                 data['is_host'] = self.request.session.session_key == room[0].host
                 data['alias'] = alias.alias
+                data['gamestate'] = room[0].gamestate
                 return Response(data, status=status.HTTP_200_OK)
             return Response({'Room Not Found': 'Invalid Room Code'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST)
@@ -92,7 +90,6 @@ class JoinRoom(APIView):
     serializer_class = CreateOrJoinRoomSerializer
 
     def post(self, request, format=None):
-        print(request.data)
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
@@ -107,14 +104,12 @@ class JoinRoom(APIView):
         room_result = Room.objects.filter(code=room_code)
         
         if not room_result.exists():
-            print('wtf')
             return Response({
                 'type': 'room_code',
                 'message': 'Room Not Found'
         }, status=status.HTTP_400_BAD_REQUEST)
             
         if not self.serializer_class(data=request.data).is_valid():
-            print('wtf')
             return Response({
                 'type': 'alias',
                 'message': 'Invalid Alias'
@@ -218,6 +213,38 @@ class SubmitPrompt(APIView):
         )
 
 
+class DeletePrompt(APIView):
+    def post(self, request, format=None):
+        if not self.request.session.session_key:
+            self.request.session.create()
+            return Response({
+                'Invalid Request': 'No Session Recorded for User'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        prompt_key = request.data.get('prompt_key')
+
+        if prompt_key is None:
+            return Response({
+                'Invalid Request': 'No prompt_key provided'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        prompt_found = Prompt.objects.filter(
+            user=self.request.session.session_key,
+            prompt_key=prompt_key
+        )
+
+        if not prompt_found:
+            return Response({
+                'Invalid Request': 'Prompt not found'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        prompt = prompt_found[0]
+        prompt.delete()
+        return Response({
+            'Message': 'Successfully Deleted Prompt'
+        }, status=status.HTTP_200_OK)
+
+
 class DeletePrompts(APIView):
     def post(self, request, format=None):
         if not self.request.session.session_key:
@@ -290,3 +317,68 @@ class GetCurrentPlayers(APIView):
 
         data.extend([player.alias for player in current_players if player.alias != player_alias.alias])
         return Response({'data': data}, status=status.HTTP_200_OK)
+
+
+def ready_check(room_code):
+    aliases = Alias.objects.filter(room_code=room_code).all()
+    return all([alias.ready for alias in aliases])
+
+
+def set_ready_statuses_to_false(room_code):
+    aliases = Alias.objects.filter(room_code=room_code).all()
+    for alias in aliases:
+        alias.ready = False
+        alias.save(update_fields=['ready'])
+
+
+class NextGamestate(APIView):
+    def post(self, request, format=None):
+        if not self.request.session.session_key:
+            self.request.session.create()
+            return Response({
+                'Invalid Request': 'No Session Recorded for User'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        room_code = self.request.session.get('room_code')
+        if room_code is None:
+            return Response({
+                'Invalid Request': 'User not in Room'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        room_set = Room.objects.filter(code=room_code)
+        if not room_set.exists():
+            return Response({
+                'Invalid Request': 'Room does not Exist'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        room = room_set[0]
+        if GameState.requires_ready_check(room.gamestate):
+            if not ready_check(room_code):
+                return Response({
+                'Invalid Request': 'Not all Players in Room are Ready'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        print(f"initial_state: {room.gamestate}")
+        next_gamestate = GameState(room.gamestate, room_code).next()
+        print(f"next_state: {room.gamestate}")
+        room.gamestate = next_gamestate
+        room.save(update_fields=['gamestate'])
+        set_ready_statuses_to_false(room_code)
+        return Response({'gamestate': next_gamestate}, status=status.HTTP_200_OK)
+
+
+class CurrentGameState(APIView):
+    def get(self, request, format=None):
+        if not self.request.session.session_key:
+            self.request.session.create()
+            return Response({
+                'Invalid Request': 'No Session Recorded for User'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        room_code = self.request.session.get('room_code')
+        if room_code is None:
+            return Response({
+                'Invalid Request': 'User not in Room'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        room_set = Room.objects.filter(code=room_code)
+        if not room_set.exists():
+            return Response({
+                'Invalid Request': 'Room does not Exist'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        room = room_set[0]
+        return Response({'gamestate': room.gamestate}, status=status.HTTP_200_OK)
