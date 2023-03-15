@@ -11,7 +11,8 @@ from .views import (
     UpdateRoom,
     GetCurrentPlayers,
     DeletePrompt,
-    NextGamestate
+    NextGamestate,
+    UpdateReadyState
 )
 
 urlpatterns = [
@@ -26,5 +27,6 @@ urlpatterns = [
     path('update-room', UpdateRoom.as_view()),
     path('get-current-players', GetCurrentPlayers.as_view()),
     path('delete-prompt', DeletePrompt.as_view()),
-    path('next-gamestate', NextGamestate.as_view())
+    path('next-gamestate', NextGamestate.as_view()),
+    path('update-ready-status', UpdateReadyState.as_view())
 ]

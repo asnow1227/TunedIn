@@ -10,6 +10,7 @@ import io from "socket.io-client";
 export default function QueuePage(props){
 
     const[players, setPlayers] = useState(new Array());
+    const[isReady, setIsReady] = useState(false);
 
     useEffect(() => {
         const setup = async () => {
@@ -48,7 +49,7 @@ export default function QueuePage(props){
         }
     }, []);
 
-    const updateGamestate = async () => {
+    const updateGameState = async () => {
         const requestOptions = {
             method: 'POST',
             headers: {
@@ -66,6 +67,26 @@ export default function QueuePage(props){
         });
     }
 
+    // const updateReadyStatus = async () => {
+    //     const requestOptions = {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         },
+    //         body: JSON.stringify({
+    //             is_ready: !isReady
+    //         }),
+    //     }
+
+    //     const response = await fetch('/api/update-ready-status', requestOptions);
+    //     if (!response.ok){
+    //         alert('error updating ready status')
+    //     }
+    //     setIsReady(ready => !ready);
+    //     if (!props.isHost) return;
+    //     updateGameState();
+    // }
+
     return (
         <div align="center">
             <Typography variant="h3" component="h3">
@@ -81,8 +102,8 @@ export default function QueuePage(props){
                 )
             })}
             {props.isHost ? 
-                <Button variant="contained" color="primary" onClick={updateGamestate}> 
-                    Ready
+                <Button variant="contained" color="primary" onClick={updateGameState}> 
+                    {isReady ? "Not Ready" : "Ready"}
                 </Button>
              : null}
         </div>

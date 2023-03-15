@@ -1,6 +1,6 @@
 READY_CHECK = {
     'queue': False,
-    'prompts': False
+    'prompts': True
 }
 
 class GameState:
@@ -15,7 +15,7 @@ class GameState:
             return 'prompts'
         elif state == 'prompts':
             #introuce logic to check the room for the round, etc.
-            return 'round'
+            return 'queue'
 
     @staticmethod
     def requires_ready_check(gamestate):

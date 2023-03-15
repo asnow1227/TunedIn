@@ -99,5 +99,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'gamestate': gamestate
             })
         )
+    
 
     

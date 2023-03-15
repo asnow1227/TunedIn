@@ -15,8 +15,7 @@ const makeArray = (num_prompts) => {
 };
 
 export default function CreatePromptsPage(props) {
-  const [numPrompts, setNumPrompts] = useState(4);
-  const [formValues, setFormValues] = useState(makeArray(4));
+  const [formValues, setFormValues] = useState(makeArray(3));
   const [currIndex, setCurrIndex] = useState(0);
 
   const handleChange = (e) => {
@@ -109,6 +108,25 @@ export default function CreatePromptsPage(props) {
     };
   }
 
+  const updateGameState = async () => {
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+    }
+    
+    const response = await fetch('/api/next-gamestate', requestOptions);
+    if (!response.ok){
+        alert("Not all Prompts have been Submitted");
+        return
+    }
+    const data = await response.json();
+    props.socketManager.send('gamestate_update', {
+        gamestate: data.gamestate
+    });
+  }
+
   return (
     <div>
       <Grid container spacing={1} align="center">
@@ -139,7 +157,7 @@ export default function CreatePromptsPage(props) {
         </Grid>
         <Grid item xs={2}>
           {
-            currIndex == numPrompts - 1 ? null : 
+            currIndex == 2 ? null : 
             <IconButton onClick={() => {
               setCurrIndex(currIndex + 1);
             }}>
@@ -162,6 +180,12 @@ export default function CreatePromptsPage(props) {
             </Button>
           </ButtonGroup>
         </Grid>
+        {props.isHost ? 
+          <Grid item xs={12}>
+            <Button variant="contained" color="primary" onClick={updateGameState}>
+              Ready
+            </Button>
+          </Grid>: null}
       </Grid>
     </div>
   );

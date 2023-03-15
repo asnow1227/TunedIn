@@ -90,13 +90,15 @@ class SocketManager {
 //     }
 // }
 
+const socketManager = new SocketManager();
+
 export default function Room(props) {
     
     const[votesToSkip, setVotesToSkip] = useState(2);
     const[guestCanPause, setGuestCanPause] = useState(false);
     const[isHost, setIsHost] = useState(false);
     const[spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
-    const[socketManager, setSocketManager] = useState(new SocketManager());
+    // const[socketManager, setSocketManager] = useState(new SocketManager());
     const[alias, setAlias] = useState("");
     const[isLoading, setIsLoading] = useState(true);
     const[gamestate, setGamestate] = useState("");
@@ -149,6 +151,7 @@ export default function Room(props) {
             });
             socketManager.onEvent('gamestate_update', function(data){
                 setGamestate(data.gamestate);
+                console.log(data.gamestate)
             })
         }
 
@@ -201,7 +204,7 @@ export default function Room(props) {
             return <QueuePage alias={alias} isHost={isHost} socketManager={socketManager} />
         }
         if (gamestate == 'prompts'){
-            return <CreatePromptsPage />
+            return <CreatePromptsPage isHost={isHost} socketManager={socketManager}/>
         }
     }
 
@@ -217,11 +220,11 @@ export default function Room(props) {
                     {
                     isLoading ? null : renderGameState()}
                 </Grid>
-                <Grid item xs={12}>
+                {gamestate == 'queue' ? <Grid item xs={12}>
                     <Button variant="contained" color="secondary" onClick={leaveRoom}> 
                         Leave Room
                     </Button>
-                </Grid>
+                </Grid>: null}
             </Grid>
         </div> 
     )

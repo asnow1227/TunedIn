@@ -207,6 +207,17 @@ class SubmitPrompt(APIView):
         )
         prompt.save()
 
+        all_prompts = Prompt.objects.filter(
+            user=self.request.session.session_key
+        )
+        print(len(all_prompts))
+        if len(all_prompts) == 3:
+            print('wtf')
+            alias = Alias.objects.filter(user=self.request.session.session_key)[0]
+            alias.ready = True
+            alias.save(update_fields=['ready'])
+            print(alias.alias, alias.ready, alias.room_code)
+
         return Response(
             {'Message': 'Successfully Submitted Prompt'},
             status=status.HTTP_200_OK
@@ -240,6 +251,11 @@ class DeletePrompt(APIView):
         
         prompt = prompt_found[0]
         prompt.delete()
+
+        alias = Alias.objects.filter(user=self.request.session.session_key)[0]
+        alias.ready = False
+        alias.save(update_fields=['ready'])
+        
         return Response({
             'Message': 'Successfully Deleted Prompt'
         }, status=status.HTTP_200_OK)
@@ -262,6 +278,10 @@ class DeletePrompts(APIView):
         
         for prompt in prompt_set:
             prompt.delete()
+
+        alias = Alias.objects.filter(user=self.request.session.session_key)[0]
+        alias.ready = False
+        alias.save(update_fields=['ready'])
         
         return Response({
             'Message': 'Succesffuly Deleted Prompts for User'
@@ -321,6 +341,7 @@ class GetCurrentPlayers(APIView):
 
 def ready_check(room_code):
     aliases = Alias.objects.filter(room_code=room_code).all()
+    print({alias.alias: (alias.ready, alias.room_code) for alias in aliases})
     return all([alias.ready for alias in aliases])
 
 
@@ -356,12 +377,37 @@ class NextGamestate(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         print(f"initial_state: {room.gamestate}")
         next_gamestate = GameState(room.gamestate, room_code).next()
-        print(f"next_state: {room.gamestate}")
         room.gamestate = next_gamestate
         room.save(update_fields=['gamestate'])
+        print(f"next_state: {room.gamestate}")
         set_ready_statuses_to_false(room_code)
         return Response({'gamestate': next_gamestate}, status=status.HTTP_200_OK)
 
+
+class UpdateReadyState(APIView):
+    def post(self, request, format=None):
+        if not self.request.session.session_key:
+            self.request.session.create()
+            return Response({
+                'Invalid Request': 'No Session Recorded for User'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        room_code = self.request.session.get('room_code')
+        room_set = Room.objects.filter(code=room_code)
+        if not room_set.exists():
+            return Response({
+                'Invalid Request': 'Room does not Exist'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        alias_set = Alias.objects.filter(user=self.request.session.session_key, room_code=room_code)
+        if not alias_set.exists():
+            return Response({
+                'Invalid Request': 'Alias does not Exist in Room'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        alias = alias_set[0]
+        alias.ready = request.data.get('is_ready')
+        alias.save(update_fields=['ready'])
+        return Response({
+            'Success': 'Successfully Updated Ready State'
+        }, status=status.HTTP_200_OK)
 
 class CurrentGameState(APIView):
     def get(self, request, format=None):
