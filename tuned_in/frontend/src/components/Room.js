@@ -7,6 +7,7 @@ import MusicPlayer from "./MusicPlayer";
 import io from "socket.io-client";
 import QueuePage from "./QueuePage";
 import CreatePromptsPage from "./EnterPromptsPage"
+import Prompt from "./Prompt"
 
 
 class SocketManager {
@@ -65,30 +66,6 @@ class SocketManager {
         this.socket.close();
     }
 }
-
-// const GameStateMap = {
-//     'queue': QueuePage,
-//     'prompts': CreatePromptsPage,
-//     'round': null,
-//     'listen': null,
-//     'voting': null,
-//     'score': null
-// }
-
-// class GameStateRouter {
-//     static dependencies = new Map();
-//     static mapGamestate(gamestate) {
-//         //add logic for the rounds and voting here
-//         var props = {}
-//         if (GameStateRouter.dependencies.has(gamestate)){
-//             props = GameStateRouter.dependencies[gamestate]
-//         }
-//         return GameStateMap[gamestate](props)
-//     }
-//     static setDependencies(gamestate, props) {
-//         GameStateRouter.dependencies[gamestate] = props
-//     }
-// }
 
 const socketManager = new SocketManager();
 
@@ -206,6 +183,9 @@ export default function Room(props) {
         if (gamestate == 'prompts'){
             return <CreatePromptsPage isHost={isHost} socketManager={socketManager}/>
         }
+        if (gamestate == 'select'){
+            return <Prompt />
+        }
     }
 
     return (
@@ -216,13 +196,18 @@ export default function Room(props) {
                         Code: {roomCode}
                     </Typography>
                 </Grid>
+                <Grid item xs={12}>
+                    <Typography variant="h4" component="h4">
+                        Alias: {alias}
+                    </Typography>
+                </Grid>
                 <Grid item xs={12} align="center">
                     {
                     isLoading ? null : renderGameState()}
                 </Grid>
-                {gamestate == 'queue' ? <Grid item xs={12}>
+                {isHost ? <Grid item xs={12}>
                     <Button variant="contained" color="secondary" onClick={leaveRoom}> 
-                        Leave Room
+                        End Game
                     </Button>
                 </Grid>: null}
             </Grid>

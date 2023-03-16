@@ -359,29 +359,40 @@ class NextGamestate(APIView):
             return Response({
                 'Invalid Request': 'No Session Recorded for User'
             }, status=status.HTTP_400_BAD_REQUEST)
+        
         room_code = self.request.session.get('room_code')
         if room_code is None:
             return Response({
                 'Invalid Request': 'User not in Room'
             }, status=status.HTTP_400_BAD_REQUEST)
+        
         room_set = Room.objects.filter(code=room_code)
         if not room_set.exists():
             return Response({
                 'Invalid Request': 'Room does not Exist'
             }, status=status.HTTP_400_BAD_REQUEST)
+        
         room = room_set[0]
-        if GameState.requires_ready_check(room.gamestate):
-            if not ready_check(room_code):
-                return Response({
-                'Invalid Request': 'Not all Players in Room are Ready'
+        if not self.request.session.session_key == room.host:
+            return Response({
+                'Invalid Request': 'Only Host Can Update the Gamestate'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+        gamestate = GameState(room)
+        if not gamestate.ready_check():
+            return Response({
+            'Invalid Request': 'Not all Players in Room are Ready'
+        }, status=status.HTTP_400_BAD_REQUEST)
         print(f"initial_state: {room.gamestate}")
-        next_gamestate = GameState(room.gamestate, room_code).next()
-        room.gamestate = next_gamestate
-        room.save(update_fields=['gamestate'])
-        print(f"next_state: {room.gamestate}")
-        set_ready_statuses_to_false(room_code)
-        return Response({'gamestate': next_gamestate}, status=status.HTTP_200_OK)
+
+        gamestate.update()
+        # next_gamestate = gamestate.next()
+        # room.gamestate = next_gamestate
+        # room.save(update_fields=['gamestate', 'room_round'])
+        # gamestate.set_ready_statuses_to_false()
+        print(f"next_state: {gamestate.gamestate}")
+        # set_ready_statuses_to_false(room_code)
+        return Response({'gamestate': gamestate.gamestate}, status=status.HTTP_200_OK)
 
 
 class UpdateReadyState(APIView):
@@ -393,11 +404,13 @@ class UpdateReadyState(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         room_code = self.request.session.get('room_code')
         room_set = Room.objects.filter(code=room_code)
+        
         if not room_set.exists():
             return Response({
                 'Invalid Request': 'Room does not Exist'
             }, status=status.HTTP_400_BAD_REQUEST)
         alias_set = Alias.objects.filter(user=self.request.session.session_key, room_code=room_code)
+        
         if not alias_set.exists():
             return Response({
                 'Invalid Request': 'Alias does not Exist in Room'
@@ -408,6 +421,7 @@ class UpdateReadyState(APIView):
         return Response({
             'Success': 'Successfully Updated Ready State'
         }, status=status.HTTP_200_OK)
+
 
 class CurrentGameState(APIView):
     def get(self, request, format=None):
@@ -428,3 +442,40 @@ class CurrentGameState(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         room = room_set[0]
         return Response({'gamestate': room.gamestate}, status=status.HTTP_200_OK)
+
+
+class GetPrompt(APIView):
+    def get(self, request, format=None):
+        if not self.request.session.session_key:
+            self.request.session.create()
+            return Response({
+                'Invalid Request': 'No Session Recorded for User'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        user = self.request.session.session_key
+        room_code = self.request.session.get('room_code')
+        if room_code is None:
+            return Response({
+                'Invalid Request': 'User not in Room'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        room_set = Room.objects.filter(code=room_code)
+        if not room_set.exists():
+            return Response({
+                'Invalid Request': 'Room does not Exist'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        room = room_set[0]
+        #need to add logic here to grab the prompt where the user hasn't selected a song yet
+        #would grab two at first, send one back, fill out the prompt, with the key and then 
+        #on the second run would just grab the prompt that hasn't had a song selected
+        prompt_set = Prompt.objects.raw(
+            f"""Select ID, prompt_text from api_prompt where prompt_key = {room.room_round} and 
+            (assigned_user_1 = '{user}' or assigned_user_2 = '{user}')
+        """)
+        
+        if not prompt_set:
+            return Response({
+                'Invalid Request': 'User Not Assigned Any Prompts for Round'
+            }, status=status.HTTP_400_BAD_REQUEST)
+       
+        return Response({'prompt': prompt_set[0].prompt_text}, status=status.HTTP_200_OK)

@@ -170,16 +170,6 @@ export default function CreatePromptsPage(props) {
             {formValues[currIndex].submitted ? "Unsubmit" : "Submit"}
           </Button>
         </Grid>
-        <Grid item xs={12}>
-          <ButtonGroup disableElevation variant="contained" color="primary">
-            <Button color="primary" onClick={submitAll}>
-              Submit All
-            </Button>
-            <Button color="secondary" onClick={unsubmitAll}>
-              Unsubmit All
-            </Button>
-          </ButtonGroup>
-        </Grid>
         {props.isHost ? 
           <Grid item xs={12}>
             <Button variant="contained" color="primary" onClick={updateGameState}>
@@ -190,5 +180,16 @@ export default function CreatePromptsPage(props) {
     </div>
   );
 }
+
+// <Grid item xs={12}>
+//           <ButtonGroup disableElevation variant="contained" color="primary">
+//             <Button color="primary" onClick={submitAll}>
+//               Submit All
+//             </Button>
+//             <Button color="secondary" onClick={unsubmitAll}>
+//               Unsubmit All
+//             </Button>
+//           </ButtonGroup>
+//         </Grid>
 
 
