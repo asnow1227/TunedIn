@@ -116,6 +116,7 @@ class GameState:
         for (prompt, combo) in zip(prompts, combos):
             prompt.assigned_user_1 = combo[0]
             prompt.assigned_user_2 = combo[1]
+            print(prompt.assigned_user_1, prompt.assigned_user_2, prompt.prompt_text)
             prompt.save(update_fields=['assigned_user_1', 'assigned_user_2'])
             
     def update(self):

@@ -8,6 +8,8 @@ const style = {
   margin: "0 auto",
 };
 
+const BLANK_IMG_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
+
 export default class SelectSongPage extends React.Component {
     constructor(props) {
         super(props);
@@ -107,9 +109,24 @@ export default class SelectSongPage extends React.Component {
     }
 
     render() {
+        const footerProps = this.state.selected.id ? {
+            ...this.state.selected, 
+            selectable: false,
+        } : {
+            title: 'No Song Selected',
+            image_url: BLANK_IMG_URL,
+            selectable: false,
+        };
+
         return (
-        <div className="box" align="center">
+        <div className="box">
             <div className = "row header" align="center">
+                <Typography variant="h6" component="h6">
+                    Assigned Prompt:
+                </Typography>
+                <p>
+                    This is the Prompt Text
+                </p>
                 <TextField
                 id="filled-search"
                 label="Select a Song"
@@ -135,17 +152,15 @@ export default class SelectSongPage extends React.Component {
                 </Grid>
                 </InfiniteScroll>
             </div>
-            <div className="row footer">
+            <div className="row footer" align="center">
                 <hr></hr>
                 <Typography variant="h6" component="h6">Selected Song</Typography>
                 {
-                    this.state.selected.id ? 
-                    <MusicCard {...this.state.selected} /> :
-                    <MusicCard title="No Song Selected" 
-                    image_url="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII="/>
+                    <MusicCard {...footerProps}/>
                 }
             </div>
         </div>
+    
         );
   }
 }

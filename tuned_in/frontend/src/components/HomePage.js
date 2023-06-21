@@ -4,7 +4,7 @@ import CreatePromptsPage from "./EnterPromptsPage";
 import EmbedSpotify from "./SpotifyEmbed";
 import Room from "./Room";
 import { Grid, Button, ButtonGroup, Typography } from '@material-ui/core';
-import SelectSongPage from "./SelectSongPage";
+import SelectSongPage from "./selectSongPageFunctional";
 import {
   BrowserRouter as Router,
   Route,

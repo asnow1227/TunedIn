@@ -36,8 +36,8 @@ body {
 }
 
 .scroll-div {
-  height: 300px;
-  width: 600px;
+  /* height: 300px;
+  width: 600px; */
   overflow-y: auto;
 }
 
@@ -45,6 +45,8 @@ body {
   display: flex;
   flex-flow: column;
   height: 100%;
+  align-items: center;
+  align-content: center;
 }
 
 .box .row {
@@ -74,4 +76,12 @@ body {
 
 .white-outline{
   border: solid white;
+}
+
+.outer-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

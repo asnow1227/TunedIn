@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useCallback, useEffect } from "react";
 import { Grid, Typography, Card, IconButton } from "@material-ui/core";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import HighlightOffIcon from "@material-ui/icons/HighlightOff";
@@ -11,39 +11,27 @@ const style = {
     padding: 8
 };
 
-export default class MusicCard extends Component {
-    constructor(props) {
-        super(props);
-        console.log(props);
-        this.state = {
-            hovered: false,
-            selected: false,
-            iconHovered: false,
-            style: {
-                display: 'none'
-            }
-        }
-        this.handleIconClicked = this.handleIconClicked.bind(this);
-        this.displayButtons = this.displayButtons.bind(this);
+export default function MusicCard(props){
+    const selectable = props.selectable == false ? props.selectable : true;
+    const selected = props.selected == false ? props.selected : 
+        (props.selectedId == props.id);
+    const [style, setStyle] = useState({
+        display: 'none'
+    });
+
+    const handleIconClicked = () => {
+        selected ? props.setSelectedCallback({}) : 
+        props.setSelectedCallback(props);
     }
 
-    handleIconClicked(){
-        this.state.selected ? 
-            this.props.selectedCallback({}, this):
-            this.props.selectedCallback(this.props, this);
-        this.setState({
-            selected: !this.state.selected,
-        });
-    }
-
-    displayButtons(){
+    const displayButtons = () => {
         return (
             <IconButton 
-            onClick={this.handleIconClicked} 
-            style={this.state.style}
+            onClick={handleIconClicked} 
+            style={style}
             >
                 {
-                this.state.selected ?  
+                selected ?  
                 <HighlightOffIcon
                 color="error"
                  /> : 
@@ -55,48 +43,41 @@ export default class MusicCard extends Component {
         )
     }
 
-    render() {
-        return (
-            <Grid item xs={12}>
-                <Card 
-                height="64px" 
-                onMouseEnter={() => {
-                    this.setState({
-                        style: {
-                            display: 'block'
-                        }
-                    })
-                }} 
-                onMouseLeave={() => {
-                    this.setState({
-                        style: {
-                            display: 'none'
-                        }
-                    })
-                }}
-                style={
-                    this.state.selected ? 
-                    {backgroundColor: "#C8F7C8"} :
-                    {backgroundColor: "white"}
-                }
-                >
-                    <Grid container alignItems="center">
-                        <Grid item align="center" xs={4}>
-                            <img src={this.props.image_url} height="64px" width="64px" />
-                        </Grid>
-                        <Grid item align="center" xs={8}>
-                            <Typography component="h8" variant="h8">
-                                {this.props.title}
-                            </Typography>
-                            <Typography color="textSecondary" variant="subtitle1">
-                                {this.props.artist}
-                            </Typography>
-                            {this.displayButtons()}
-                        </Grid>
+    return (
+        <Grid item xs={12}>
+            <Card 
+            height="64px" 
+            onMouseEnter={() => {
+                setStyle({
+                    display: 'block'
+                })
+            }} 
+            onMouseLeave={() => {
+                setStyle({
+                    display: 'none'
+                })
+            }}
+            style={
+                selected ? 
+                {backgroundColor: "green"} :
+                {backgroundColor: "white"}
+            }
+            >
+                <Grid container alignItems="center">
+                    <Grid item align="center" xs={4}>
+                        <img src={props.image_url} height="64px" width="64px" />
                     </Grid>
-                </Card>
-            </Grid>
-        )
-    }
-
+                    <Grid item align="center" xs={8}>
+                        <Typography component="h8" variant="h8">
+                            {props.title}
+                        </Typography>
+                        <Typography color="textSecondary" variant="subtitle1">
+                            {props.artist}
+                        </Typography>
+                        {selectable === true ? displayButtons() : null}
+                    </Grid>
+                </Grid>
+            </Card>
+        </Grid>
+    )
 }

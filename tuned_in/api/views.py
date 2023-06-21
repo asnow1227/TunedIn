@@ -207,11 +207,11 @@ class SubmitPrompt(APIView):
         )
         prompt.save()
 
-        all_prompts = Prompt.objects.filter(
+        all_user_prompts = Prompt.objects.filter(
             user=self.request.session.session_key
         )
-        print(len(all_prompts))
-        if len(all_prompts) == 3:
+        print(len(all_user_prompts))
+        if len(all_user_prompts) == 3:
             print('wtf')
             alias = Alias.objects.filter(user=self.request.session.session_key)[0]
             alias.ready = True
