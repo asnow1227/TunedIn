@@ -14,6 +14,13 @@ import django
 import json
 from game.gamestate import GameState
 
+
+def clear_all_room_data(room):
+    for model in (Prompt, Alias):
+        model.objects.filter(room_code=room.code).all().delete()
+    room.delete()
+
+
 # Create your views here.
 class RoomView(generics.ListAPIView):
     queryset = Room.objects.all()
@@ -40,29 +47,37 @@ class CreateRoomView(APIView):
         host = self.request.session.session_key
         room_query_set = Room.objects.filter(host=host)
         if room_query_set.exists():
-            room = room_query_set[0]
-            alias_query_set = Alias.objects.filter(user=host, room_code=room.code)
-            if alias_query_set.exists():
-                alias = alias_query_set[0]
-                alias.alias = alias_name
-                alias.save(update_fields=['alias'])
-            else:
-                alias = Alias(room_code=room.code, user=host, alias=alias_name)
-                alias.save()
-            # room.guest_can_pause = guest_can_pause
-            # room.votes_to_skip = votes_to_skip
-            # room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
+            for room in room_query_set:
+                clear_all_room_data(room)
+        alias_query_set = Alias.objects.filter(user=host)
+        if alias_query_set.exists():
+            alias_query_set.all().delete()
+        # if room_query_set.exists():
+        #     room = room_query_set[0]
+        #     alias_query_set = Alias.objects.filter(user=host, room_code=room.code)
+        #     if alias_query_set.exists():
+        #         alias = alias_query_set[0]
+        #         alias.alias = alias_name
+        #         alias.save(update_fields=['alias'])
+        #     else:
+        #         # this indicates that the user is trying to create a room when they have left another.
+        #         # take this time to clear their data!
+        #         clear_all_data(host)
+        #         alias = Alias(room_code=room.code, user=host, alias=alias_name)
+        #         alias.save()
+        #     # room.guest_can_pause = guest_can_pause
+        #     # room.votes_to_skip = votes_to_skip
+        #     # room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
+        #     self.request.session['room_code'] = room.code
+        #     return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
+        room = Room(host=host)
+        room.save()
+        request.data['room_code'] = room.code
+        if self.serializer_class(data=request.data).is_valid():
+            alias = Alias(user=host, room_code=room.code, alias=alias_name)
+            alias.save()
             self.request.session['room_code'] = room.code
             return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
-        else:
-            room = Room(host=host)
-            room.save()
-            request.data['room_code'] = room.code
-            if self.serializer_class(data=request.data).is_valid():
-                alias = Alias(user=host, room_code=room.code, alias=alias_name)
-                alias.save()
-                self.request.session['room_code'] = room.code
-                return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
         
         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -114,6 +129,9 @@ class JoinRoom(APIView):
                 'type': 'alias',
                 'message': 'Invalid Alias'
         }, status=status.HTTP_400_BAD_REQUEST)
+
+        Alias.objects.filter(user=self.request.session.session_key).all().delete()
+        
         
         try:
             alias = Alias(
@@ -123,6 +141,7 @@ class JoinRoom(APIView):
             )
             alias.save()
         except django.db.utils.IntegrityError:
+            print('wtf why lol')
             return Response({
                 'type': 'alias',
                 'message': 'Alias exists in Room'
@@ -184,6 +203,7 @@ class SubmitPrompt(APIView):
         user = self.request.session.session_key
         prompt_text = serializer.data.get('prompt_text')
         prompt_key = serializer.data.get('prompt_key')
+        print(prompt_key)
         
         prompt_found = Prompt.objects.filter(
             user=self.request.session.session_key,
@@ -208,7 +228,7 @@ class SubmitPrompt(APIView):
         prompt.save()
 
         all_user_prompts = Prompt.objects.filter(
-            user=self.request.session.session_key
+            user=self.request.session.session_key, room_code=room_code
         )
         print(len(all_user_prompts))
         if len(all_user_prompts) == 3:

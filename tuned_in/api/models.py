@@ -45,7 +45,7 @@ class Alias(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['alias', 'room_code'],
+                fields=['room_code', 'alias'],
                 name='unique_aliasing'
             )
         ]

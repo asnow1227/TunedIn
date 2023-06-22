@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useParams } from "react-router-dom";  
-import { Grid, Button, Typography } from '@material-ui/core';
+import { Grid, Button, Typography, Select } from '@material-ui/core';
 import { useNavigate } from "react-router-dom";
 import CreateRoomPage from "./CreateRoomPage";
 import MusicPlayer from "./MusicPlayer";
@@ -8,6 +8,7 @@ import io from "socket.io-client";
 import QueuePage from "./QueuePage";
 import CreatePromptsPage from "./EnterPromptsPage"
 import Prompt from "./Prompt"
+import SelectSongPage from "./selectSongPageFunctional"
 
 
 class SocketManager {
@@ -184,7 +185,7 @@ export default function Room(props) {
             return <CreatePromptsPage isHost={isHost} socketManager={socketManager}/>
         }
         if (gamestate == 'select'){
-            return <Prompt />
+            return <SelectSongPage />
         }
     }
 

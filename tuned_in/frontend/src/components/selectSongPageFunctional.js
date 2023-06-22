@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import axios from "axios";
-import { TextField, Grid, Card, Typography, StepContent} from "@material-ui/core";
+import { TextField, Grid, Button, Card, Typography, StepContent} from "@material-ui/core";
 import MusicCard from "./MusicCard";
 
 const style = {
@@ -82,6 +82,10 @@ export default function SelectSongPage(props){
         fetchMoreData(true);
     };
 
+    const handleSubmitPrompt = (e) => {
+        return
+    }
+
     const footerProps = selectedProps.id ? {
         ...selectedProps,
         selectable: false,
@@ -127,10 +131,15 @@ export default function SelectSongPage(props){
         </div>
         <div className="row footer" align="center">
             <hr></hr>
+            <Grid container spacing={1} align="center">
             <Typography variant="h6" component="h6">Selected Song</Typography>
-            {
-                <MusicCard {...footerProps} selected={false}/>
-            }
+            <MusicCard {...footerProps} selected={false}/>
+            <Grid item xs={12}>
+                <Button variant="contained" color="primary" onClick={handleSubmitPrompt}>
+                {submitted === true ? "Unsubmit" : "Submit"}
+                </Button>
+          </Grid>
+          </Grid>
         </div>
     </div>
 
