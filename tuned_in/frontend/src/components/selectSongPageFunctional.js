@@ -14,11 +14,13 @@ export default function SelectSongPage(props){
     const [items, setItems] = useState(new Array());
     const [hasMore, setHasMore] = useState(true);
     const [q, setQ] = useState('');
-    const [currPage, setCurrPage] = useState(1);
+    const [currPage, setCurrPage] = useState(0);
     const [currentIds, setCurrentIds] = useState(new Set());
     const [selectedProps, setSelectedProps] = useState({});
     const [selectedComponent, setSelectedComponent] = useState(null);
     const [prmpt, setPrmpt] = useState('');
+    const [prmptId, setPrmptId] = useState('');
+    const [submitted, setSubmitted] = useState(false);
     
     useEffect(() => {
         const setUp = async () => {
@@ -27,34 +29,34 @@ export default function SelectSongPage(props){
                 return
             }
             const data = await response.json();
-            setPrmpt(data.prompt)
+            setPrmpt(data.prompt);
+            setPrmptId(data.id);
         }
         setUp();
-    })
+    }, [])
 
     const setSelectedCallback = (selectedProps) => {
         setSelectedProps(selectedProps);
     };
 
-    const fetchMoreData = async (from_search=false) => {
-        // a fake async api call like which sends
-        // 20 more records in 1.5 secs
+    const fetchMoreData = async () => {
+       
         var page = currPage;
-        if (from_search) {
-            page = 1;
-        }
+
         const response = await axios.get(
             `http://127.0.0.1:8000/spotify/get-songs?query=${q}&page=${page}&limit=10`
         )
-        console.log(response.data);
-        console.log(page);
+        // console.log(response.data);
+        // console.log(page);
         
         if (!response.data.data.length) {
             setHasMore(false);
             return 
         }
 
-        const elementsToAdd = new Array()
+        console.log(items);
+
+        const elementsToAdd = new Array();
 
         response.data.data.forEach((element) => {
             if (currentIds.has(element.id)){
@@ -69,20 +71,54 @@ export default function SelectSongPage(props){
         setCurrPage(page + 1);
     };
 
+    // useEffect(() => {
+    //     fetchMoreData();
+    // }, []);
+
     useEffect(() => {
-        fetchMoreData();
-    }, []);
-    
-    const handleSearchChange = (e) => {
+        console.log('what')
+        if (currPage == 1) {
+            fetchMoreData();
+        }
+    }, [currPage])
+
+    const handleSearchEntered = (e) => {
+        if(e.keyCode != 13){
+            return
+        }
         setItems([]);
         setHasMore(true);
-        setCurrPage(1);
-        setQ(e.target.value);
         setCurrentIds(new Set());
-        fetchMoreData(true);
+        setCurrPage(1);
+    }
+    
+    const handleSearchChange = (e) => {
+        setQ(e.target.value);
     };
 
-    const handleSubmitPrompt = (e) => {
+    const handleSubmitSongSelection = () => {
+        const requestOptions = {
+            method: "POST",
+            headers: { "Content-Type": "application/json"},
+            body: JSON.stringify({
+                promptId: prmptId,
+                songId: selectedProps.id,
+            })
+        };
+        console.log('hello');
+        fetch('/api/select-song', requestOptions).then((response) => {
+            if (response.ok) {
+              alert('Song Submitted Successfully')
+              setSubmitted(true);
+            } else {
+                return response.json();
+            }
+          }).then((data) => {
+              console.log('wtf');
+              console.log(data);
+              const message = data.message;
+              alert(message);
+          })
         return
     }
 
@@ -110,6 +146,7 @@ export default function SelectSongPage(props){
             type="search"
             variant="filled"
             onChange={e => handleSearchChange(e)}
+            onKeyDown={e => handleSearchEntered(e)}
             />
         </div>
         <div id="scrollableDiv" className="row content" align="center">
@@ -131,15 +168,19 @@ export default function SelectSongPage(props){
         </div>
         <div className="row footer" align="center">
             <hr></hr>
-            <Grid container spacing={1} align="center">
-            <Typography variant="h6" component="h6">Selected Song</Typography>
-            <MusicCard {...footerProps} selected={false}/>
-            <Grid item xs={12}>
-                <Button variant="contained" color="primary" onClick={handleSubmitPrompt}>
-                {submitted === true ? "Unsubmit" : "Submit"}
-                </Button>
-          </Grid>
-          </Grid>
+            <Grid container align="center" spacing={1}>
+                <Grid item xs={12}>
+                    <Typography variant="h6" component="h6">Selected Song</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                    <MusicCard {...footerProps} selected={false}/>
+                </Grid>
+                <Grid item xs={12}>
+                    <Button variant="contained" color={!submitted ? "primary" : "secondary"} onClick={handleSubmitSongSelection}>
+                        {submitted ? "Unsubmit" : "Submit"}
+                    </Button>
+                </Grid>
+            </Grid>
         </div>
     </div>
 

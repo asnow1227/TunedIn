@@ -13,12 +13,18 @@ from django.http import JsonResponse
 import django
 import json
 from game.gamestate import GameState
+from decorator import decorator
 
 
 def clear_all_room_data(room):
     for model in (Prompt, Alias):
         model.objects.filter(room_code=room.code).all().delete()
     room.delete()
+
+
+def clear_all_user_data(user):
+    for model in (Prompt, Alias):
+        model.objects.filter(user=user).all().delete()
 
 
 # Create your views here.
@@ -49,27 +55,8 @@ class CreateRoomView(APIView):
         if room_query_set.exists():
             for room in room_query_set:
                 clear_all_room_data(room)
-        alias_query_set = Alias.objects.filter(user=host)
-        if alias_query_set.exists():
-            alias_query_set.all().delete()
-        # if room_query_set.exists():
-        #     room = room_query_set[0]
-        #     alias_query_set = Alias.objects.filter(user=host, room_code=room.code)
-        #     if alias_query_set.exists():
-        #         alias = alias_query_set[0]
-        #         alias.alias = alias_name
-        #         alias.save(update_fields=['alias'])
-        #     else:
-        #         # this indicates that the user is trying to create a room when they have left another.
-        #         # take this time to clear their data!
-        #         clear_all_data(host)
-        #         alias = Alias(room_code=room.code, user=host, alias=alias_name)
-        #         alias.save()
-        #     # room.guest_can_pause = guest_can_pause
-        #     # room.votes_to_skip = votes_to_skip
-        #     # room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
-        #     self.request.session['room_code'] = room.code
-        #     return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
+        clear_all_user_data(host)
+        
         room = Room(host=host)
         room.save()
         request.data['room_code'] = room.code
@@ -130,8 +117,7 @@ class JoinRoom(APIView):
                 'message': 'Invalid Alias'
         }, status=status.HTTP_400_BAD_REQUEST)
 
-        Alias.objects.filter(user=self.request.session.session_key).all().delete()
-        
+        clear_all_user_data(self.request.session.session_key)
         
         try:
             alias = Alias(
@@ -372,6 +358,31 @@ def set_ready_statuses_to_false(room_code):
         alias.save(update_fields=['ready'])
 
 
+@decorator
+def check_request_key_and_room_status(fn, self, *args, **kwargs):
+    if not self.request.session.session_key:
+        self.request.session.create()
+        return Response({
+            'Invalid Request': 'No Session Recorded for User'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    room_code = self.request.session.get('room_code')
+    if room_code is None:
+        return Response({
+            'Invalid Request': 'User not in Room'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    room_set = Room.objects.filter(code=room_code)
+    if not room_set.exists():
+        return Response({
+            'Invalid Request': 'Room does not Exist'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    return fn(self, *args, **kwargs)
+    
+
+
+
 class NextGamestate(APIView):
     def post(self, request, format=None):
         if not self.request.session.session_key:
@@ -498,4 +509,38 @@ class GetPrompt(APIView):
                 'Invalid Request': 'User Not Assigned Any Prompts for Round'
             }, status=status.HTTP_400_BAD_REQUEST)
        
-        return Response({'prompt': prompt_set[0].prompt_text}, status=status.HTTP_200_OK)
+        return Response({'prompt': prompt_set[0].prompt_text, 'id': prompt_set[0].id}, status=status.HTTP_200_OK)
+
+
+class SubmitSongSelection(APIView):
+    
+    @check_request_key_and_room_status
+    def post(self, request, format=None):
+        user = self.request.session.session_key
+        prompt_id = request.data.get('promptId')
+        song_id = request.data.get('songId')
+        prompt_set = Prompt.objects.filter(id=prompt_id)
+        if not prompt_set:
+            return Response({
+                'message': 'Prompt Id does not exist'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        prompt = prompt_set[0]
+        if user != prompt.assigned_user_1 and user != prompt.assigned_user_2:
+            return Response({
+                'message': 'User not assigned to Prompt Id'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if user == prompt.assigned_user_1:
+            prompt.assigned_user_1_song_choice == song_id
+            prompt.save(update_fields=['assigned_user_1_song_choice'])
+        else:
+            prompt.assigned_user_2_song_choice == song_id
+            prompt.save(update_fields=['assigned_user_2_song_choice'])
+
+        return Response({
+                'Success': 'Successfuly Updated Song Vote for User'
+            }, status=status.HTTP_200_OK)
+        
+            
+
