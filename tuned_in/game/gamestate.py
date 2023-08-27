@@ -37,6 +37,12 @@ def assign_prompt_combos(players):
     return tups
 
 
+## the gamestate object is used to update the gamestate. There is a ready status associated with each player.
+# for the prompt round, each player must enter all three prompts to be set to ready status. For the voting round,
+# eventially want to have this be a set time interval from the client that will send a message to the socket when the 
+# clock has expired for making a selection. Want this to be like a minute or so. Otherwise, we need to count if all the votes 
+# are entered for a given prompt.
+
 class GameState:
     def __init__(self, room):
         self.room = room
@@ -44,15 +50,23 @@ class GameState:
     def next(self):
         state = self.gamestate.split()[0]
         if state == 'queue':
+            # if we are in the queue phase, we move to the enter prompts page
             return 'prompts'
         elif state in {'prompts', 'score'}:
-            #introuce logic to check the room for the round, etc.
+            # if we are in the prompt enter page or have just exited a scoring stage, then we need to move to the 
+            # select song phase
             return 'select'
         elif state == 'select':
+            # to simplify, we will sumbit empty strings as the song selection if the time has expired, to avoid needing 
+            # to change the structure of the gamestate as it currently stands (but may want to refactor this at some point)
             if not self.all_round_selections_made():
+                # if there are still selections to be made for the round, then move to another song selection page.
                 return 'select'
+            # if all selections have been made for the current round, then continue to the voting phase
             return 'vote'
         elif state == 'vote':
+            # if we are a voting stage, check if all the votes are submitted. To simplify, when time has expired to submit a vote, 
+            # an empty string will be entered for the voting user.
             if not self.all_round_votes_submitted():
                 return 'vote'
             return 'score'
@@ -110,6 +124,7 @@ class GameState:
 
     def assign_prompts(self):
         aliases = Alias.objects.filter(room_code=self.room.code).all()
+        # assign the propmts based on the prompt key, this makes it easier to select prompts from the db
         prompts = Prompt.objects.filter(room_code=self.room.code, prompt_key=self.room.room_round)
         players = [alias.user for alias in aliases]
         combos = assign_prompt_combos(players)

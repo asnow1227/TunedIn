@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import axios from "axios";
 import { TextField, Grid, Button, Card, Typography, StepContent} from "@material-ui/core";
@@ -10,6 +10,21 @@ const style = {
 
 const BLANK_IMG_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
+const InputForm = forwardRef((props, ref) => {
+    const inputRef = useRef(null);
+    useImperativeHandle(ref, () => {
+        return {
+            setBlank: () => {
+                console.log(inputRef.current.value);
+                inputRef.current.value = '';
+            }
+        }
+    }, []);
+
+    return <TextField {...props} inputRef={inputRef}/>;
+});
+
+
 export default function SelectSongPage(props){
     const [items, setItems] = useState(new Array());
     const [hasMore, setHasMore] = useState(true);
@@ -18,9 +33,10 @@ export default function SelectSongPage(props){
     const [currentIds, setCurrentIds] = useState(new Set());
     const [selectedProps, setSelectedProps] = useState({});
     const [selectedComponent, setSelectedComponent] = useState(null);
-    const [prmpt, setPrmpt] = useState('');
-    const [prmptId, setPrmptId] = useState('');
+    const [prompts, setPrompts] = useState(new Array());
+    const [promptIdx, setPromptIdx] = useState(0);
     const [submitted, setSubmitted] = useState(false);
+    const inputRef = useRef(null);
     
     useEffect(() => {
         const setUp = async () => {
@@ -29,8 +45,11 @@ export default function SelectSongPage(props){
                 return
             }
             const data = await response.json();
-            setPrmpt(data.prompt);
-            setPrmptId(data.id);
+            data.prompts.forEach((prompt) => {
+                prompt.selection = ''
+            })
+            setPrompts(data.prompts);
+            console.log(data.prompts);
         }
         setUp();
     }, [])
@@ -40,6 +59,10 @@ export default function SelectSongPage(props){
     };
 
     const fetchMoreData = async () => {
+
+        if (!q) {
+            return
+        }
        
         var page = currPage;
 
@@ -94,19 +117,24 @@ export default function SelectSongPage(props){
     
     const handleSearchChange = (e) => {
         setQ(e.target.value);
+        console.log(e.target.value);
     };
 
-    const handleSubmitSongSelection = () => {
+    const submitPrompts = () => {
+        const returnData = new Array();
+        prompts.forEach(prompt => {
+            returnData.push({
+                'prompt_id': prompt.id,
+                'song_id': prompt.selection,
+            })
+        })
         const requestOptions = {
             method: "POST",
             headers: { "Content-Type": "application/json"},
-            body: JSON.stringify({
-                promptId: prmptId,
-                songId: selectedProps.id,
-            })
+            body: JSON.stringify({'prompts': returnData})
         };
         console.log('hello');
-        fetch('/api/select-song', requestOptions).then((response) => {
+        fetch('/api/submit-song-selections', requestOptions).then((response) => {
             if (response.ok) {
               alert('Song Submitted Successfully')
               setSubmitted(true);
@@ -120,6 +148,32 @@ export default function SelectSongPage(props){
               alert(message);
           })
         return
+
+    };
+
+    const handleSubmitSongSelection = () => {
+        // set the selected id for the given prompt to the selected song id
+        // reset all the state variables on the page, with the exception of the query
+        prompts[promptIdx].selection = selectedProps.id;
+        inputRef.current.setBlank();
+        setQ('');
+        setPromptIdx(promptIdx + 1);
+        setItems([]);
+        setHasMore(true);
+        setCurrentIds(new Set());
+        setCurrPage(0);
+        setSelectedProps({});
+        if (promptIdx == prompts.length - 1) {
+            var hasBlank = false;
+            prompts.forEach(prompt => {
+                if (prompt.selected == '') {
+                    hasBlank = true;
+                }
+            });
+            if (!hasBlank){
+                submitPrompts();
+            }
+        }
     }
 
     const footerProps = selectedProps.id ? {
@@ -131,22 +185,27 @@ export default function SelectSongPage(props){
         selectable: false,
     };
 
+    if (submitted){
+        return <Typography variant="h6" component="h6">Waiting for Host</Typography>
+    }
+
     return (
     <div className="box">
-        <div className = "row header" align="center">
+        <div className="row header" align="center">
             <Typography variant="h6" component="h6">
                 Assigned Prompt:
             </Typography>
             <p>
-                {prmpt}
+                {prompts[promptIdx]?.prompt}
             </p>
-            <TextField
+            <InputForm
             id="filled-search"
             label="Select a Song"
             type="search"
             variant="filled"
             onChange={e => handleSearchChange(e)}
             onKeyDown={e => handleSearchEntered(e)}
+            ref={inputRef}
             />
         </div>
         <div id="scrollableDiv" className="row content" align="center">
@@ -176,9 +235,12 @@ export default function SelectSongPage(props){
                     <MusicCard {...footerProps} selected={false}/>
                 </Grid>
                 <Grid item xs={12}>
-                    <Button variant="contained" color={!submitted ? "primary" : "secondary"} onClick={handleSubmitSongSelection}>
-                        {submitted ? "Unsubmit" : "Submit"}
-                    </Button>
+                    {   selectedProps?.id ? 
+                        <Button variant="contained" color="primary" onClick={handleSubmitSongSelection}>
+                            Submit
+                        </Button> : null
+                    }
+                    
                 </Grid>
             </Grid>
         </div>

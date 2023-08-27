@@ -13,8 +13,8 @@ from .views import (
     DeletePrompt,
     NextGamestate,
     UpdateReadyState,
-    GetPrompt,
-    SubmitSongSelection
+    GetPrompts,
+    SubmitSongSelections
 )
 
 urlpatterns = [
@@ -31,6 +31,6 @@ urlpatterns = [
     path('delete-prompt', DeletePrompt.as_view()),
     path('next-gamestate', NextGamestate.as_view()),
     path('update-ready-status', UpdateReadyState.as_view()),
-    path('prompt', GetPrompt.as_view()),
-    path('select-song', SubmitSongSelection.as_view())
+    path('prompt', GetPrompts.as_view()),
+    path('submit-song-selections', SubmitSongSelections.as_view())
 ]
