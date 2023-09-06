@@ -1,6 +1,6 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from api.models import Alias, Prompt
+from api.models import Alias, Prompt, Room
 from asgiref.sync import sync_to_async
 
 
@@ -28,6 +28,7 @@ class SocketMessage(dict):
 
 @sync_to_async
 def clear_room_data(room_code):
+    Room.objects.filter(code=room_code).all().delete()
     Alias.objects.filter(room_code=room_code).all().delete()
     Prompt.objects.filter(room_code=room_code).all().delete()
     print('success')

@@ -10,7 +10,27 @@ import CreatePromptsPage from "./EnterPromptsPage"
 import Prompt from "./Prompt"
 import SelectSongPage from "./selectSongPageFunctional"
 
-
+// this class is a wrapper around the standard socket object provided in js
+// this creates a mapping of event names -> callback functions
+// set up this way to allow us to add callback functions easily from child 
+// components of this room page, by passing the socket manager as a prop.
+// the socket manager callback will have access to state variables of the child component if they 
+// are necessary.
+// this works as follows:
+//      add the socket manager object after creating it in the room page component with the setSocket method
+//          this hijacks the 'onmessage' function of the socket object to use the 'routeMessage' function of the SocketManager
+//      define events with the onEvent method (from any component that inherits the socketManager as a prop)
+//          this takes a string and a callback function and adds the callback function to a map by the event name          
+//      when the socket recieves an event from its consumer:
+//          the SocketManager looks for a corresponding callback function in the 'functions' map and calls it on the passed 'data' attribute
+//          ** this means that the consumer must pass the data in the form 
+//                  {
+//                      'type': .. the event type that tells the SocketManager which function to route the message to,
+//                      'data': .. the actual data to pass to the function that maps to the event type
+//                  }
+//              you will see this mirrored in the tuned_in/game/consumers.py file with the jsonSocketMessage object 
+// **Note that it may be better to define a global variable so we don't have to set this as a state variable on the room component and pass it as props,
+// **other components could just access this by importing it
 class SocketManager {
     constructor(chatSocket=null){
         this.socket = chatSocket;

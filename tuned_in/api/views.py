@@ -15,13 +15,14 @@ import json
 from game.gamestate import GameState
 from decorator import decorator
 
-
+# convenience method to clear room data on host leave
 def clear_all_room_data(room):
     for model in (Prompt, Alias):
         model.objects.filter(room_code=room.code).all().delete()
     room.delete()
 
 
+# convenience method to clear the given user data if they leave
 def clear_all_user_data(user):
     for model in (Prompt, Alias):
         model.objects.filter(user=user).all().delete()
@@ -33,93 +34,135 @@ class RoomView(generics.ListAPIView):
     serializer_class = RoomSerializer
 
 
+# view for creating a room
 class CreateRoomView(APIView):
     #APIView allows us to overwrite request methods, e.g get, post
     serializer_class = CreateOrJoinRoomSerializer
     
     def post(self, request, format=None):
+        # call post on this view to create the room 
+        
+        # if no session exists for the current user, create one
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
+        # grab the alias name from the packet recieved
         alias_name = request.data.get('alias')
+        # if no alias is provided, return a bad request
         if alias_name is None:
             return Response({
                 'Bad Request': 'No Alias provided for User'
             }, status=status.HTTP_400_BAD_REQUEST)
-        # serializer = self.serializer_class(data=request.data)
-        # if serializer.is_valid():
-            # guest_can_pause = serializer.data.get('guest_can_pause')
-            # votes_to_skip = serializer.data.get('votes_to_skip')
+
+        # host is the user requesting to create a room
         host = self.request.session.session_key
         room_query_set = Room.objects.filter(host=host)
-        # if we are hosting other rooms, clear the other rooms data (for now this is a hack so that we only have one room at a time)
+        print(host)
+        # if we are hosting other rooms, clear the other rooms data 
+        # for now this is a hack so that we only have one room at a time, we need to have a process that clears the data 
+        # for expired sessions every so often from the backend
         if room_query_set.exists():
             for room in room_query_set:
                 clear_all_room_data(room)
         clear_all_user_data(host)
         
+        # create the room object with the requesting user as the host and save it
         room = Room(host=host)
         room.save()
         request.data['room_code'] = room.code
+        # add a 'room_code' key to the request.data dictionary so it can be accessed easily by other 
+        # methods
+        
+        # validate the data with the serializer
         if self.serializer_class(data=request.data).is_valid():
+            print('Okay')
+            # create the alias for the user and save it
             alias = Alias(user=host, room_code=room.code, alias=alias_name)
             alias.save()
+            # add the room code and alias to the request session object for ease of access
             self.request.session['room_code'] = room.code
+            self.request.session['alias'] = alias.alias
+            # return the room data back to the client
             return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
         
+        # if the data is not valid through the serializer, send a response back that it's a bad request
         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# view to get details about the room
 class GetRoom(APIView):
     serializer_class = RoomSerializer
     lookup_url_kwarg = 'code'
 
     def get(self, request, format=None):
+        # this is a bit too much I feel to use the url_kwarg but we grab 
+        # the room code from the packet.
         code = request.GET.get(self.lookup_url_kwarg)
+        # only do work if there is a code
         if code != None:
-            room = Room.objects.filter(code=code)
-            if len(room) > 0:
-                data = RoomSerializer(room[0]).data
-                alias = Alias.objects.filter(room_code=room[0].code, user=self.request.session.session_key)[0]
-                data['is_host'] = self.request.session.session_key == room[0].host
+            # only do work if the room exists
+            room_set = Room.objects.filter(code=code)
+            if room_set.exists:
+                # room is actually a list of rooms, so serialize the first room object
+                # this will be the base of the packet we send back
+                data = RoomSerializer(room_set[0]).data
+                # get the user's alias, might change this to use the alias object on the request
+                alias = Alias.objects.filter(room_code=room_set[0].code, user=self.request.session.session_key)[0]
+                # user is the host if their request id is equal to the room's host id
+                data['is_host'] = self.request.session.session_key == room_set[0].host
+                # set the alias and gamestate on the returned packet
                 data['alias'] = alias.alias
-                data['gamestate'] = room[0].gamestate
+                data['gamestate'] = room_set[0].gamestate
+                # return the packet
                 return Response(data, status=status.HTTP_200_OK)
+            # if no room found, return a bad request
             return Response({'Room Not Found': 'Invalid Room Code'}, status=status.HTTP_404_NOT_FOUND)
+        # if no code provided in the get request, return a bad request
         return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# view to join the room
 class JoinRoom(APIView):
     serializer_class = CreateOrJoinRoomSerializer
 
     def post(self, request, format=None):
+        # if the session doesn't exist, create one
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
+        # get the room code from the request data
         room_code = request.data.get('room_code')
         
+        # no room code was provided return a bad request.
         if room_code is None:
             return Response({
                 'type': 'room_code',
                 'message': 'Room Not Found'
             }, status=status.HTTP_200_OK)
         
+        # get the room objects that match the code (should be one)
         room_result = Room.objects.filter(code=room_code)
         
+        # if no rooms, return a bad response
         if not room_result.exists():
             return Response({
                 'type': 'room_code',
                 'message': 'Room Not Found'
         }, status=status.HTTP_400_BAD_REQUEST)
-            
+        
+        # if the serialized data isn't valid, return a bad request
         if not self.serializer_class(data=request.data).is_valid():
             return Response({
                 'type': 'alias',
                 'message': 'Invalid Alias'
         }, status=status.HTTP_400_BAD_REQUEST)
 
+        # clear the current user's data before fetching any user related data
+        # this is a hack and prevents user's from being in multiple rooms at once
+        # may need a workaround for this
         clear_all_user_data(self.request.session.session_key)
         
+        # try to create the alias on the given room
         try:
             alias = Alias(
                 user=self.request.session.session_key,
@@ -127,22 +170,29 @@ class JoinRoom(APIView):
                 room_code=room_code
             )
             alias.save()
+        # if the same alias exists in the room, return a bad response
         except django.db.utils.IntegrityError:
             return Response({
                 'type': 'alias',
                 'message': 'Alias exists in Room'
         }, status=status.HTTP_400_BAD_REQUEST)
 
+        # set the room code for the user's session
         self.request.session['room_code'] = room_code
+        # return a success response
         return Response({'message': 'Room Joined'}, status=status.HTTP_200_OK)
         
  
 
 
 class UserInRoom(APIView):
+    # view to check if a user is in a room. Used to validate joining a room.
     def get(self, request, format=None):
         if not self.request.session.exists(self.request.session.session_key):
+            # if there is no session key, create the session one
             self.request.session.create()
+        # if the user has joined a room, we would have stored the room_code on the 
+        # session object. Send this back to the clietn as a response.
         data = {
             'code': self.request.session.get('room_code')
         }
@@ -150,11 +200,14 @@ class UserInRoom(APIView):
 
 
 class LeaveRoom(APIView):
+    # view to leave a room
     def post(self, request, format=None):
         if 'room_code' in self.request.session:
+            # if there is a room code then get the roo code from the session, and pop it
             room_code = self.request.session.pop('room_code')
             session_id = self.request.session.session_key
             room_results = Room.objects.filter(host=session_id)
+            # clear the room and alias results if they exist
             if len(room_results) > 0:
                 room = room_results[0]
                 room.delete()
@@ -167,6 +220,7 @@ class LeaveRoom(APIView):
 
 
 class SubmitPrompt(APIView):
+    # view to submit a single prompt
     serializer_class = SubmitPromptsSerializer
     def post(self, request, format=None):
         if not self.request.session.session_key:
@@ -230,6 +284,7 @@ class SubmitPrompt(APIView):
 
 
 class DeletePrompt(APIView):
+    # view to delete a prompt
     def post(self, request, format=None):
         if not self.request.session.session_key:
             self.request.session.create()
@@ -275,6 +330,7 @@ class DeletePrompt(APIView):
 
 
 class DeletePrompts(APIView):
+    # view to delete multiple prompts
     def post(self, request, format=None):
         if not self.request.session.session_key:
             self.request.session.create()
@@ -308,6 +364,7 @@ class DeletePrompts(APIView):
 
 
 class UpdateRoom(APIView):
+    # view to update the room settings
     serializer_class = UpdateRoomSerializer
     
     def patch(self, request, format=None):
@@ -339,6 +396,7 @@ class UpdateRoom(APIView):
 
 
 class GetCurrentPlayers(APIView):
+    # view to get the current players in a room.
     def get(self, request, format=None):
         if not self.request.session.session_key:
             self.request.session.create()
@@ -364,12 +422,14 @@ class GetCurrentPlayers(APIView):
 
 
 def ready_check(room_code):
+    # method that returns whether all players in a room are currently ready
     aliases = Alias.objects.filter(room_code=room_code).all()
     print({alias.alias: (alias.ready, alias.room_code) for alias in aliases})
     return all([alias.ready for alias in aliases])
 
 
 def set_ready_statuses_to_false(room_code):
+    # sets all the ready statuses to false for a room (used on round updates)
     aliases = Alias.objects.filter(room_code=room_code).all()
     for alias in aliases:
         alias.ready = False
@@ -378,6 +438,8 @@ def set_ready_statuses_to_false(room_code):
 
 @decorator
 def check_request_key_and_room_status(fn, self, *args, **kwargs):
+    # decorator for convenience to perform standard checks on the request sent from the client 
+    # in each view
     if not self.request.session.session_key:
         self.request.session.create()
         return Response({
@@ -402,6 +464,7 @@ def check_request_key_and_room_status(fn, self, *args, **kwargs):
 
 
 class NextGamestate(APIView):
+    # view to fetch the next gamestate
     def post(self, request, format=None):
         if not self.request.session.session_key:
             self.request.session.create()
@@ -427,13 +490,16 @@ class NextGamestate(APIView):
                 'Invalid Request': 'Only Host Can Update the Gamestate'
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # use the GameState object to perform the logic for the room.
         gamestate = GameState(room)
+        # if not all players are ready, then return a bad request.
         if not gamestate.ready_check():
             return Response({
             'Invalid Request': 'Not all Players in Room are Ready'
         }, status=status.HTTP_400_BAD_REQUEST)
         print(f"initial_state: {room.gamestate}")
 
+        # update to the new gamestate
         gamestate.update()
         # next_gamestate = gamestate.next()
         # room.gamestate = next_gamestate
@@ -445,6 +511,7 @@ class NextGamestate(APIView):
 
 
 class UpdateReadyState(APIView):
+    # set a users ready status to true
     def post(self, request, format=None):
         if not self.request.session.session_key:
             self.request.session.create()
@@ -473,6 +540,7 @@ class UpdateReadyState(APIView):
 
 
 class CurrentGameState(APIView):
+    # get the current gamestate for the room
     def get(self, request, format=None):
         if not self.request.session.session_key:
             self.request.session.create()
@@ -536,7 +604,9 @@ class GetPrompts(APIView):
 
 
 class SubmitSongSelections(APIView):
-    
+    # view to submit the song selections
+    # want to split this into separate endpoints, submit song selections
+    # one at a time
     @check_request_key_and_room_status
     def post(self, request, format=None):
         user = self.request.session.session_key
@@ -569,5 +639,24 @@ class SubmitSongSelections(APIView):
                 'Success': 'Successfuly Updated Song Vote for User'
             }, status=status.HTTP_200_OK)
         
-            
 
+class VotingRound(APIView):
+    # want to split this into separate endpoints, one for each prompt
+    # uniquely
+    @check_request_key_and_room_status
+    def get(self, request, format=None):
+        room_code = self.request.session['room_code']
+        room = Room.objects.filter(code=room_code)
+        aliases = Alias.objects.filter(room_code=room_code)
+        alias_map = {alias.user: alias.alias for alias in aliases}
+        voting_round = room.voting_round
+        prompt = Prompt.objects.filter(room_code=room_code, voting_round=voting_round)
+        data = {
+            'prompt_id': prompt.id,
+            'prompt_text': prompt.prompt_text,
+            'assigned_user_1': alias_map[prompt.assigned_user_1],
+            'assigned_user_2': alias_map[prompt.assigned_user_2],
+            'assigned_user_1_song_selection': prompt.assigned_user_1_song_selection,
+            'assigned_user_2_song_selection': prompt.assigned_user_2_song_selection
+        }
+        return Response({'prompt' : data}, status=status.HTTP_200_OK)
