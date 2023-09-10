@@ -70,16 +70,17 @@ export default function CreatePromptsPage(props) {
   const handleSubmitButtonPressed = async (e) => {
     e.preventDefault();
     let formVals = formValues;
-    let index = currIndex
-    if (formVals[currIndex].submitted){
-      unsubmitPrompt(formVals, index);
-    } else {
-      submitPrompt(formVals, index);
-    }
+    // let index = currIndex
+    // if (formVals[currIndex].submitted){
+    //   unsubmitPrompt(formVals, index);
+    // } else {
+    //   submitPrompt(formVals, index);
+    // }
+    submitAll();
     console.log(formValues[currIndex]);
   }
 
-  const submitAll = () => {
+  const anyBlank = () => {
     let anyBlank = false;
     let formVals = formValues;
     for (let i=0; i < formVals.length; i++) {
@@ -88,15 +89,19 @@ export default function CreatePromptsPage(props) {
         break;
       }
     };
-    if (anyBlank) {
+    return anyBlank;
+  }
+
+  const submitAll = () => {
+    if (anyBlank()) {
       alert("No Prompts can be Blank");
       return
     }
+    let formVals = formValues;
     for (let i=0; i < formVals.length; i++) {
-      if (!formValues[i].submitted){
-        submitPrompt(formVals, i);
-      }
+      submitPrompt(formVals, i);
     };
+    props.readyUpCallback();
   };
 
   const unsubmitAll = () => {
@@ -166,16 +171,10 @@ export default function CreatePromptsPage(props) {
           }
         </Grid>
         <Grid item xs={12}>
-          <Button variant="contained" color={!formValues[currIndex].submitted ? "primary" : "secondary"} onClick={handleSubmitButtonPressed}>
-            {formValues[currIndex].submitted ? "Unsubmit" : "Submit"}
+          <Button variant="contained" color="primary" onClick={handleSubmitButtonPressed}>
+            Ready
           </Button>
         </Grid>
-        {props.isHost ? 
-          <Grid item xs={12}>
-            <Button variant="contained" color="primary" onClick={updateGameState}>
-              Ready
-            </Button>
-          </Grid>: null}
       </Grid>
     </div>
   );

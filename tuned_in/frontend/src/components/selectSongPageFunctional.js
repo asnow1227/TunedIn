@@ -69,15 +69,11 @@ export default function SelectSongPage(props){
         const response = await axios.get(
             `http://127.0.0.1:8000/spotify/get-songs?query=${q}&page=${page}&limit=10`
         )
-        // console.log(response.data);
-        // console.log(page);
         
         if (!response.data.data.length) {
             setHasMore(false);
             return 
         }
-
-        console.log(items);
 
         const elementsToAdd = new Array();
 
@@ -94,12 +90,7 @@ export default function SelectSongPage(props){
         setCurrPage(page + 1);
     };
 
-    // useEffect(() => {
-    //     fetchMoreData();
-    // }, []);
-
     useEffect(() => {
-        console.log('what')
         if (currPage == 1) {
             fetchMoreData();
         }
@@ -117,7 +108,6 @@ export default function SelectSongPage(props){
     
     const handleSearchChange = (e) => {
         setQ(e.target.value);
-        console.log(e.target.value);
     };
 
     const submitPrompts = () => {
@@ -133,7 +123,6 @@ export default function SelectSongPage(props){
             headers: { "Content-Type": "application/json"},
             body: JSON.stringify({'prompts': returnData})
         };
-        console.log('hello');
         fetch('/api/submit-song-selections', requestOptions).then((response) => {
             if (response.ok) {
               alert('Song Submitted Successfully')
@@ -142,8 +131,6 @@ export default function SelectSongPage(props){
                 return response.json();
             }
           }).then((data) => {
-              console.log('wtf');
-              console.log(data);
               const message = data.message;
               alert(message);
           })
@@ -156,7 +143,7 @@ export default function SelectSongPage(props){
         // reset all the state variables on the page, with the exception of the query
         prompts[promptIdx].selection = selectedProps.id;
         inputRef.current.setBlank();
-        setQ('');
+        // setQ('');
         setPromptIdx(promptIdx + 1);
         setItems([]);
         setHasMore(true);

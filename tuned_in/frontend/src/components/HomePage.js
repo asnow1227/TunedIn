@@ -42,7 +42,7 @@ export default class HomePage extends Component {
         <Grid container spacing={3} align="center">
             <Grid item xs={12}>
               <Typography variant="h3" compact="h3">
-                House Party
+                Tuned In
               </Typography>
             </Grid>
             <Grid item xs={12}>

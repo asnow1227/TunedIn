@@ -8,7 +8,7 @@ import io from "socket.io-client";
 
 
 export default function QueuePage(props){
-
+    console.log('actually wtf')
     const[players, setPlayers] = useState(new Array());
     const[isReady, setIsReady] = useState(false);
 
@@ -21,6 +21,7 @@ export default function QueuePage(props){
                         return
                     }
                     const data = await response.json();
+                    console.log(data.data);
                     setPlayers(data.data);
                 } catch (error) {
                     console.log(error);
@@ -48,24 +49,6 @@ export default function QueuePage(props){
             props.socketManager.removeEvents(['player_add', 'player_leave']);
         }
     }, []);
-
-    const updateGameState = async () => {
-        const requestOptions = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        }
-        
-        const response = await fetch('/api/next-gamestate', requestOptions);
-        if (!response.ok){
-            return
-        }
-        const data = await response.json();
-        props.socketManager.send('gamestate_update', {
-            gamestate: data.gamestate
-        });
-    }
 
     // const updateReadyStatus = async () => {
     //     const requestOptions = {
@@ -102,7 +85,7 @@ export default function QueuePage(props){
                 )
             })}
             {props.isHost ? 
-                <Button variant="contained" color="primary" onClick={updateGameState}> 
+                <Button variant="contained" color="primary" onClick={props.updateGameState}> 
                     {isReady ? "Not Ready" : "Ready"}
                 </Button>
              : null}

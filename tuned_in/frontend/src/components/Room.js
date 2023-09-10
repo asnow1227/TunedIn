@@ -90,6 +90,14 @@ class SocketManager {
 
 const socketManager = new SocketManager();
 
+const initializeSocketManager = (roomCode) => {
+    const chatSocket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
+    socketManager.onEvent('connection_established', (data) => {
+        console.log(data);
+    });
+    socketManager.setSocket(chatSocket);
+}
+
 export default function Room(props) {
     
     const[votesToSkip, setVotesToSkip] = useState(2);
@@ -100,6 +108,7 @@ export default function Room(props) {
     const[alias, setAlias] = useState("");
     const[isLoading, setIsLoading] = useState(true);
     const[gamestate, setGamestate] = useState("");
+    const[isWaiting, setIsWaiting] = useState(false);
 
     const navigate = useNavigate();
     
@@ -119,6 +128,8 @@ export default function Room(props) {
                 setIsHost(roomData.is_host);
                 setAlias(roomData.alias); 
                 setGamestate(roomData.gamestate);
+                setIsWaiting(roomData.is_waiting);
+                console.log(roomData.gamestate);
                 if (!roomData.is_host) return;
                 const authenicatedResponse = await fetch('/spotify/is-authenticated');
                 const authenticatedData = await authenicatedResponse.json();
@@ -133,11 +144,12 @@ export default function Room(props) {
         };
 
         const setupSocket = async () => {
-            const chatSocket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
-            socketManager.onEvent('connection_established', (data) => {
-                console.log(data);
-            });
-            socketManager.setSocket(chatSocket);
+            // const chatSocket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
+            // socketManager.onEvent('connection_established', (data) => {
+            //     console.log(data);
+            // });
+            // socketManager.setSocket(chatSocket);
+            initializeSocketManager(roomCode);
             socketManager.onEvent('host_leave', function(_data){
                 if (!isHost){
                     props.leaveRoomCallback();
@@ -149,6 +161,7 @@ export default function Room(props) {
             });
             socketManager.onEvent('gamestate_update', function(data){
                 setGamestate(data.gamestate);
+                setIsWaiting(false);
                 console.log(data.gamestate)
             })
         }
@@ -194,23 +207,73 @@ export default function Room(props) {
         leave();
     }
 
+    const updateGameState = async () => {
+        const requestOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }
+        
+        const response = await fetch('/api/next-gamestate', requestOptions);
+        if (!response.ok){
+            return
+        }
+        const data = await response.json();
+        socketManager.send('gamestate_update', {
+            gamestate: data.gamestate
+        });
+    }
+
+    const readyUpCallback = () => {
+        // callback to set ready status for a player
+        setIsLoading(true);
+        const readyUp = async () => {
+            console.log('readyUpCalled');
+            const requestOptions = {
+                method: "POST",
+                headers: {'Content-Type': 'application/json'},
+            }
+            const roomReadyStatus = await fetch('/api/ready-up', requestOptions);
+            // the ready-up endpoint checks if other players aren't ready and returns back
+            // true if so, otherwise, we update the gamestate
+            if (!roomReadyStatus.ok) {
+                return
+            }
+            const data = await roomReadyStatus.json();
+            if (data.is_waiting){
+                setIsWaiting(true);
+            }
+            else {
+                // if we aren't waiting on anyone then we are ready, send a gamestate update
+                updateGameState();
+            }
+            return
+        }
+        readyUp();
+        setIsLoading(false);  
+    }
+
     const renderGameState = () => {
+        if (isWaiting){
+            return <Typography variant="h4" component="h4">Waiting...</Typography>
+        }
         if (gamestate == ""){
             return null
         }
-        if (gamestate == 'queue'){
-            return <QueuePage alias={alias} isHost={isHost} socketManager={socketManager} />
+        if (gamestate == 'Q'){
+            return <QueuePage alias={alias} isHost={isHost} socketManager={socketManager} updateGameState={updateGameState}/>
         }
-        if (gamestate == 'prompts'){
-            return <CreatePromptsPage isHost={isHost} socketManager={socketManager}/>
+        if (gamestate == 'P'){
+            return <CreatePromptsPage isHost={isHost} socketManager={socketManager} readyUpCallback={readyUpCallback}/>
         }
-        if (gamestate == 'select'){
+        if (gamestate == 'SEL'){
             return <SelectSongPage />
         }
     }
 
     return (
-        <div className="center">
+        <div className="center" width="100%">
             <Grid container spacing={1} align="center">
                 <Grid item xs={12}>
                     <Typography variant="h4" component="h4">

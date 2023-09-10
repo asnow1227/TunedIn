@@ -1,15 +1,22 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 import string 
 import random
 
-def generate_unique_code():
-    length = 6
-    
+
+def generate_room_code():
     while True:
-        code = ''.join(random.choices(string.ascii_uppercase, k=length))
+        code = ''.join(random.choices(string.ascii_uppercase, k=6))
         if not Room.objects.filter(code=code).count():
             break
+    return code
 
+
+def generate_prompt_id():
+    while True:
+        code = ''.join(random.choices(string.ascii_uppercase, k=10))
+        if not Prompt.objects.filter(unique_id=code).count():
+            break
     return code
 
 
@@ -17,8 +24,16 @@ def generate_unique_code():
 # Note that all models have a unique "id" field that we don't have to define but can 
 # access to get a unique record if we want.
 class Room(models.Model):
+
+    class GameState(models.TextChoices):
+        QUEUE = 'Q', _('Queue')
+        PROMPT = 'P', _('Prompt')
+        SELECT = 'SEL', _('Select')
+        VOTE = 'V', _('Vote')
+        SCORE = 'SCR', _('Score')
+    
     # unique code for each room
-    code = models.CharField(max_length=8, default=generate_unique_code, unique=True)
+    code = models.CharField(max_length=8, default=generate_room_code, unique=True)
     # host for the room. this is a request session id
     host = models.CharField(max_length=50, unique=True)
     # ...
@@ -31,13 +46,18 @@ class Room(models.Model):
     # 'select': page for selecting a song based on the assigned prompt
     # 'vote': page where the prompts are displayed and user selections are voted
     # 'score': page where scores are displayed
-    gamestate = models.CharField(max_length=50, default='queue')
+    gamestate = models.CharField(max_length=3, choices=GameState.choices, default=GameState.QUEUE)
     # the game flow consists of queue and then 2 or more 'rounds' that toggle 
-    # through the remaining gamestates above. I've defaulted the round to 0
-    # since I am used to indexing
-    room_round = models.IntegerField(default=0)
+    # through the remaining gamestates above.
+    main_round = models.IntegerField(default=1)
+    # number of players at the start of the game
+    num_players = models.IntegerField(null=True)
     # voting round, will be used to order the prompts for the voting phase
-    voting_round = models.IntegerField(default=0)
+    voting_round = models.IntegerField(default=1)
+    # prompts per player, decided by the number of players
+    prompts_per_player = models.IntegerField(default=3)
+
+    # objects = RoomManager()
 
 # stores information about the prompts. Many prompts exist for one 
 # room
@@ -50,22 +70,28 @@ class Prompt(models.Model):
     room_code = models.CharField(max_length=8, null=False)
     # the prompt text
     prompt_text = models.TextField(null=False)
-    # assign a key to the prompt. This will be unique at the user level and 
-    # something like '1', '2', '3'
+    # when the user submits a prompt on the front end, this variable is included so that 
+    # when they want to delete a specific prompt they can map it back to this prompt key. 
+    # change this to be 'main_round' aligned with the main_round on the room object
     prompt_key = models.IntegerField(null=False)
-    # first assigned user for the prompt (a request session id)
-    assigned_user_1 = models.CharField(max_length=50, null=True)
-    # second assigned user for the prompt (a request session id)
-    assigned_user_2 = models.CharField(max_length=50, null=True)
-    # song id that user 1 selected
-    assigned_user_1_song_choice = models.TextField(null=True)
-    # song id that user 2 selected
-    assigned_user_2_song_choice = models.TextField(null=True)
-    # tracks the votes for each of the users prompts
-    assigned_user_1_votes = models.IntegerField(default=0)
-    assigned_user_2_votes = models.IntegerField(default=0)
+    # unique id for the prompt
+    unique_id = models.CharField(max_length=10, default=generate_prompt_id, unique=True)
     # voting round for the prompt, will default to 0 and will align with the gamestate voting round
     voting_round = models.IntegerField(default=0)
+
+
+class PromptAssignments(models.Model):
+    # the user that is assigned the prompt (a request session id)
+    assigned_user = models.CharField(max_length=50)
+    # room code for the given room
+    room_code = models.CharField(max_length=8, null=False)
+    # prompt id
+    prompt_unique_id = models.CharField(max_length=8, null=False) 
+    # song choice
+    assigned_user_song_choice = models.TextField(null=True)
+    # votes for the user's song choice
+    assigned_user_votes = models.IntegerField(default=0)
+
 
 # table to store the player aliases for each room
 class Alias(models.Model):
