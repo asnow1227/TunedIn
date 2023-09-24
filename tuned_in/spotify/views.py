@@ -152,6 +152,7 @@ class GetTrack(APIView):
         return Response({'data': get_track(track_id)}, status=status.HTTP_200_OK)
     pass
 
+
 class GetSongs(APIView):
     def get(self, request, format=None):
         q = request.GET.get('query')

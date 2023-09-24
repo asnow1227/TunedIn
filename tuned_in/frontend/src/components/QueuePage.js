@@ -8,47 +8,47 @@ import io from "socket.io-client";
 
 
 export default function QueuePage(props){
-    console.log('actually wtf')
-    const[players, setPlayers] = useState(new Array());
-    const[isReady, setIsReady] = useState(false);
+    // console.log('actually wtf')
+    // const[players, setPlayers] = useState(new Array());
+    // const[isReady, setIsReady] = useState(false);
 
-    useEffect(() => {
-        const setup = async () => {
-            const fetchPlayers = async () => {
-                try {
-                    const response = await fetch('/api/get-current-players');
-                    if (!response.ok){
-                        return
-                    }
-                    const data = await response.json();
-                    console.log(data.data);
-                    setPlayers(data.data);
-                } catch (error) {
-                    console.log(error);
-                }
-            };
-            const addSocketEvents = async () => {
-                props.socketManager.onEvent('player_leave', (data) => {
-                    setPlayers(previous => previous.filter(alias => alias != data.alias));
-                });
-                props.socketManager.onEvent('player_add', (data) => {
-                    setPlayers(previous => Array.from(
-                        new Set([...previous, data.alias])
-                    ));
-                });
-            };
-            await fetchPlayers();
-            await addSocketEvents();
-            props.socketManager.send('player_add', {
-                'alias': props.alias,
-            });
-        };
-        setup();
+    // useEffect(() => {
+    //     const setup = async () => {
+    //         const fetchPlayers = async () => {
+    //             try {
+    //                 const response = await fetch('/api/get-current-players');
+    //                 if (!response.ok){
+    //                     return
+    //                 }
+    //                 const data = await response.json();
+    //                 console.log(data.data);
+    //                 setPlayers(data.data);
+    //             } catch (error) {
+    //                 console.log(error);
+    //             }
+    //         };
+    //         const addSocketEvents = async () => {
+    //             props.socketManager.onEvent('player_leave', (data) => {
+    //                 setPlayers(previous => previous.filter(alias => alias != data.alias));
+    //             });
+    //             props.socketManager.onEvent('player_add', (data) => {
+    //                 setPlayers(previous => Array.from(
+    //                     new Set([...previous, data.alias])
+    //                 ));
+    //             });
+    //         };
+    //         await fetchPlayers();
+    //         await addSocketEvents();
+    //         props.socketManager.send('player_add', {
+    //             'alias': props.alias,
+    //         });
+    //     };
+    //     setup();
 
-        return () => {
-            props.socketManager.removeEvents(['player_add', 'player_leave']);
-        }
-    }, []);
+    //     return () => {
+    //         props.socketManager.removeEvents(['player_add', 'player_leave']);
+    //     }
+    // }, []);
 
     // const updateReadyStatus = async () => {
     //     const requestOptions = {
@@ -75,7 +75,7 @@ export default function QueuePage(props){
             <Typography variant="h3" component="h3">
                 Queue 
             </Typography>
-            {players.map(function(alias, i){
+            {props.players.map(function(alias, i){
                 return (
                     <div key={i}>
                         <Typography variant="h4" component="h4">
@@ -85,8 +85,8 @@ export default function QueuePage(props){
                 )
             })}
             {props.isHost ? 
-                <Button variant="contained" color="primary" onClick={props.updateGameState}> 
-                    {isReady ? "Not Ready" : "Ready"}
+                <Button variant="contained" color="primary" onClick={() => props.setIsReady(true)}> 
+                    Ready
                 </Button>
              : null}
         </div>

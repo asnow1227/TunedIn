@@ -455,7 +455,6 @@ def check_request_key_and_room_status(fn, self, *args, **kwargs):
     
 
 
-
 class NextGamestate(APIView):
     # view to fetch the next gamestate
     @check_request_key_and_room_status

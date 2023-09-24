@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
+import API from "../backend/API";
 import { TextField, Button, Grid, Typography, ButtonGroup, ListItemText, IconButton } from "@material-ui/core";
 import NavigateBeforeIcon from '@material-ui/icons/NavigateBefore';
 import NavigateNextIcon from '@material-ui/icons/NavigateNext';
@@ -29,18 +30,22 @@ export default function CreatePromptsPage(props) {
       alert("Prompt Cannot be Blank");
       return
     }
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        prompt_text: formVals[index].text,
-        prompt_key: formVals[index].key,
-      })
-    };
-    const response = await fetch('/api/submit-prompt', requestOptions);
-    if (!response.ok){
+    // const response = API.post('submit-prompt', )
+    // const requestOptions = {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   },
+    //   body: JSON.stringify({
+    //     prompt_text: formVals[index].text,
+    //     prompt_key: formVals[index].key,
+    //   })
+    // };
+    const response = await API.post('submit-prompt', JSON.stringify({
+      prompt_text: formVals[index].text,
+      prompt_key: formVals[index].key,
+    }));
+    if (!response.statusText == "OK"){
       alert("Error Submitting Prompt")
       return
     }
@@ -48,28 +53,28 @@ export default function CreatePromptsPage(props) {
     setFormValues([...formVals]);
   };
 
-  const unsubmitPrompt = async (formVals, index) => {
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        prompt_key: formVals[index].key,
-      })
-    };
-    const response = await fetch('/api/delete-prompt', requestOptions);
-    if (!response.ok) {
-      alert("Unable to delete prompt sucessfully")
-      return
-    }
-    formVals[index].submitted = false;
-    setFormValues([...formVals]);
-  }
+  // const unsubmitPrompt = async (formVals, index) => {
+  //   const requestOptions = {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json'
+  //     },
+  //     body: JSON.stringify({
+  //       prompt_key: formVals[index].key,
+  //     })
+  //   };
+  //   const response = await fetch('/api/delete-prompt', requestOptions);
+  //   if (!response.ok) {
+  //     alert("Unable to delete prompt sucessfully")
+  //     return
+  //   }
+  //   formVals[index].submitted = false;
+  //   setFormValues([...formVals]);
+  // }
 
   const handleSubmitButtonPressed = async (e) => {
     e.preventDefault();
-    let formVals = formValues;
+    // let formVals = formValues;
     // let index = currIndex
     // if (formVals[currIndex].submitted){
     //   unsubmitPrompt(formVals, index);
@@ -101,36 +106,36 @@ export default function CreatePromptsPage(props) {
     for (let i=0; i < formVals.length; i++) {
       submitPrompt(formVals, i);
     };
-    props.readyUpCallback();
+    props.setIsReady(true);
   };
 
-  const unsubmitAll = () => {
-    let formVals = formValues;
-    for (let i=0; i < formVals.length; i++) {
-      if (formVals[i].submitted){
-        unsubmitPrompt(formVals, i);
-      };
-    };
-  }
+  // const unsubmitAll = () => {
+  //   let formVals = formValues;
+  //   for (let i=0; i < formVals.length; i++) {
+  //     if (formVals[i].submitted){
+  //       unsubmitPrompt(formVals, i);
+  //     };
+  //   };
+  // }
 
-  const updateGameState = async () => {
-    const requestOptions = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-    }
+  // const updateGameState = async () => {
+  //   const requestOptions = {
+  //       method: 'POST',
+  //       headers: {
+  //           'Content-Type': 'application/json'
+  //       },
+  //   }
     
-    const response = await fetch('/api/next-gamestate', requestOptions);
-    if (!response.ok){
-        alert("Not all Prompts have been Submitted");
-        return
-    }
-    const data = await response.json();
-    props.socketManager.send('gamestate_update', {
-        gamestate: data.gamestate
-    });
-  }
+  //   const response = await fetch('/api/next-gamestate', requestOptions);
+  //   if (!response.ok){
+  //       alert("Not all Prompts have been Submitted");
+  //       return
+  //   }
+  //   const data = await response.json();
+  //   props.socketManager.send('gamestate_update', {
+  //       gamestate: data.gamestate
+  //   });
+  // }
 
   return (
     <div>
@@ -171,9 +176,12 @@ export default function CreatePromptsPage(props) {
           }
         </Grid>
         <Grid item xs={12}>
-          <Button variant="contained" color="primary" onClick={handleSubmitButtonPressed}>
-            Ready
-          </Button>
+          {
+            anyBlank() ? null :
+            <Button variant="contained" color="primary" onClick={handleSubmitButtonPressed}>
+            Submit
+            </Button>
+          }
         </Grid>
       </Grid>
     </div>
