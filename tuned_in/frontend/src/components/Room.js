@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState,  useEffect, } from "react";
 import { useParams } from "react-router-dom";  
-import { Grid, Button, Typography, Select, TextareaAutosize } from '@material-ui/core';
+import { Grid, Button, Typography } from '@material-ui/core';
 import { useNavigate } from "react-router-dom";
 import API, { SPOTIFY_API, authenticateUsersSpotify } from "../backend/API"
-import usePlayers from "../hooks/usePlayers";
-import useGamestate from "../hooks/useGamestate";
+import SocketManager from "../backend/SocketManager";
+import useObjectState from "../hooks/useObjectState";
 import useSocketManager from "../hooks/useSocketManager";
 import QueuePage from "./QueuePage";
 import CreatePromptsPage from "./EnterPromptsPage"
@@ -19,10 +19,12 @@ const PAGES = {
 export default function Room(props) {
     const { roomCode } = useParams();
     useSocketManager(roomCode);
-    const { thisUserLeft, setThisUserLeft, alias, setAlias, players, isHost, setIsHost, hostLeft } = usePlayers(roomCode);
-    const[gamestate, setGamestate, isWaiting, setIsWaiting, isReady, setIsReady] = useGamestate();
-    const[spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
-    const[isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useObjectState({isHost: null, isWaiting: null, isReady: false, alias: ""});
+    const [players, setPlayers] = useState(new Array());
+    const [gamestate, setGamestate] = useState(null);
+    const [playerAddTriggered, setPlayerAddTriggered] = useState(false);
+    const [spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
     
     const leave = () => {
@@ -31,27 +33,41 @@ export default function Room(props) {
     }
 
     useEffect(() => {
-        // hostLeft will be handled by the userPlayers hook. If a player is
-        // the host and they leave, then hostLeft will be true will trigger the call
-        // to leave.
-        if (hostLeft || thisUserLeft) {
-            leave();
-        }
-    }, [hostLeft, thisUserLeft])
+        SocketManager.onEvents({
+            gamestate_update: (data) => {
+                setGamestate(data.gamestate);
+                setUser({isWaiting: false, isReady: false});
+            },
+            player_leave: (data) => {
+                // console.log('player_leave triggered');
+                if (data.alias == user.alias){
+                    leave();
+                } else {
+                    setPlayers(prev => (prev.filter(alias => alias != data.alias)));
+                }
+            },
+            player_add: (data) => {
+                setPlayers(prev =>  (Array.from(new Set([...prev, data.alias]))));
+            },
+            host_leave: (_) => {
+                leave();
+            },
+        });
 
-    useEffect(() => {
-        const setRoomDetails = async () => {
-            const response = await API.get('get-room?code=' + roomCode);
-            if (!response.statusText == "OK") {
+        const setRoomAndUserDetails = async () => {
+            try {
+                const response = await API.get('get-room?code=' + roomCode);
+                const data = response.data;
+                // console.log(data.players[0]);
+                setPlayers(data.players);
+                setGamestate(data.gamestate);
+                setUser({isWaiting: data.is_waiting, isHost: data.is_host, alias: data.players[0]});
+                return data.isHost;
+            } catch {
                 leave();
             }
-            setIsHost(response.data.is_host);
-            setAlias(response.data.alias); 
-            setGamestate(response.data.gamestate);
-            setIsWaiting(response.data.is_waiting);
-            return response.data.is_host;
-        };
-    
+        }
+
         const setAuthenticatedStatus = async () => {
             const response = await SPOTIFY_API.get('is-authenticated');
             setSpotifyAuthenticated(response.data.status);
@@ -59,7 +75,7 @@ export default function Room(props) {
         };
 
         const setUp = async () => {
-            const isHost = await setRoomDetails();
+            const isHost = await setRoomAndUserDetails();
             if (isHost){
                 const isSpotifyAuthenticated = await setAuthenticatedStatus();
                 if (!isSpotifyAuthenticated){
@@ -71,18 +87,54 @@ export default function Room(props) {
         setIsLoading(true);
         setUp();
         setIsLoading(false);
-    
+       
     }, []);
 
+    useEffect(() => {
+        const updateGamestate = async () => {
+            try {
+                const response = await API.post('next-gamestate');
+                SocketManager.send('gamestate_update', {gamestate: response.data.gamestate});
+            } catch {
+                alert("Error updating gamestate");
+            }
+        }
+        if (user.isReady && !user.isWaiting){
+            updateGamestate();
+        }
+        if (user.alias && !playerAddTriggered){
+            setPlayerAddTriggered(true);
+            SocketManager.send('player_add', {alias: user.alias});
+        }
+    }, [user, playerAddTriggered]);
+
+    const setUserReady = async () => {
+        try {
+            const response = await API.post('ready-up');
+            setUser({isReady: true, isWaiting: response.data.isWaiting});
+        } catch {
+            alert("Error setting user to ready");
+        }
+    };
+
+    const leaveButtonPressed = () => {
+        if (user.isHost) {
+            SocketManager.send('host_leave', {room_code: roomCode});
+        }
+        else {
+            SocketManager.send('player_leave', {alias: user.alias});
+        }
+    };
+
     const renderGameState = () => {
-        if (isWaiting){
+        if (user.isWaiting){
             return <Typography variant="h4" component="h4">Waiting...</Typography>
         }
         const Component = gamestate ? PAGES[gamestate] : null;
         const props = {
-            alias: alias, 
-            isHost: isHost,
-            setIsReady: setIsReady,
+            alias: user.alias, 
+            isHost: user.isHost,
+            setUserReady: setUserReady,
             players: players,
         }
         return Component ? <Component {...props}/> : null;
@@ -98,15 +150,15 @@ export default function Room(props) {
                 </Grid>
                 <Grid item xs={12}>
                     <Typography variant="h4" component="h4">
-                        Alias: {alias}
+                        Alias: {user.alias}
                     </Typography>
                 </Grid>
                 <Grid item xs={12} align="center">
                     {
                     isLoading ? null : renderGameState()}
                 </Grid>
-                {isHost ? <Grid item xs={12}>
-                    <Button variant="contained" color="secondary" onClick={() => setThisUserLeft(true)}> 
+                {user.isHost ? <Grid item xs={12}>
+                    <Button variant="contained" color="secondary" onClick={leaveButtonPressed}> 
                         End Game
                     </Button>
                 </Grid>: null}

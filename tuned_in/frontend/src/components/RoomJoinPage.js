@@ -1,120 +1,54 @@
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
+import API from "../backend/API";
 import { TextField, Button, Grid, Typography } from "@material-ui/core";
 import { Link } from "react-router-dom";
 import { withRouter } from "../wrappers/withRouter";
 
-class RoomJoinOrCreatePage extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      roomCode: "",
-      roomCodeError: "",
-      aliasError: "",
-      alias: ""
-    };
-    this.handleCodeTextFieldChange = this.handleCodeTextFieldChange.bind(this);
-    this.roomButtonPressed = this.roomButtonPressed.bind(this);
-    this.handleAliasTextFieldChange = this.handleAliasTextFieldChange.bind(this);
-    this.renderJoinField = this.renderJoinField.bind(this);
-    this.handleJoinRoom = this.handleJoinRoom.bind(this);
-    this.handleCreateRoom = this.handleCreateRoom.bind(this);
-  }
 
-  handleCodeTextFieldChange(e) {
-    this.setState({
-      roomCode: e.target.value,
+function RoomJoinOrCreatePage(props){
+  const [roomCode, setRoomCode] = useState("");
+  const [roomCodeError, setRoomCodeError] = useState("");
+  const [alias, setAlias] = useState("");
+  const [aliasError, setAliasError] = useState("");
+
+  const createRoom = () => {
+    API.post('create-room', {alias: alias}).then((response) => {
+      props.navigate('/room/' + response.data.code)
+    }).catch((error) => {
+      console.log(error.response);
+      setAliasError("Error creating room");
+    }) 
+  };
+
+  const joinRoom = () => {
+    API.post('join-room', {room_code: roomCode, alias: alias}).then((response) => {
+      props.navigate('/room/' + roomCode);
+    }).catch((error) => {
+      const data = error.response.data;
+      setAliasError(data.type == 'alias' ? data.message : "");
+      setRoomCodeError(data.type == 'room_code' ? data.message : "");
+      console.log(data);
     })
-  }
+  };
 
-  handleAliasTextFieldChange(e) {
-    this.setState({
-      alias: e.target.value,
-    })
-  }
-
-  renderJoinField(){
+  const renderJoinField = () => {
     return (
       <Grid container spacing={1} align="center">
         <Grid item xs={12} align="center">
           <TextField
-            error={this.state.roomCodeError}
+            error={roomCodeError}
             label="Code"
             placeholder="Enter a Room Code"
-            helperText={this.state.roomCodeError}
-            value={this.state.roomCode}
+            helperText={roomCodeError}
+            value={roomCode}
             variant="outlined"
-            onChange={this.handleCodeTextFieldChange}
+            onChange={e => setRoomCode(e.target.value)}
           />
         </Grid>
       </Grid>
-    )
+    )};
 
-  }
-
-  handleCreateRoom() {
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        alias: this.state.alias
-      }),
-    };
-    fetch('/api/create-room', requestOptions)
-      .then((response) => {
-        if (response.ok){
-          return response.json()
-        } 
-        this.setState({
-          aliasError: "Error Creating Room"
-        })
-      })
-      .then((data) => this.props.navigate('/room/' + data.code))
-      .catch((error) => console.log(error));
-  }
-
-  handleJoinRoom() {
-    const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json"},
-      body: JSON.stringify({
-        room_code: this.state.roomCode,
-        alias: this.state.alias,
-      })
-    };
-    fetch('api/join-room', requestOptions).then((response) => {
-      if (response.ok) {
-        this.props.navigate(`/room/${this.state.roomCode}`)
-      } else {
-        return response.json()
-      }
-    }).then((data) => {
-      console.log(data);
-      const message = data.message;
-      if (data.type == "room_code"){
-        this.setState({
-          roomCodeError: message,
-          aliasError: ""
-        })
-      } else {
-        this.setState({
-          roomCodeError: "",
-          aliasError: message
-        })
-      }
-    })
-    .catch((error) => {
-      console.log(String(error));
-    });
-  }
-
-  roomButtonPressed() {
-    this.props.join ? this.handleJoinRoom() : this.handleCreateRoom()
-  }
-
-  render() {
-    const title = this.props.join ? "Join a Room" : "Create a Room";
+    const title = props.join ? "Join a Room" : "Create a Room";
     return (
       <div className="center">
         <Grid container spacing={1} align="center">
@@ -125,19 +59,19 @@ class RoomJoinOrCreatePage extends Component {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              error={this.state.aliasError}
+              error={aliasError}
               label="Alias"
               placeholder="Enter an Alias"
-              value={this.state.alias}
-              helperText={this.state.aliasError}
+              value={alias}
+              helperText={aliasError}
               variant="outlined"
-              onChange={this.handleAliasTextFieldChange}
+              onChange={e => setAlias(e.target.value)}
             />
           </Grid>
-          {this.props.join ? this.renderJoinField() : null}
+          {props.join ? renderJoinField() : null}
           <Grid item xs={12}>
-            <Button variant="contained" color="primary" onClick={this.roomButtonPressed}>
-            {this.props.join ? "Join" : "Create"}
+            <Button variant="contained" color="primary" onClick={() => {props.join ? joinRoom() : createRoom()}}>
+            {props.join ? "Join" : "Create"}
             </Button>
           </Grid>
           <Grid item xs={12}>
@@ -148,7 +82,6 @@ class RoomJoinOrCreatePage extends Component {
         </Grid>
       </div>
     )
-  }
-}
+};
 
 export default withRouter(RoomJoinOrCreatePage);

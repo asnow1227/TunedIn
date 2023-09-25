@@ -10,7 +10,7 @@ export default function useScript(url) {
         document.body.appendChild(script);
 
         return () => {
-        document.body.removeChild(script);
+            document.body.removeChild(script);
         }
     }, [url]);
 };

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import SocketManager from "../backend/SokcketManager";
+import SocketManager from "../backend/SocketManager";
 
 export default function useSocketManager(roomCode){
     useEffect(() => {

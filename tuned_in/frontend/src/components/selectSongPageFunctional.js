@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import _debounce from "lodash/debounce";
+// import _debounce from "lodash/debounce";
 import API, { SPOTIFY_API } from "../backend/API";
 import axios from "axios";
 import { TextField, Grid, Button, Card, Typography, StepContent} from "@material-ui/core";
@@ -38,7 +38,7 @@ export default function SelectSongPage(props){
     const [promptIdx, setPromptIdx] = useState(0);
     const [submitted, setSubmitted] = useState(false);
     const inputRef = useRef(null);
-    const debouncedHandleSearchEntered = useCallback(_debounce(handleSearchEntered, 1000), []);
+    // const debouncedHandleSearchEntered = useCallback(_debounce(handleSearchEntered, 1000), []);
     
     useEffect(() => {
         const setUp = async () => {
@@ -116,7 +116,7 @@ export default function SelectSongPage(props){
     
     const handleSearchChange = (e) => {
         setQ(e.target.value);
-        debouncedHandleSearchEntered();
+        // debouncedHandleSearchEntered();
     };
 
     const submitPrompts = () => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../backend/API";
-import SocketManager from "../backend/SokcketManager";
+import SocketManager from "../backend/SocketManager";
 
 export default function usePlayers(roomCode){
     // function to manage details about the players in the room,

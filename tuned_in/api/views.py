@@ -98,32 +98,32 @@ class GetRoom(APIView):
         # this is a bit too much I feel to use the url_kwarg but we grab 
         # the room code from the packet.
         code = request.GET.get('code')
-        # only do work if there is a code
-        if code != None:
-            # only do work if the room exists
-            room_set = Room.objects.filter(code=code)
-            if room_set.exists:
-                # room is actually a list of rooms, so serialize the first room object
-                # this will be the base of the packet we send back
-                data = RoomSerializer(room_set[0]).data
-                # get the user's alias, might change this to use the alias object on the request
-                alias = Alias.objects.filter(room_code=room_set[0].code, user=self.request.session.session_key)[0]
-                # user is the host if their request id is equal to the room's host id
-                data['is_host'] = self.request.session.session_key == room_set[0].host
-                # set the alias and gamestate on the returned packet
-                data['alias'] = alias.alias
-                data['gamestate'] = room_set[0].gamestate
-
-                room_aliases = Alias.objects.filter(room_code=room_set[0].code)
-                data['is_waiting'] = alias.ready and any([not alias.ready for alias in room_aliases]) and room_set[0].gamestate != Room.GameState.QUEUE
-                # return the packet
-                return Response(data, status=status.HTTP_200_OK)
-            # if no room found, return a bad request
+        if code is None:
+            # if no code provided in the get request, return a bad request
+            return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST) 
+        
+        room_set = Room.objects.filter(code=code)
+        # if no room found, return a bad request
+        if not room_set.exists():
             return Response({'Room Not Found': 'Invalid Room Code'}, status=status.HTTP_404_NOT_FOUND)
-        # if no code provided in the get request, return a bad request
-        return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST)
-
-
+        # only do work if the room exists
+        # room is actually a list of rooms, so serialize the first room object
+        # this will be the base of the packet we send back
+        room = room_set[0]
+        # get the user's alias, might change this to use the alias object on the request
+        current_players = Alias.objects.filter(room_code=room.code).all()
+        player_alias = [alias for alias in current_players if alias.user == self.request.session.session_key][0]
+        players = [player_alias.alias]
+        players.extend([alias.alias for alias in current_players if alias.alias != player_alias.alias])
+        data = {
+            'is_host': self.request.session.session_key == room.host,
+            'is_waiting': player_alias.ready and any([not alias.ready for alias in current_players if alias.alias != player_alias.alias]) and room.gamestate != Room.GameState.QUEUE,
+            'gamestate': room.gamestate,
+            'players': players
+        }
+        # return the packet
+        return Response(data, status=status.HTTP_200_OK)
+        
 # view to join the room
 class JoinRoom(APIView):
     serializer_class = CreateOrJoinRoomSerializer

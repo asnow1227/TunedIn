@@ -78,6 +78,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         )
 
     async def player_add(self, event):
+        print(event)
         alias = event['data']['alias']
         await self.send(
             text_data=jsonSocketMessage('player_add', data={

@@ -9,6 +9,7 @@ class SocketManager {
         this.send = this.send.bind(this);
         this.removeEvents = this.removeEvents.bind(this);
         this.roomCode = null;
+        this.onEvents = this.onEvents.bind(this);
     }
     routeMessage(e){
         let data = JSON.parse(e.data);
@@ -20,6 +21,11 @@ class SocketManager {
     }
     onEvent(event_type, func){
         this.functions[event_type] = func;
+    }
+    onEvents(events){
+        for (const [eventName, eventFunc] of Object.entries(events)) {
+            this.functions[eventName] = eventFunc;
+        };
     }
     removeEvent(event_type){
         this.functions.delete(event_type);
@@ -35,6 +41,7 @@ class SocketManager {
             type: event_type,
             data: data
         });
+        console.log(message);
         if (this.socket.readyState === 1) {
             this.socket.send(message);
         } else {
