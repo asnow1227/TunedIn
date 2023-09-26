@@ -2,9 +2,11 @@ import React, { useState, useCallback, useEffect, useRef, useImperativeHandle, f
 import InfiniteScroll from "react-infinite-scroll-component";
 // import _debounce from "lodash/debounce";
 import API, { SPOTIFY_API } from "../backend/API";
+import useObjectState from "../hooks/useObjectState";
 import axios from "axios";
 import { TextField, Grid, Button, Card, Typography, StepContent} from "@material-ui/core";
 import MusicCard from "./MusicCard";
+import useDebounce from "../hooks/useDebounce";
 
 const style = {
   margin: "0 auto",
@@ -31,150 +33,126 @@ export default function SelectSongPage(props){
     const [items, setItems] = useState(new Array());
     const [hasMore, setHasMore] = useState(true);
     const [q, setQ] = useState('');
+    const debouncedQ = useDebounce(q, 500);
     const [currPage, setCurrPage] = useState(1);
-    const [currentIds, setCurrentIds] = useState(new Set());
+    // const [currentIds, setCurrentIds] = useState(new Set());
     const [selectedProps, setSelectedProps] = useState({});
-    const [prompts, setPrompts] = useState(new Array());
-    const [promptIdx, setPromptIdx] = useState(0);
-    const [submitted, setSubmitted] = useState(false);
+    const [prompt, setPrompt] = useObjectState({id: null, text: ""});
+    // const [prompts, setPrompts] = useState(new Array());
+    // const [promptIdx, setPromptIdx] = useState(0);
+    // const [submitted, setSubmitted] = useState(false);
     const inputRef = useRef(null);
-    // const debouncedHandleSearchEntered = useCallback(_debounce(handleSearchEntered, 1000), []);
+
+    if (currPage == 1){
+        fetchMoreData();
+    }
+
+    useEffect(() => {
+        if (!debouncedQ) {
+            setItems(new Array());
+            setHasMore(false);
+            return
+        }
+        setCurrPage(1);
+    }, [debouncedQ])
     
     useEffect(() => {
         const setUp = async () => {
-            const response = await API.get('prompt');
-            // const response = await fetch('/api/prompt');
-            if (!response.statusText == "OK"){
-                return
+            try {
+                const response = await API.get('prompt');
+                setPrompt({id: response.data.prompt_id, text: response.data.text});
+            } catch (error) {
+                console.log(error);
             }
-            response.data.prompts.forEach((prompt) => {
-                prompt.selection = ''
-            })
-            setPrompts(response.data.prompts);
-            // console.log(data.prompts);
         }
         setUp();
-    }, [])
+    }, []);
 
     const setSelectedCallback = (selectedProps) => {
         setSelectedProps(selectedProps);
     };
 
-    const handleSearchEntered = () => {
-        setItems([]);
-        setHasMore(true);
-        setCurrentIds(new Set());
-        setCurrPage(1);
-    }
-
-    const fetchMoreData = async () => {
-        if (!q) {
-            return
-        }
-        var page = currPage;
-        const response = await SPOTIFY_API.get('get-songs', {
-            'params': {
-                'query': q,
-                'page': page,
-                'limit': 10,
-            }
-        });
-        if (!response.data.data.length) {
-            setHasMore(false);
-            return 
-        }
-
-        const elementsToAdd = new Array();
-        response.data.data.forEach((element) => {
-            if (currentIds.has(element.id)){
-                console.log(element.id)
-                return 
-            }
-            currentIds.add(element.id);
-            elementsToAdd.push(element)
-        })
-
-        setItems([...items, ...elementsToAdd]);
-        setCurrPage(page + 1);
-    };
-
-    useEffect(() => {
-        if (currPage == 1) {
-            fetchMoreData();
-        }
-    }, [currPage])
-
-    // const handleSearchEntered = (e) => {
-    //     if(e.keyCode != 13){
-    //         return
-    //     }
+    // const handleSearchEntered = () => {
     //     setItems([]);
     //     setHasMore(true);
     //     setCurrentIds(new Set());
     //     setCurrPage(1);
     // }
-    
-    const handleSearchChange = (e) => {
-        setQ(e.target.value);
-        // debouncedHandleSearchEntered();
-    };
 
-    const submitPrompts = () => {
-        const returnData = new Array();
-        prompts.forEach(prompt => {
-            returnData.push({
-                'prompt_id': prompt.id,
-                'song_id': prompt.selection,
-            })
-        })
-        // const requestOptions = {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json"},
-        //     body: JSON.stringify({'prompts': returnData})
-        // };
-        API.post('submit-song-selection', {'prompts': returnData}).then((response) => {
-            alert('Song Submitted Successfully')
-            setSubmitted(true);
-        }).catch((error) => alert(error.message));
+    const fetchMoreData = async () => {
 
-        // fetch('/api/submit-song-selections', requestOptions).then((response) => {
-        //     if (response.ok) {
-        //       alert('Song Submitted Successfully')
-        //       setSubmitted(true);
-        //     } else {
-        //         return response.json();
+        const response = await SPOTIFY_API.get('get-songs', {
+            'params': {
+                'query': q,
+                'page': currPage,
+                'limit': 10,
+            }
+        });
+
+        if (!response.data.data.length) {
+            setHasMore(false);
+            return;
+        }
+
+        setItems((prev) => [...prev, response.data.data]);
+        setCurrPage(page + 1);
+        // const elementsToAdd = new Array();
+        // response.data.data.forEach((element) => {
+        //     if (currentIds.has(element.id)){
+        //         console.log(element.id)
+        //         return 
         //     }
-        //   }).then((data) => {
-        //       const message = data.message;
-        //       alert(message);
-        //   })
-        // return
+        //     currentIds.add(element.id);
+        //     elementsToAdd.push(element)
+        // })
 
+        // setItems([...items, ...elementsToAdd]);
+        // setCurrPage(page + 1);
     };
 
-    const handleSubmitSongSelection = () => {
+    // const handleSearchChange = (e) => {
+    //     setQ(e.target.value);
+        // debouncedHandleSearchEntered();
+    // };
+
+    // const submitPrompts = () => {
+    //     let returnData = prompts.map((elem) => {
+    //         return {prompt_id: prompt.id, song_id: prompt.selection};
+    //     });
+    //     API.post('submit-song-selection', {'prompts': returnData}).then((response) => {
+    //         alert('Song Submitted Successfully')
+    //         setSubmitted(true);
+    //     }).catch((error) => alert(error.message));
+    // };
+
+    // const handleSubmitSongSelection = () => {
         // set the selected id for the given prompt to the selected song id
         // reset all the state variables on the page, with the exception of the query
-        prompts[promptIdx].selection = selectedProps.id;
-        inputRef.current.setBlank();
-        // setQ('');
-        setPromptIdx(promptIdx + 1);
-        setItems([]);
-        setHasMore(true);
-        setCurrentIds(new Set());
-        setCurrPage(0);
-        setSelectedProps({});
-        if (promptIdx == prompts.length - 1) {
-            var hasBlank = false;
-            prompts.forEach(prompt => {
-                if (prompt.selected == '') {
-                    hasBlank = true;
-                }
-            });
-            if (!hasBlank){
-                submitPrompts();
-            }
-        }
+        // prompts[promptIdx].selection = selectedProps.id;
+        // inputRef.current.setBlank();
+        // // setQ('');
+        // setPromptIdx(promptIdx + 1);
+        // setItems([]);
+        // setHasMore(true);
+        // setCurrentIds(new Set());
+        // setCurrPage(0);
+        // setSelectedProps({});
+        // if (promptIdx == prompts.length - 1) {
+        //     var hasBlank = false;
+        //     prompts.forEach(prompt => {
+        //         if (prompt.selected == '') {
+        //             hasBlank = true;
+        //         }
+        //     });
+        //     if (!hasBlank){
+        //         submitPrompts();
+        //     }
+        // }
+    // }
+
+    const handleSubmitSongSelection = () => {
+        API.post('prompt', {prompt_id: prompt.id, song_id: selectedProps.id});
+
     }
 
     const footerProps = selectedProps.id ? {
@@ -186,9 +164,9 @@ export default function SelectSongPage(props){
         selectable: false,
     };
 
-    if (submitted){
-        return <Typography variant="h6" component="h6">Waiting for Host</Typography>
-    }
+    // if (submitted){
+    //     return <Typography variant="h6" component="h6">Waiting for Host</Typography>
+    // }
 
     return (
     <div className="box">
@@ -197,27 +175,27 @@ export default function SelectSongPage(props){
                 Assigned Prompt:
             </Typography>
             <p>
-                {prompts[promptIdx]?.prompt}
+                {prompt.text}
             </p>
             <InputForm
-            id="filled-search"
-            label="Select a Song"
-            type="search"
-            variant="filled"
-            onChange={e => handleSearchChange(e)}
-            // onKeyDown={e => handleSearchEntered(e)}
-            ref={inputRef}
+                id="filled-search"
+                label="Select a Song"
+                type="search"
+                variant="filled"
+                onChange={e => setQ(e.target.value)}
+                // onKeyDown={e => handleSearchEntered(e)}
+                ref={inputRef}
             />
         </div>
         <div id="scrollableDiv" className="row content" align="center">
             <hr></hr>
             <InfiniteScroll
-            className="white-outline"
-            dataLength={items.length}
-            next={fetchMoreData}
-            hasMore={hasMore}
-            loader={<h4>Loading...</h4>}
-            scrollableTarget="scrollableDiv"
+                className="white-outline"
+                dataLength={items.length}
+                next={fetchMoreData}
+                hasMore={hasMore}
+                loader={<h4>Loading...</h4>}
+                scrollableTarget="scrollableDiv"
             >
             <Grid container align="center" spacing={1}>
             {items.map((i, index) => (

@@ -165,13 +165,13 @@ class CreateRoomPage extends Component {
               defaultValue={String(this.props.guestCanPause)} 
               onChange={this.handleGuestCanPauseChange}>
               <FormControlLabel 
-              value="true" 
+              value={false}
               control={<Radio color="primary" />}
               label = "Play/Pause"
               labelPlacement="bottom">
               </FormControlLabel>
               <FormControlLabel 
-              value="false" 
+              value={false}
               control={<Radio color="secondary" />}
               label = "No Control"
               labelPlacement="bottom">

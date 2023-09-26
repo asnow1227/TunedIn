@@ -89,12 +89,13 @@ def update_gamestate(room):
         room.gamestate = Room.GameState.PROMPT
         room.num_players = len(aliases)
         room.save()
+        set_ready_statuses_to_false(room.code)
         return room
     
     # for all other rounds, we will update the ready status on the user's alias for each user
     # this checks to ensure that all players are ready before updating the gamestate
     aliases = Alias.objects.filter(room_code=room.code)
-    if not [alias.ready for alias in aliases]:
+    if not all([alias.ready for alias in aliases]):
         raise RoomNotReadyError(room.code)
     
    

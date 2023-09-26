@@ -68,7 +68,7 @@ export default function MusicCard(props){
                         <img src={props.image_url} height="64px" width="64px" />
                     </Grid>
                     <Grid item align="center" xs={8}>
-                        <Typography component="h8" variant="h8">
+                        <Typography component="h6" variant="h6">
                             {props.title}
                         </Typography>
                         <Typography color="textSecondary" variant="subtitle1">

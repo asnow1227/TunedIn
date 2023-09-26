@@ -15,19 +15,17 @@ function RoomJoinOrCreatePage(props){
     API.post('create-room', {alias: alias}).then((response) => {
       props.navigate('/room/' + response.data.code)
     }).catch((error) => {
-      console.log(error.response);
       setAliasError("Error creating room");
     }) 
   };
 
   const joinRoom = () => {
-    API.post('join-room', {room_code: roomCode, alias: alias}).then((response) => {
+    API.post('join-room', {room_code: roomCode, alias: alias}).then((_) => {
       props.navigate('/room/' + roomCode);
     }).catch((error) => {
       const data = error.response.data;
       setAliasError(data.type == 'alias' ? data.message : "");
       setRoomCodeError(data.type == 'room_code' ? data.message : "");
-      console.log(data);
     })
   };
 
@@ -59,7 +57,7 @@ function RoomJoinOrCreatePage(props){
           </Grid>
           <Grid item xs={12}>
             <TextField
-              error={aliasError}
+              error={!!aliasError}
               label="Alias"
               placeholder="Enter an Alias"
               value={alias}

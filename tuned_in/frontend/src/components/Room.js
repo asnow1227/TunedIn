@@ -18,12 +18,10 @@ const PAGES = {
 
 export default function Room(props) {
     const { roomCode } = useParams();
-    useSocketManager(roomCode);
     const [user, setUser] = useObjectState({isHost: null, isWaiting: null, isReady: false, alias: ""});
     const [players, setPlayers] = useState(new Array());
     const [gamestate, setGamestate] = useState(null);
     const [playerAddTriggered, setPlayerAddTriggered] = useState(false);
-    const [spotifyAuthenticated, setSpotifyAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
     
@@ -33,13 +31,13 @@ export default function Room(props) {
     }
 
     useEffect(() => {
+        SocketManager.initialize(roomCode);
         SocketManager.onEvents({
             gamestate_update: (data) => {
                 setGamestate(data.gamestate);
                 setUser({isWaiting: false, isReady: false});
             },
             player_leave: (data) => {
-                // console.log('player_leave triggered');
                 if (data.alias == user.alias){
                     leave();
                 } else {
@@ -58,26 +56,24 @@ export default function Room(props) {
             try {
                 const response = await API.get('get-room?code=' + roomCode);
                 const data = response.data;
-                // console.log(data.players[0]);
                 setPlayers(data.players);
                 setGamestate(data.gamestate);
-                setUser({isWaiting: data.is_waiting, isHost: data.is_host, alias: data.players[0]});
+                setUser({isWaiting: data.is_waiting, isReady: data.is_ready, isHost: data.is_host, alias: data.players[0]});
                 return data.isHost;
             } catch {
                 leave();
             }
         }
 
-        const setAuthenticatedStatus = async () => {
+        const getAuthenticatedStatus = async () => {
             const response = await SPOTIFY_API.get('is-authenticated');
-            setSpotifyAuthenticated(response.data.status);
             return response.data.status;
         };
 
         const setUp = async () => {
             const isHost = await setRoomAndUserDetails();
             if (isHost){
-                const isSpotifyAuthenticated = await setAuthenticatedStatus();
+                const isSpotifyAuthenticated = await getAuthenticatedStatus();
                 if (!isSpotifyAuthenticated){
                     await authenticateUsersSpotify();
                 }
@@ -90,28 +86,19 @@ export default function Room(props) {
        
     }, []);
 
-    useEffect(() => {
-        const updateGamestate = async () => {
-            try {
-                const response = await API.post('next-gamestate');
-                SocketManager.send('gamestate_update', {gamestate: response.data.gamestate});
-            } catch {
-                alert("Error updating gamestate");
-            }
-        }
-        if (user.isReady && !user.isWaiting){
-            updateGamestate();
-        }
-        if (user.alias && !playerAddTriggered){
-            setPlayerAddTriggered(true);
-            SocketManager.send('player_add', {alias: user.alias});
-        }
-    }, [user, playerAddTriggered]);
+    if (user.alias && !playerAddTriggered){
+        setPlayerAddTriggered(true);
+        SocketManager.send('player_add', {alias: user.alias});
+    }
 
     const setUserReady = async () => {
         try {
             const response = await API.post('ready-up');
-            setUser({isReady: true, isWaiting: response.data.isWaiting});
+            setUser({isReady: true, isWaiting: response.data.is_waiting});
+            if (!response.data.is_waiting){
+                const response = await API.post('next-gamestate');
+                SocketManager.send('gamestate_update', {gamestate: response.data.gamestate});
+            }
         } catch {
             alert("Error setting user to ready");
         }
