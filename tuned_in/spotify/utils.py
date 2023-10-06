@@ -180,7 +180,7 @@ def get_songs(q, offset, limit):
             'artist': ', '.join([
                 artist.get('name') for artist in item.get('artists')
             ]),
-            'image_url': item.get('album').get('images')[2].get('url'),
+            'image_url': item.get('album').get('images')[1].get('url'),
             'duration': item.get('duration_ms'),
             'title': item.get('name'),
             'id': item.get('id')

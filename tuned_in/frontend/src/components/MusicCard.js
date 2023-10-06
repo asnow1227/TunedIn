@@ -1,15 +1,12 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { Grid, Typography, Card, IconButton } from "@material-ui/core";
+import React, { useState } from "react";
+import { Grid, Typography, IconButton, Box } from "@material-ui/core";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import HighlightOffIcon from "@material-ui/icons/HighlightOff";
+import { Card, CardOverflow, CardContent, AspectRatio, Divider, Button, CardActions, Link } from "@mui/joy";
+import PlayCircleOutlineIcon from '@material-ui/icons/PlayCircleOutline';
+import { Spotify } from 'react-spotify-embed';
 
 
-const style = {
-    height: 30,
-    border: "1px solid green",
-    margin: 6,
-    padding: 8
-};
 
 export default function MusicCard(props){
     const selectable = props.selectable == false ? props.selectable : true;
@@ -26,58 +23,64 @@ export default function MusicCard(props){
 
     const displayButtons = () => {
         return (
-            <IconButton 
-            onClick={handleIconClicked} 
-            style={style}
-            >
-                {
-                selected ?  
-                <HighlightOffIcon
-                color="error"
-                 /> : 
-                 <CheckCircleIcon 
-                style={{color: "green"}}
-                 />
-                 }
+            <IconButton onClick={handleIconClicked} style={style}>
+                { selected ?  <HighlightOffIcon color="error" /> : <CheckCircleIcon style={{color: "green"}}/> }
             </IconButton>
         )
     }
 
     return (
-        <Grid item xs={12}>
-            <Card 
-            height="64px" 
-            onMouseEnter={() => {
-                setStyle({
-                    display: 'block'
-                })
-            }} 
-            onMouseLeave={() => {
-                setStyle({
-                    display: 'none'
-                })
-            }}
-            style={
-                selected ? 
-                {backgroundColor: "green"} :
-                {backgroundColor: "white"}
-            }
+            <Card
+             height={150}
+             orientation="horizontal"
+             variant="outlined"
+             color="neutral"
             >
-                <Grid container alignItems="center">
-                    <Grid item align="center" xs={4}>
-                        <img src={props.image_url} height="64px" width="64px" />
-                    </Grid>
-                    <Grid item align="center" xs={8}>
-                        <Typography component="h6" variant="h6">
-                            {props.title}
-                        </Typography>
-                        <Typography color="textSecondary" variant="subtitle1">
-                            {props.artist}
-                        </Typography>
-                        {selectable === true ? displayButtons() : null}
-                    </Grid>
-                </Grid>
+                <CardOverflow>
+                    <AspectRatio ratio="1" sx={{ width: 150 }}>
+                        <img src={props.image_url} loading="lazy" alt=""/>
+                    </AspectRatio>
+                </CardOverflow>
+                <CardContent>
+                    <Typography variant="h6">
+                        {props.title}
+                    </Typography>
+                    <Typography color="textSecondary" variant="subtitle2">
+                        {props.artist}
+                    </Typography>
+                    <Box width={1}>
+                        <Button variant="soft" size="sm">
+                            Select
+                        </Button>
+                        {/* <Button variant="solid" size="sm">
+                            Preview
+                        </Button> */}
+                    </Box>
+                </CardContent>
+               
+                <CardOverflow
+                    variant="soft"
+                    color="primary"
+                    sx={{
+                    px: 0.2,
+                    // writingMode: 'vertical-rl',
+                    textAlign: 'center',
+                    align: 'center',
+                    fontSize: 'xs',
+                    fontWeight: 'xl',
+                    letterSpacing: '1px',
+                    borderLeft: '1px solid',
+                    borderColor: 'divider',
+                    }}
+                >
+                    <Link underline="none" overlay>
+                        <div className="rotated">
+                            <Typography>
+                                Preview
+                            </Typography>
+                        </div>
+                    </Link>
+                </CardOverflow>
             </Card>
-        </Grid>
     )
 }
