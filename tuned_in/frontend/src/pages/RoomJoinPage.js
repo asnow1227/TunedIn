@@ -49,7 +49,7 @@ function RoomJoinOrCreatePage(props){
 
     const title = props.join ? "Join a Room" : "Create a Room";
     return (
-      <Centered>
+      // <Centered>
         <Grid container spacing={1} align="center">
           <Grid item xs={12}>
             <Typography variant="h4" component="h4">
@@ -79,7 +79,6 @@ function RoomJoinOrCreatePage(props){
             </Button>
           </Grid>
         </Grid>
-      </Centered>
     )
 };
 

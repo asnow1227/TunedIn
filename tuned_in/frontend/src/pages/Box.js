@@ -7,39 +7,17 @@ export default function BoxComponent(props){
     const selectedSongRef = useRef('');
     return (
     <div className="box" align="center">
-        {/* <Header>
+        {/* <Header align="center">
             <Typography>
                 Header
             </Typography>
-        </Header>
-        <Row>
-            <Box height={.8}>
-                <Grid container>
-                    <Button>Click Me</Button>
-                </Grid>
-            </Box>
-            <Box height={.2}>
-                <Grid container>
-                    <Typography>Click Me</Typography>
-                </Grid>
-            </Box>
-        </Row>
-       <Footer>
+        </Header> */}
+        <SpotifySearch selectedSongRef={selectedSongRef}/>
+        {/* <Footer>
             <Typography>
                 Footer
             </Typography>
         </Footer> */}
-        <Header align="center">
-            <Typography>
-                Header
-            </Typography>
-        </Header>
-        <SpotifySearch selectedSongRef={selectedSongRef}/>
-        <Footer>
-            <Typography>
-                Footer
-            </Typography>
-        </Footer>
     </div>
     )
 }

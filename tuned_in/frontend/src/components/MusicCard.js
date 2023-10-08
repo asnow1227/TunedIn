@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Grid, Typography, IconButton, Box } from "@material-ui/core";
+import { Grid, Typography, IconButton, Box, useTheme } from "@material-ui/core";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import HighlightOffIcon from "@material-ui/icons/HighlightOff";
 import { Card, CardOverflow, CardContent, AspectRatio, Divider, Button, CardActions, Link } from "@mui/joy";
@@ -9,6 +9,7 @@ import { Spotify } from 'react-spotify-embed';
 
 
 export default function MusicCard(props){
+
     const selectable = props.selectable == false ? props.selectable : true;
     const selected = props.selected == false ? props.selected : 
         (props.selectedId == props.id);
@@ -30,11 +31,12 @@ export default function MusicCard(props){
     }
 
     return (
+        <Grid item xs={12}>
             <Card
              height={150}
              orientation="horizontal"
-             variant="outlined"
-             color="neutral"
+             variant="plain card"
+             style={{backgroundColor: "black"}}
             >
                 <CardOverflow>
                     <AspectRatio ratio="1" sx={{ width: 150 }}>
@@ -42,14 +44,14 @@ export default function MusicCard(props){
                     </AspectRatio>
                 </CardOverflow>
                 <CardContent>
-                    <Typography variant="h6">
+                    <Typography variant="h6" color="white">
                         {props.title}
                     </Typography>
                     <Typography color="textSecondary" variant="subtitle2">
                         {props.artist}
                     </Typography>
                     <Box width={1}>
-                        <Button variant="soft" size="sm">
+                        <Button sx={{backgroundColor:"#1DB954", color:"white"}} size="sm">
                             Select
                         </Button>
                         {/* <Button variant="solid" size="sm">
@@ -82,5 +84,6 @@ export default function MusicCard(props){
                     </Link>
                 </CardOverflow>
             </Card>
+        </Grid>
     )
 }
