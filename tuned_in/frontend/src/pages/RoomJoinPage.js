@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import API from "../backend/API";
-import { TextField, Button, Grid, Typography } from "@material-ui/core";
+import { TextField, Button, Grid, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
 import { withRouter } from "../wrappers/withRouter";
 import { Centered } from "../components/Layout";
@@ -63,8 +63,9 @@ function RoomJoinOrCreatePage(props){
               placeholder="Enter an Alias"
               value={alias}
               helperText={aliasError}
-              variant="outlined"
+              variant="standard"
               onChange={e => setAlias(e.target.value)}
+              sx={{borderColor: "white"}}
             />
           </Grid>
           {props.join ? renderJoinField() : null}

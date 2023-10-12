@@ -1,8 +1,9 @@
 import React from "react";
 // import { render } from "react-dom";
 import ReactDOM from "react-dom/client";
-import { MuiThemeProvider, createTheme } from "@material-ui/core/styles";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import HomePage from "./HomePage";
+
 
 const theme = createTheme({
   palette: {
@@ -13,12 +14,27 @@ const theme = createTheme({
     secondary: {
       main: "#1DB954",
       contrastText: "white"
+    },
+  },
+  components: {
+    MuiInputBase: {
+        styleOverrides: {
+            input: {
+                color: 'white',
+            }
+        }
     }
   },
+    // action: {
+    //   disabled: "white",
+    //   disabledBackground: "#1DB954",
+    //   disabledOpacity: .1,
+    // },
   typography: {
     fontFamily: "Circular",
   },
 });
+
 
 // export default function App(props){
 //   console.log(theme);
@@ -32,9 +48,9 @@ const theme = createTheme({
 const appDiv = ReactDOM.createRoot(document.getElementById("app"));
 appDiv.render(
   <React.StrictMode>
-    <MuiThemeProvider theme={theme}>
+    <ThemeProvider theme={theme}>
        <HomePage />
-    </MuiThemeProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );
 
