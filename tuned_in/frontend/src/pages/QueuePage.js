@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import { Button, Typography } from '@material-ui/core';
+import { Button, Typography } from '@mui/material';
 import { Centered, Footer } from "../components/Layout";
 import { Row } from "../components/Layout"
 

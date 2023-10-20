@@ -20,6 +20,7 @@
     "@mui/icons-material": "^5.14.12",
     "@mui/joy": "^5.0.0-beta.9",
     "@mui/material": "^5.14.12",
+    "@mui/styles": "^5.14.14",
     "axios": "^1.2.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -27,6 +28,7 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-router-dom": "^6.4.4",
     "react-spotify-embed": "^2.0.3",
+    "reactjs-popup": "^2.0.6",
     "socket.io": "^4.5.4",
     "socket.io-client": "^4.5.4",
     "webpack": "^5.88.2",
@@ -36,6 +38,8 @@
     "@babel/core": "^7.20.5",
     "@babel/preset-env": "^7.20.2",
     "@babel/preset-react": "^7.18.6",
-    "babel-loader": "^9.1.0"
+    "babel-loader": "^9.1.0",
+    "css-loader": "^6.8.1",
+    "style-loader": "^3.3.3"
   }
 }

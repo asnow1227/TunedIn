@@ -1,40 +1,190 @@
 import React from "react";
 // import { render } from "react-dom";
 import ReactDOM from "react-dom/client";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { experimental_extendTheme as materialExtendTheme, Experimental_CssVarsProvider as MaterialCssVarsProvider, THEME_ID as MATERIAL_THEME_ID } from "@mui/material/styles";
+import { CssVarsProvider as JoyCssVarsProvider, extendTheme as JoyExtendTheme, THEME_ID as JOY_THEME_ID } from "@mui/joy/styles";
 import HomePage from "./HomePage";
 
 
-const theme = createTheme({
+const SPOTIFY_BLACK = "#191414"
+const SPOTIFY_GREEN = "#1DB954"
+
+let materialTheme = materialExtendTheme({
+  components: {
+    MuiFormControl: {
+      styleOverrides: {
+        root: {
+          borderColor: SPOTIFY_BLACK,
+          borderRadius: "4px",
+        }
+      }
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          borderRadius: "4px",
+          borderColor: SPOTIFY_BLACK,
+          '&.Mui-focused': {
+            borderColor: SPOTIFY_GREEN
+          },
+          // '& label': {
+          //   color: SPOTIFY_GREEN,
+          // },
+          // '& label.Mui-focused': {
+          //   color: SPOTIFY_GREEN,
+          // },
+          '& .MuiInput-underline:after': {
+            borderBottomColor: SPOTIFY_GREEN,
+          },
+          '& .MuiOutlinedInput-root': {
+            color: SPOTIFY_BLACK,
+            borderRadius: "4px",
+            borderWidth: '0.30rem',
+            borderColor: "white",
+            '&:hover fieldset': {
+              borderColor: 'white',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: SPOTIFY_GREEN
+            },
+          },
+        }
+      }
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        color: SPOTIFY_BLACK,
+        input: {
+          color: SPOTIFY_BLACK,
+          borderColor: SPOTIFY_BLACK,
+          borderRadius: '4px',
+          backgroundColor: "white",
+        },
+      }
+    }
+  },
   palette: {
     primary: {
-      main: "#191414",
+      main: SPOTIFY_BLACK,
       contrastText: "white"
     },
     secondary: {
-      main: "#1DB954",
+      main: SPOTIFY_GREEN,
       contrastText: "white"
     },
   },
-  components: {
-    MuiInputBase: {
-        styleOverrides: {
-            input: {
-                color: 'white',
-            }
-        }
-    }
-  },
-    // action: {
-    //   disabled: "white",
-    //   disabledBackground: "#1DB954",
-    //   disabledOpacity: .1,
-    // },
   typography: {
     fontFamily: "Circular",
   },
 });
 
+const palette = {
+  primary: {
+    solidBg: SPOTIFY_BLACK,
+    solidBorder: SPOTIFY_BLACK,
+  }
+}
+
+const JoyTheme = JoyExtendTheme({
+  colorSchemes: {
+    light: { palette },
+    dark: { palette },
+  },
+  // palette: {
+  //   primary: {
+  //     main: SPOTIFY_BLACK,
+  //     contrastText: "white"
+  //   },
+  //   secondary: {
+  //     main: SPOTIFY_GREEN,
+  //     contrastText: "white"
+  //   },
+  // },
+  typography: {
+    fontFamily: "Circular",
+  },
+})
+
+
+
+// materialTheme = materialExtendTheme(materialTheme, {
+//   components: {
+//     MuiTextField: {
+//       styleOverrides: {
+//         root: {
+//           '& label.Mui-focused': {
+//             color: SPOTIFY_BLACK,
+//           },
+//           '& .MuiInput-underline:after': {
+//             borderBottomColor: SPOTIFY_GREEN,
+//           },
+//           '& .MuiOutlinedInput-root': {
+//             '&.Mui-focused fieldset': {
+//               borderColor: SPOTIFY_GREEN,
+//             },
+//           },
+//         }
+//       }
+//     },
+//     MuiInputBase: {
+//       styleOverrides: {
+//         input: {
+//           color: SPOTIFY_GREEN,
+//           backgroundColor: "white",
+//           borderRadius: "4px",
+//         },
+//       }
+//     }
+//   },
+// });
+
+// let theme = createTheme({
+//   palette: {
+//     primary: {
+//       main: SPOTIFY_BLACK,
+//       contrastText: "white"
+//     },
+//     secondary: {
+//       main: SPOTIFY_GREEN,
+//       contrastText: "white"
+//     },
+//   },
+//   typography: {
+//     fontFamily: "Circular",
+//   },
+// });
+
+
+// theme = createTheme(theme, {
+//   components: {
+//     MuiTextField: {
+//       styleOverrides: {
+//         root: {
+//           '& label.Mui-focused': {
+//             color: theme.palette.secondary.main,
+//           },
+//           '& .MuiInput-underline:after': {
+//             borderBottomColor: theme.palette.secondary.main,
+//           },
+//           '& .MuiOutlinedInput-root': {
+//             '&.Mui-focused fieldset': {
+//               borderColor: theme.palette.secondary.main,
+//             },
+//           },
+//         }
+//       }
+//     },
+//     MuiInputBase: {
+//       styleOverrides: {
+//         input: {
+//           color: theme.palette.primary.main,
+//           backgroundColor: "white",
+//           borderRadius: "4px",
+//         },
+//       }
+//     }
+//   },
+// });
 
 // export default function App(props){
 //   console.log(theme);
@@ -48,9 +198,11 @@ const theme = createTheme({
 const appDiv = ReactDOM.createRoot(document.getElementById("app"));
 appDiv.render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-       <HomePage />
-    </ThemeProvider>
+    <MaterialCssVarsProvider theme={{ [MATERIAL_THEME_ID]: materialTheme }}>
+      <JoyCssVarsProvider theme={{ [JOY_THEME_ID]: JoyTheme}}>
+        <HomePage />
+      </JoyCssVarsProvider>
+    </MaterialCssVarsProvider>
   </React.StrictMode>
 );
 
