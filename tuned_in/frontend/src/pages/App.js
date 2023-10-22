@@ -1,13 +1,12 @@
 import React from "react";
-// import { render } from "react-dom";
 import ReactDOM from "react-dom/client";
 import { experimental_extendTheme as materialExtendTheme, Experimental_CssVarsProvider as MaterialCssVarsProvider, THEME_ID as MATERIAL_THEME_ID } from "@mui/material/styles";
 import { CssVarsProvider as JoyCssVarsProvider, extendTheme as JoyExtendTheme, THEME_ID as JOY_THEME_ID } from "@mui/joy/styles";
 import HomePage from "./HomePage";
 
 
-const SPOTIFY_BLACK = "#191414"
-const SPOTIFY_GREEN = "#1DB954"
+export const SPOTIFY_BLACK = "#191414"
+export const SPOTIFY_GREEN = "#1DB954"
 
 let materialTheme = materialExtendTheme({
   components: {
@@ -27,12 +26,6 @@ let materialTheme = materialExtendTheme({
           '&.Mui-focused': {
             borderColor: SPOTIFY_GREEN
           },
-          // '& label': {
-          //   color: SPOTIFY_GREEN,
-          // },
-          // '& label.Mui-focused': {
-          //   color: SPOTIFY_GREEN,
-          // },
           '& .MuiInput-underline:after': {
             borderBottomColor: SPOTIFY_GREEN,
           },
@@ -70,7 +63,7 @@ let materialTheme = materialExtendTheme({
     },
     secondary: {
       main: SPOTIFY_GREEN,
-      contrastText: "white"
+      contrastText: "black"
     },
   },
   typography: {
@@ -82,6 +75,12 @@ const palette = {
   primary: {
     solidBg: SPOTIFY_BLACK,
     solidBorder: SPOTIFY_BLACK,
+    200: "#535353",
+  },
+  secondary: {
+    solidBg: SPOTIFY_GREEN,
+    solidBorder: SPOTIFY_GREEN,
+    200: SPOTIFY_GREEN,
   }
 }
 
@@ -90,110 +89,10 @@ const JoyTheme = JoyExtendTheme({
     light: { palette },
     dark: { palette },
   },
-  // palette: {
-  //   primary: {
-  //     main: SPOTIFY_BLACK,
-  //     contrastText: "white"
-  //   },
-  //   secondary: {
-  //     main: SPOTIFY_GREEN,
-  //     contrastText: "white"
-  //   },
-  // },
   typography: {
     fontFamily: "Circular",
   },
 })
-
-
-
-// materialTheme = materialExtendTheme(materialTheme, {
-//   components: {
-//     MuiTextField: {
-//       styleOverrides: {
-//         root: {
-//           '& label.Mui-focused': {
-//             color: SPOTIFY_BLACK,
-//           },
-//           '& .MuiInput-underline:after': {
-//             borderBottomColor: SPOTIFY_GREEN,
-//           },
-//           '& .MuiOutlinedInput-root': {
-//             '&.Mui-focused fieldset': {
-//               borderColor: SPOTIFY_GREEN,
-//             },
-//           },
-//         }
-//       }
-//     },
-//     MuiInputBase: {
-//       styleOverrides: {
-//         input: {
-//           color: SPOTIFY_GREEN,
-//           backgroundColor: "white",
-//           borderRadius: "4px",
-//         },
-//       }
-//     }
-//   },
-// });
-
-// let theme = createTheme({
-//   palette: {
-//     primary: {
-//       main: SPOTIFY_BLACK,
-//       contrastText: "white"
-//     },
-//     secondary: {
-//       main: SPOTIFY_GREEN,
-//       contrastText: "white"
-//     },
-//   },
-//   typography: {
-//     fontFamily: "Circular",
-//   },
-// });
-
-
-// theme = createTheme(theme, {
-//   components: {
-//     MuiTextField: {
-//       styleOverrides: {
-//         root: {
-//           '& label.Mui-focused': {
-//             color: theme.palette.secondary.main,
-//           },
-//           '& .MuiInput-underline:after': {
-//             borderBottomColor: theme.palette.secondary.main,
-//           },
-//           '& .MuiOutlinedInput-root': {
-//             '&.Mui-focused fieldset': {
-//               borderColor: theme.palette.secondary.main,
-//             },
-//           },
-//         }
-//       }
-//     },
-//     MuiInputBase: {
-//       styleOverrides: {
-//         input: {
-//           color: theme.palette.primary.main,
-//           backgroundColor: "white",
-//           borderRadius: "4px",
-//         },
-//       }
-//     }
-//   },
-// });
-
-// export default function App(props){
-//   console.log(theme);
-//   return (
-//     <MuiThemeProvider theme={theme}>
-//        <HomePage />
-//     </MuiThemeProvider>
-//   )
-// }
 
 const appDiv = ReactDOM.createRoot(document.getElementById("app"));
 appDiv.render(
@@ -205,6 +104,3 @@ appDiv.render(
     </MaterialCssVarsProvider>
   </React.StrictMode>
 );
-
-// const appDiv = document.getElementById("app");
-// render(<App />, appDiv);

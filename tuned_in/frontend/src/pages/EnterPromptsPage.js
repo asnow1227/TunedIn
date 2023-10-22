@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from "react";
 import API from "../backend/API";
-import { TextField, Grid, Typography } from "@material-ui/core";
+import { TextField, Grid, Typography } from "@mui/material";
 import ConditionalButton from "../components/ConditionalButton";
 import ToggableComponent from "../components/ToggableComponent";
 import makeArray from "../utils/makeArray";
@@ -38,43 +38,31 @@ export default function CreatePromptsPage(props) {
     submitPrompts();
   }
 
-  const buttonProps = { variant: "contained", color: "primary", onClick: handleSubmitButtonPressed }
+  const buttonProps = { variant: "contained", color: "secondary", onClick: handleSubmitButtonPressed }
 
   return (
     <Fragment>
-      <Header align="center">
-        <Typography variant="h4" component="h4">
-          Enter Prompts
-        </Typography>
-      </Header>
-      <Row>
-        <Centered>
-          <ToggableComponent 
-            onLeftIcon={() => setCurrIndex(currIndex - 1)} 
-            displayLeftIcon={currIndex != 0}
-            onRightIcon={() => setCurrIndex(currIndex + 1)}
-            displayRightIcon={currIndex != 2}
-          >
-            <TextField
-              label={"Prompt " + String(currIndex + 1)}
-              placeholder="Enter a Prompt"
-              value={formValues[currIndex].text}
-              multiline={true}
-              variant="outlined"
-              onChange={e => handleChange(e)}
-            />
-          </ToggableComponent>
-        </Centered>
-      </Row>
-      <Footer>
-        <ConditionalButton 
-          disabled={anyBlank} 
-          buttonProps={buttonProps} 
-          enabledMessage={ENABLED_MESSAGE}
-          disabledMessage={DISABLED_MESSAGE}
-          buttonText="Submit"
+      <ToggableComponent 
+        onLeftIcon={() => setCurrIndex(currIndex - 1)} 
+        displayLeftIcon={currIndex != 0}
+        onRightIcon={() => setCurrIndex(currIndex + 1)}
+        displayRightIcon={currIndex != 2}
+      >
+        <TextField
+          placeholder="Enter a Prompt"
+          value={formValues[currIndex].text}
+          variant="outlined"
+          onChange={e => handleChange(e)}
+          sx={{width: "100%"}}
         />
-      </Footer>
+      </ToggableComponent>
+      {/* <ConditionalButton 
+        // disabled={anyBlank} 
+        buttonProps={buttonProps} 
+        enabledMessage={ENABLED_MESSAGE}
+        disabledMessage={DISABLED_MESSAGE}
+        buttonText="Submit"
+      /> */}
     </Fragment>
   );
 }

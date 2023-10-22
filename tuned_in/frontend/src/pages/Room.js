@@ -1,15 +1,14 @@
 import React, { useState,  useEffect, } from "react";
 import { useParams } from "react-router-dom";  
-import { Grid, Button, Typography, Box } from '@material-ui/core';
+import { Typography } from '@mui/material';
 import { useNavigate } from "react-router-dom";
 import API, { SPOTIFY_API, authenticateUsersSpotify } from "../backend/API"
 import SocketManager from "../backend/SocketManager";
 import useObjectState from "../hooks/useObjectState";
-import useSocketManager from "../hooks/useSocketManager";
 import QueuePage from "./QueuePage";
 import CreatePromptsPage from "./EnterPromptsPage"
 import SelectSongPage from "./SelectSongPage"
-import { Row, Footer, Header, MainBox } from "../components/Layout";
+import { MainBox } from "../components/Layout";
 
 const PAGES = {
     'Q': QueuePage,
@@ -32,7 +31,6 @@ export default function Room(props) {
     }
 
     useEffect(() => {
-        // document.body.style.zoom = "100%"
         SocketManager.initialize(roomCode);
         SocketManager.onEvents({
             gamestate_update: (data) => {
@@ -125,15 +123,16 @@ export default function Room(props) {
             isHost: user.isHost,
             setUserReady: setUserReady,
             players: players,
-            roomCode: roomCode
+            roomCode: roomCode,
+            leaveButtonPressed: leaveButtonPressed
         }
         return Component ? <Component {...props}/> : null;
     }
 
     return (
         <MainBox>
-            <Header align="right">
-                <Grid container alignItems="right">
+            {/* <Header align="center">
+                <Grid container >
                     <Grid item xs={12}>
                         <Typography color="textSecondary" variant="subtitle1">
                             Alias: {user.alias}
@@ -145,14 +144,14 @@ export default function Room(props) {
                         </Typography>
                     </Grid>
                 </Grid>    
-            </Header>
+            </Header> */}
                 {!isLoading && renderGameState()}
-            <Footer align="center">
+            {/* <Footer align="center">
                 {user.isHost && 
                 <Button variant="contained" color="secondary" onClick={leaveButtonPressed}> 
                     End Game
                 </Button>}
-            </Footer>
+            </Footer> */}
         </MainBox>
     )
 }

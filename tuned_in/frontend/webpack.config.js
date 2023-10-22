@@ -18,8 +18,19 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: [ 'style-loader', 'css-loader' ]
-      }
+        use: ['style-loader', 'css-loader' ]
+      },
+      {
+        test: /\.(jpe?g|png|gif|svg)$/i, 
+        use: {
+          loader: "url-loader",
+          options: {
+            limit: 8192,
+            name: '[name].[ext]',
+            publicPath: 'static/assets/avatars/'
+          }
+        }
+      },
     ],
   },
   optimization: {

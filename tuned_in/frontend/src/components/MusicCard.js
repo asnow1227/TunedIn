@@ -1,34 +1,9 @@
-import React, { useState } from "react";
-import { Grid, Typography, IconButton, Box, useTheme } from "@material-ui/core";
-import CheckCircleIcon from "@material-ui/icons/CheckCircle";
-import HighlightOffIcon from "@material-ui/icons/HighlightOff";
-import { Card, CardOverflow, CardContent, AspectRatio, Divider, Button, CardActions, Link } from "@mui/joy";
-import PlayCircleOutlineIcon from '@material-ui/icons/PlayCircleOutline';
-import { Spotify } from 'react-spotify-embed';
-
+import React from "react";
+import { Grid, Typography, Box } from "@mui/material";
+import { Card, CardOverflow, CardContent, AspectRatio,  Button, Link } from "@mui/joy";
 
 
 export default function MusicCard(props){
-
-    const selectable = props.selectable == false ? props.selectable : true;
-    const selected = props.selected == false ? props.selected : 
-        (props.selectedId == props.id);
-    const [style, setStyle] = useState({
-        display: 'none'
-    });
-
-    const handleIconClicked = () => {
-        selected ? props.setSelectedCallback({}) : 
-        props.setSelectedCallback(props);
-    }
-
-    const displayButtons = () => {
-        return (
-            <IconButton onClick={handleIconClicked} style={style}>
-                { selected ?  <HighlightOffIcon color="error" /> : <CheckCircleIcon style={{color: "green"}}/> }
-            </IconButton>
-        )
-    }
 
     return (
         <Grid item xs={12}>
@@ -54,12 +29,8 @@ export default function MusicCard(props){
                         <Button sx={{backgroundColor:"#1DB954", color:"white"}} size="sm">
                             Select
                         </Button>
-                        {/* <Button variant="solid" size="sm">
-                            Preview
-                        </Button> */}
                     </Box>
                 </CardContent>
-               
                 <CardOverflow
                     variant="soft"
                     color="primary"

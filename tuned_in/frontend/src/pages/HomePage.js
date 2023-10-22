@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import API from "../backend/API";
+import API, { BASE_URL} from "../backend/API";
 import CreatePromptsPage from "./EnterPromptsPage";
 import EmbedSpotify from "./SpotifyEmbed";
 import Room from "./Room";
@@ -100,7 +100,7 @@ export default function HomePage(props) {
                 </Typography>
               </Grid>
               <Grid item>
-                <img src="static/images/spotify-logo.png" height={50}/>
+                <img src={BASE_URL + "static/assets/logos/spotify-logo.png"} height={50}/>
               </Grid>
             </Grid>
         </Footer>

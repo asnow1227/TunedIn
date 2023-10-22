@@ -1,5 +1,5 @@
 import React from "react";
-import { Tooltip, Button } from "@material-ui/core";
+import { Tooltip, Button } from "@mui/material";
 
 export default function ConditionalButton(props){
     const enabledMessage = props.enabledMessage ? props.enabledMessage : '';

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = 'http://127.0.0.1:8000/';
+export const BASE_URL = 'http://127.0.0.1:8000/';
 const API_URL = BASE_URL + 'api/';
 const SPOTIFY_URL = BASE_URL + 'spotify/';
 
@@ -19,4 +19,5 @@ export const SPOTIFY_API = axios.create({
 export async function authenticateUsersSpotify() {
   const response = await SPOTIFY_API.get('get-auth-url');
   window.location.replace(response.data.url);
-}
+};
+
