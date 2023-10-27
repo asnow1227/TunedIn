@@ -1,17 +1,103 @@
-import React, { Fragment } from "react";
-import { Button, ButtonGroup, Typography, Box, Grid } from '@mui/material';
+import React, { Fragment, useState } from "react";
+import { Button, ButtonGroup, Typography, Box, Grid, TextField } from '@mui/material';
 import { Footer } from "../components/Layout";
 import { Row} from "../components/Layout"
 import PlayerCard from "../components/PlayerCard";
-import AVATARS from "../components/Avatars";
-import CreatePromptsPage from "./EnterPromptsPage";
-import { SPOTIFY_GREEN } from "./App";
+import ToggableComponent from "../components/ToggableComponent";
+import makeArray from "../utils/makeArray";
+import ConditionalButton from "../components/ConditionalButton";
+import API from "../backend/API";
+import Divider from '@mui/material/Divider';
+import RoomHeader from "../components/RoomHeader";
 
-const randomAvatar = () => {
-    return AVATARS[Math.floor(Math.random() * AVATARS.length)];
-};
+const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
+const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";
+
+const QueueBox = ({sx=null, children, ...props}) => {
+    let _sx = {width: { xs: "100%", md: "75%", lg: "50%"}};
+    if (sx){
+        _sx = {..._sx, ...props.sx}
+    };
+    return (
+        <Box sx={_sx} {...props}>
+            { children }
+        </Box>
+    )
+}
+
+const ContentDivider = ({ children }) => {
+    return (
+        <Divider sx={
+            (theme) => ({
+                "&::before, &::after": {
+                    borderColor: theme.palette.secondary.main,
+                },
+                marginBottom: "30px", 
+                marginTop:"30px"
+            })} 
+            orientation="horizontal"
+        >
+            { children }
+        </Divider>
+    )
+}
 
 function QueuePage(props){
+    const [formValues, setFormValues] = useState(makeArray(3).map((_, i) => {return {key: i, text: "", submitted: false}}));
+    const [currIndex, setCurrIndex] = useState(0);
+    const anyBlank = formValues.some((elem) => !elem.text);
+
+    const handleChange = (e) => {
+        let formVals = formValues;
+        formVals[currIndex].text = e.target.value;
+        setFormValues([...formVals]);
+    };
+    
+    const submitPrompts = async () => {
+        let prompts = formValues.map((elem, idx) => {
+            return {text: elem.text, key: idx}
+        });
+        try {
+            await API.post('submit-prompts', prompts);
+            props.setUserReady();
+        } catch (error){
+            alert("Error Submitting Prompt");
+            console.log(error);
+        }
+    };
+    
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        submitPrompts();
+    }
+
+    const readyButton = () => {
+        return (
+            <ConditionalButton enabledMessage={ENABLED_MESSAGE} disabledMessage={DISABLED_MESSAGE} disabled={anyBlank}>
+                <Button
+                variant="contained" 
+                color="secondary" 
+                onClick={handleSubmit} 
+                sx={(theme) => ({
+                    maxWidth: '100px',
+                    maxHeight: '40px', 
+                    minWidth: '100px', 
+                    minHeight: '40px',
+                    "&.Mui-disabled": {
+                        background: theme.palette.secondary.main,
+                        opacity: .6
+                    },
+                    marginTop: "10px", 
+                    marginBottom: "10px"
+                })}
+                disabled={anyBlank}
+                > 
+                    Ready
+                </Button>
+            </ConditionalButton>
+        )
+    };
+
     return (
     <Fragment>
         <Row>
@@ -21,59 +107,42 @@ function QueuePage(props){
             <Typography variant="subtitle2">
                 {`Code: ${props.roomCode}`}
             </Typography>
-            <Box sx={{width: { xs: "100%", md: "75%", lg: "50%", marginTop: "30px", marginBottom: "30px"}}}>
-                <hr color={SPOTIFY_GREEN} />
-            </Box>
-            <Box sx={{width: { xs: "100%", md: "75%", lg: "50%"}}}>
-                <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                        <Typography variant="paragraph">
-                            Waiting on others to join. Fill out some prompts in the meantime:
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <CreatePromptsPage />
-                    </Grid>
-                </Grid>
-            </Box>
-            <Box sx={{width: { xs: "100%", md: "75%", lg: "50%"}}}>
-                <hr color={SPOTIFY_GREEN} style={{marginBottom: "30px", marginTop:"30px"}}/>
-                <Typography variant="h6" style={{marginBottom: "30px"}}>
-                    Current Players:
-                </Typography>
-                <Grid container spacing={2}>
-                    {props.players.map(function(alias, i){
+            <QueueBox sx={{marginTop: "30px", marginBottom: "30px"}}>
+                <ContentDivider>Waiting on others to join. Fill out some prompts in the meantime:</ContentDivider>
+            </QueueBox>
+            <QueueBox>
+                <ToggableComponent 
+                onLeftIcon={() => setCurrIndex(currIndex - 1)} 
+                displayLeftIcon={currIndex != 0}
+                onRightIcon={() => setCurrIndex(currIndex + 1)}
+                displayRightIcon={currIndex != 2}
+                >
+                    <TextField
+                    placeholder="Enter a Prompt"
+                    value={formValues[currIndex].text}
+                    variant="outlined"
+                    onChange={e => handleChange(e)}
+                    sx={{width: "100%"}}
+                    />
+                </ToggableComponent>
+            </QueueBox>
+            <QueueBox>
+                <ContentDivider>Current Players:</ContentDivider>
+                <Grid container spacing={1}>
+                    {props.players.map((alias, i) => {
                         return (
                             <Fragment key={i}>
-                                <PlayerCard alias={alias} image_url={randomAvatar()} score={0}/>
+                                <Grid item xs={12} md={6} lg={6}>
+                                    <PlayerCard alias={alias} avatarUrl={props.avatarUrl} score={0}/>
+                                </Grid>
                             </Fragment>
                         )
                     })}
                 </Grid>
-            </Box>
+            </QueueBox>
         </Row>
         <Footer>
-        {
-            props.isHost && 
-            <ButtonGroup disableElevation variant="contained" color="primary" sx={{marginTop: "10px", marginBottom: "10px"}}>
-                <Button 
-                variant="contained" 
-                color="secondary" 
-                onClick={() => props.setUserReady()} 
-                sx={{maxWidth: '100px', maxHeight: '40px', minWidth: '100px', minHeight: '40px'}}
-                > 
-                    Ready
-                </Button>
-                <Button 
-                variant="contained"  
-                color="secondary" 
-                onClick={props.leaveButtonPressed}
-                sx={{maxWidth: '100px', maxHeight: '40px', minWidth: '100px', minHeight: '40px'}}
-                > 
-                    End
-                </Button>
-            </ButtonGroup>
-        }
+            { readyButton() }
         </Footer>
     </Fragment>
     )

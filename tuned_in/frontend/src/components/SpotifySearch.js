@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState, Fragment } from "react";
-import { Grid, TextField } from "@material-ui/core";
-import Box from "@material-ui/core/Box"
+import { Grid, TextField } from "@mui/material";
+import Box from "@mui/material/Box";
 import { SPOTIFY_API } from "../backend/API";
 import InfiniteScroll from "react-infinite-scroll-component";
 import MusicCard from "../components/MusicCard";
 import useDebounce from "../hooks/useDebounce";
 import { Row, Header } from "./Layout";
-
+import { flexBoxProps } from "./Layout";
 
 const InputForm = forwardRef((props, ref) => {
     const inputRef = useRef(null);
@@ -59,21 +59,22 @@ export default function SpotifySearch({selectedSongRef}) {
     return (
     <Fragment>
         <Header align="center">
-            <Box style={{width: "70%"}}>
+            <Box sx={flexBoxProps}>
                 <InputForm
-                style={{background: "white", borderRadius: "12px"}}
-                InputProps={{style: {borderRadius: "8px"}}}
+                InputProps={{style: {borderRadius: "30px"}}}
+                // FormControlProps={{style: {borderRadius: "12px"}}}
+                className="inputRounded"
                 id="filled-search"
                 label="Select a Song"
                 type="search"
-                variant="filled"
+                variant="outlined"
                 onChange={e => setQ(e.target.value)}
                 ref={inputRef}
                 />
             </Box>
         </Header>
         <Row align="center">
-            <Box style={{width: "70%"}}>
+            <Box sx={{width: {sx: "100%", md: "90%", lg: "80%"}, marginTop: "30px"}}>
                 <InfiniteScroll
                 dataLength={items.length}
                 next={fetchMoreData}
@@ -81,15 +82,19 @@ export default function SpotifySearch({selectedSongRef}) {
                 loader={<h4>Loading...</h4>}
                 scrollableTarget="scrollableDiv"
                 >
-                    <Grid container spacing={2}>
-                        {items.map((i, index) => (
+                <Grid container spacing={1}>
+                    {items.map((i, index) => (
+                        <Fragment key={i}>
+                            <Grid item xs={12} md={6} lg={6}>
                             <MusicCard 
                             {...i} 
                             key={index} 
                             setSelectedCallback={setSelectedCallback} 
-                            selectedId={selectedProps.id}/>)
-                        )}
-                    </Grid>
+                            selectedId={selectedProps.id}/>
+                            </Grid>
+                        </Fragment> 
+                    ))}
+                </Grid>
                 </InfiniteScroll>
             </Box>
         </Row>

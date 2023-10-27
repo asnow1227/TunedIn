@@ -33,12 +33,12 @@ function RoomJoinComponent(props){
         <Fragment>
             <Grid item xs={12} align="center">
                 <TextField
-                    error={!!roomCodeError}
-                    placeholder="Enter a Room Code"
-                    helperText={roomCodeError}
-                    value={roomCode}
-                    variant="outlined"
-                    onChange={e => setRoomCode(e.target.value)}
+                  error={!!roomCodeError}
+                  placeholder="Enter a Room Code"
+                  helperText={roomCodeError}
+                  value={roomCode}
+                  variant="outlined"
+                  onChange={e => setRoomCode(e.target.value)}
                 />
             </Grid>
         </Fragment>

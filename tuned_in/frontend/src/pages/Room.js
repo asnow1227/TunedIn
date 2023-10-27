@@ -6,15 +6,24 @@ import API, { SPOTIFY_API, authenticateUsersSpotify } from "../backend/API"
 import SocketManager from "../backend/SocketManager";
 import useObjectState from "../hooks/useObjectState";
 import QueuePage from "./QueuePage";
-import CreatePromptsPage from "./EnterPromptsPage"
+import AVATARS from "../components/Avatars";
+import { BASE_URL } from "../backend/API";
+import CreatePromptsPage from "./EnterPromptsPage";
 import SelectSongPage from "./SelectSongPage"
 import { MainBox } from "../components/Layout";
+import RoomHeader from "../components/RoomHeader";
+
 
 const PAGES = {
     'Q': QueuePage,
-    'P': CreatePromptsPage,
+    'P': QueuePage,
     'SEL': SelectSongPage,
 }
+
+const randomAvatar = () => {
+    const imageUrl = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+    return `${BASE_URL}${imageUrl}`
+};
 
 export default function Room(props) {
     const { roomCode } = useParams();
@@ -23,6 +32,7 @@ export default function Room(props) {
     const [gamestate, setGamestate] = useState(null);
     const [playerAddTriggered, setPlayerAddTriggered] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [avatarUrl, setAvatarUrl] = useState(randomAvatar());
     const navigate = useNavigate();
     
     const leave = () => {
@@ -95,6 +105,7 @@ export default function Room(props) {
         try {
             const response = await API.post('ready-up');
             setUser({isReady: true, isWaiting: response.data.is_waiting});
+            console.log(response.data.is_waiting);
             if (!response.data.is_waiting){
                 const response = await API.post('next-gamestate');
                 SocketManager.send('gamestate_update', {gamestate: response.data.gamestate});
@@ -114,7 +125,7 @@ export default function Room(props) {
     };
 
     const renderGameState = () => {
-        if (user.isWaiting){
+        if (user.isWaiting){;
             return <Typography variant="h4" component="h4">Waiting...</Typography>
         }
         const Component = gamestate ? PAGES[gamestate] : null;
@@ -124,34 +135,16 @@ export default function Room(props) {
             setUserReady: setUserReady,
             players: players,
             roomCode: roomCode,
-            leaveButtonPressed: leaveButtonPressed
+            leaveButtonPressed: leaveButtonPressed,
+            avatarUrl: avatarUrl,
         }
         return Component ? <Component {...props}/> : null;
     }
 
     return (
         <MainBox>
-            {/* <Header align="center">
-                <Grid container >
-                    <Grid item xs={12}>
-                        <Typography color="textSecondary" variant="subtitle1">
-                            Alias: {user.alias}
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Typography color="textSecondary" variant="subtitle1">
-                            Room Code: {roomCode}
-                        </Typography>
-                    </Grid>
-                </Grid>    
-            </Header> */}
+            <RoomHeader avatarUrl={avatarUrl} leaveButtonPressed={leaveButtonPressed}/>
                 {!isLoading && renderGameState()}
-            {/* <Footer align="center">
-                {user.isHost && 
-                <Button variant="contained" color="secondary" onClick={leaveButtonPressed}> 
-                    End Game
-                </Button>}
-            </Footer> */}
         </MainBox>
     )
 }

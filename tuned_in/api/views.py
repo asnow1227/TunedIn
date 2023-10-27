@@ -295,7 +295,8 @@ class ReadyUp(APIView):
         alias.ready = True
         alias.save()
         room_aliases = Alias.objects.filter(room_code=room.code)
-        is_waiting = any([not alias.ready for alias in room_aliases]) and not room.gamestate == Room.GameState.QUEUE
+        is_waiting = any([not alias.ready for alias in room_aliases])
+        print(is_waiting)
         return Response({'is_waiting': is_waiting}, status=status.HTTP_200_OK)
 
 
@@ -306,16 +307,17 @@ class GetPrompts(APIView):
         room = kwargs.get('room')
         user = self.request.session.session_key
         assigned_prompts = PromptAssignments.objects.filter(assigned_user=user, room_code=room.code)
-
-        if not assigned_prompts:
+        prompts = Prompt.objects.filter(unique_id__in=[assigned_prompt.prompt_unique_id for assigned_prompt in assigned_prompts if assigned_prompt.assigned_user_song_choice is None],
+                                        prompt_key=room.main_round-1)
+        
+        if not prompts:
             return Response({
                 'Invalid Request': 'User has no more prompts remaining'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        prompts = Prompt.objects.filter(unique_id__in=[assigned_prompt.prompt_unique_id for assigned_prompt in assigned_prompts],
-                                        prompt_key=room.main_round-1)
-        data = [{'prompt': prompt.prompt_text, 'id': prompt.unique_id} for prompt in prompts]
-        return Response({'prompts' : data}, status=status.HTTP_200_OK)
+        data = {'text': prompts[0].prompt_text, 'id': prompts[0].unique_id}
+        print(data)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class SubmitSongSelections(APIView):

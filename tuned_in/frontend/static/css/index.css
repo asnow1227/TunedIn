@@ -1,6 +1,11 @@
 html {
   background-color: black;
   color: white;
+  background: url(blob-scene-haikei.svg) no-repeat center center fixed; 
+  background-size: cover;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
 }
 
 html, body {
@@ -8,6 +13,12 @@ html, body {
   width: 100%;
   margin: 0;
   padding: 0;
+}
+
+@media (orientation: portrait) {
+  body {
+      background-size: auto 100vh;
+  }
 }
 
 #main {
@@ -156,4 +167,15 @@ html, body {
 
 .MuiCard-variantOutlined {
   outline: black;
+}
+
+.inputRounded .MuiOutlinedInput-root {
+  border-radius: 20px;
+}
+
+.menu {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  height: 3rem;
 }

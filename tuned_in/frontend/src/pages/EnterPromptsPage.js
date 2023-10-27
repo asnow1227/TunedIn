@@ -24,7 +24,6 @@ export default function CreatePromptsPage(props) {
     let prompts = formValues.map((elem, idx) => {
       return {text: elem.text, key: idx}
     });
-    console.log(prompts);
     try {
       await API.post('submit-prompts', prompts);
       props.setUserReady();
@@ -37,8 +36,6 @@ export default function CreatePromptsPage(props) {
     e.preventDefault();
     submitPrompts();
   }
-
-  const buttonProps = { variant: "contained", color: "secondary", onClick: handleSubmitButtonPressed }
 
   return (
     <Fragment>

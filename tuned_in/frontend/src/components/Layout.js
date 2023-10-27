@@ -39,3 +39,5 @@ export function Centered({ children, ...childProps}){
         </div>
     )
 }
+
+export const flexBoxProps = {width: { xs: "100%", md: "75%", lg: "50%"}}

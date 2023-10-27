@@ -10,6 +10,7 @@ import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import ModalClose from '@mui/joy/ModalClose';
 import RoomJoinComponent from "../components/RoomJoinComponent";
+import useImage from "../hooks/useImage";
 import {
   BrowserRouter as Router,
   Route,
@@ -39,15 +40,13 @@ export default function HomePage(props) {
     } else {
       return (
       <MainBox>
-        <Header>
-            <Grid container spacing={1} alignItems="center">
-              <Grid item xs={12}>
-                <Typography variant="h2" compact="h2"> 
-                  Tuned In 
-                </Typography>
-              </Grid>
-            </Grid>
-        </Header>
+        <Grid container spacing={1} alignItems="center">
+          <Grid item xs={12}>
+            <Typography variant="h2" compact="h2"> 
+              Tuned In 
+            </Typography>
+          </Grid>
+        </Grid>
         <div className="row outer">
           <div className="row inner">
             <Grid container spacing={2}>
@@ -100,7 +99,7 @@ export default function HomePage(props) {
                 </Typography>
               </Grid>
               <Grid item>
-                <img src={BASE_URL + "static/assets/logos/spotify-logo.png"} height={50}/>
+                <img src={useImage('logo', 'spotify-logo')} height={50}/>
               </Grid>
             </Grid>
         </Footer>

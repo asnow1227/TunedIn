@@ -87,7 +87,7 @@ class PromptAssignments(models.Model):
     room_code = models.CharField(max_length=8, null=False)
     # prompt id
     prompt_unique_id = models.CharField(max_length=8, null=False) 
-    # song choice
+    # song choice. We will set to non-null value on timeout of the selection page
     assigned_user_song_choice = models.TextField(null=True)
     # votes for the user's song choice
     assigned_user_votes = models.IntegerField(default=0)
