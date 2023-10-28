@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-sq14y3%55(g7_-3&_z-i8a474g5aj27%zmtdc12t*%*s%!0+cq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["96aa-2601-144-200-6d20-6d6d-bf0-4fa6-9eb6.ngrok-free.app", "127.0.0.1"]
 
 ASGI_APPLICATION = "tuned_in.asgi.application"
 

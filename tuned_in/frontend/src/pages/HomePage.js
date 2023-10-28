@@ -34,6 +34,11 @@ export default function HomePage(props) {
     setButtonPressed(undefined);
   };
 
+  const getTheme = (theme) => {
+    console.log(theme.typography.h4.fontSize);
+    return { color: "white "};
+  }
+
   const renderHomePage = () => {
     if (roomCode) {
       return <Navigate to={`/room/${roomCode}`} replace={true}/>
@@ -51,10 +56,10 @@ export default function HomePage(props) {
           <div className="row inner">
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <Box style={{width: "50%"}}>
+                <Box sx={{width: {sm: "100%", md: "75%", lg:"50%"}}}>
                   <Grid container spacing={1}>
                     <Grid item xs={12}>
-                      <Typography variant="h6">  
+                      <Typography variant="h4">  
                         How it Works
                       </Typography>
                     </Grid>
@@ -95,11 +100,11 @@ export default function HomePage(props) {
             <Grid container wrap="nowrap" direction="row" alignItems="center" justifyContent="center">
               <Grid item>
                 <Typography variant="h4">  
-                  A party game powered by Spotify
+                  Powered by Spotify
                 </Typography>
               </Grid>
               <Grid item>
-                <img src={useImage('logo', 'spotify-logo')} height={50}/>
+                <img src={useImage('logo', 'spotify-logo')} height="30rem"/>
               </Grid>
             </Grid>
         </Footer>

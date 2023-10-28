@@ -108,7 +108,7 @@ function QueuePage(props){
                 {`Code: ${props.roomCode}`}
             </Typography>
             <QueueBox sx={{marginTop: "30px", marginBottom: "30px"}}>
-                <ContentDivider>Waiting on others to join. Fill out some prompts in the meantime:</ContentDivider>
+                <ContentDivider>Enter your prompts:</ContentDivider>
             </QueueBox>
             <QueueBox>
                 <ToggableComponent 
