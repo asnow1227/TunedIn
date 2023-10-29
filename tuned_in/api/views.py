@@ -16,6 +16,7 @@ from game.gamestate import GameState
 from decorator import decorator
 from .exceptions import RoomNotReadyError
 from .utils import update_gamestate
+from spotify.utils import is_spotify_authenticated
 
 
 # convenience method to clear room data on host leave
@@ -115,6 +116,19 @@ class CreateRoomView(APIView):
         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+def get_player(player_alias, host_id):
+    is_authenticated, spotify_meta = is_spotify_authenticated(player_alias.user)
+    player = {
+        'id': player_alias.id,
+        'isReady': player_alias.ready,
+        'isHost': player_alias.user == host_id,
+        'alias': player_alias.alias,
+        'isAuthenticated': is_authenticated
+    }
+    if spotify_meta:
+        player.update(spotify_meta)
+    return player
+
 # view to get details about the room
 class GetRoom(APIView):
     serializer_class = RoomSerializer
@@ -132,15 +146,23 @@ class GetRoom(APIView):
         
         room = room_set[0]
         current_players = Alias.objects.filter(room_code=room.code).all()
-        player_alias = [alias for alias in current_players if alias.user == self.request.session.session_key][0]
-        players = [player_alias.alias]
-        players.extend([alias.alias for alias in current_players if alias.alias != player_alias.alias])
+        user_alias = [alias for alias in current_players if alias.user == self.request.session.session_key][0]
+        # user_id = user_alias.id
+        # others = 
+        # players = [player_alias.alias]
+        # players.extend([alias.alias for alias in current_players if alias.alias != player_alias.alias])
+        # data = {
+        #     'is_ready': player_alias.ready,
+        #     'is_host': self.request.session.session_key == room.host,
+            # 'is_waiting': player_alias.ready and any([not alias.ready for alias in current_players if alias.alias != player_alias.alias]) and room.gamestate != Room.GameState.QUEUE,
+        #     'gamestate': room.gamestate,
+        #     'players': players
+        # }
+
         data = {
-            'is_ready': player_alias.ready,
-            'is_host': self.request.session.session_key == room.host,
-            'is_waiting': player_alias.ready and any([not alias.ready for alias in current_players if alias.alias != player_alias.alias]) and room.gamestate != Room.GameState.QUEUE,
             'gamestate': room.gamestate,
-            'players': players
+            'user': get_player(user_alias, room.host),
+            'players': [get_player(player_alias, room.host) for player_alias in current_players if player_alias.user != user_alias.user]
         }
   
         return Response(data, status=status.HTTP_200_OK)
@@ -197,7 +219,7 @@ class JoinRoom(APIView):
         self.request.session['room_code'] = room_code
         # return a success response
         return Response({'message': 'Room Joined'}, status=status.HTTP_200_OK)
-        
+    
 
 class UserInRoom(APIView):
     # view to check if a user is in a room. Used to validate joining a room.
@@ -211,6 +233,12 @@ class UserInRoom(APIView):
             'code': self.request.session.get('room_code')
         }
         return JsonResponse(data, status=status.HTTP_200_OK)
+
+
+class ClearRoomSession(APIView):
+    def post(self, request, format=None):
+        self.request.session.pop('room_code', None)
+        return Response({'Success': 'Request Successful'}, status=status.HTTP_200_OK)
 
 
 class LeaveRoom(APIView):
@@ -228,6 +256,8 @@ class LeaveRoom(APIView):
         if len(alias_results) > 0:
             alias = alias_results[0]
             alias.delete()
+
+        self.request.session.pop('room_code')
             
         return Response({'Message': 'Success'}, status=status.HTTP_200_OK)
 

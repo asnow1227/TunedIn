@@ -19,7 +19,6 @@ def generate_prompt_id():
             break
     return code
 
-
 # Create your models here. 
 # Note that all models have a unique "id" field that we don't have to define but can 
 # access to get a unique record if we want.
@@ -105,6 +104,8 @@ class Alias(models.Model):
     # certain gamestates will require a 'ready check' to see if all players in the room 
     # are currently ready to continue
     ready = models.BooleanField(default=False)
+    # convenience for checking if user is spotify authenticated
+    authenticated = models.BooleanField(default=False)
 
     class Meta:
         constraints = [

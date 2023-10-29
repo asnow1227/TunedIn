@@ -129,11 +129,11 @@ function QueuePage(props){
             <QueueBox>
                 <ContentDivider>Current Players:</ContentDivider>
                 <Grid container spacing={1}>
-                    {props.players.map((alias, i) => {
+                    {props.players.map((player, i) => {
                         return (
                             <Fragment key={i}>
                                 <Grid item xs={12} md={6} lg={6}>
-                                    <PlayerCard alias={alias} avatarUrl={props.avatarUrl} score={0}/>
+                                    <PlayerCard alias={player.alias} avatarUrl={props.avatarUrl} score={0}/>
                                 </Grid>
                             </Fragment>
                         )

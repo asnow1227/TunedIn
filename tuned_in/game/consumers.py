@@ -65,6 +65,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def host_leave(self, event):
         room_code = event['data']['room_code']
+        print(event)
         await clear_room_data(room_code)
 
         await self.send(text_data=jsonSocketMessage('host_leave'))
@@ -79,10 +80,12 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def player_add(self, event):
         print(event)
-        alias = event['data']['alias']
+        player = event['data']['player']
+        player.pop('isWaiting', None)
+        
         await self.send(
             text_data=jsonSocketMessage('player_add', data={
-                'alias': alias
+                'player': player
             })
         )
 

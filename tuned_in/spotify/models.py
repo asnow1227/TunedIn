@@ -8,3 +8,11 @@ class SpotifyToken(models.Model):
     access_token = models.CharField(max_length=150)
     expires_in = models.DateTimeField()
     token_type = models.CharField(max_length=50)
+
+
+class UsersSpotify(models.Model):
+    user = models.CharField(max_length=50, unique=True)
+    image_url = models.CharField(max_length=200)
+    display_name = models.CharField(max_length=50)
+    spotify_id = models.CharField(max_length=200)
+    

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .credentials import REDIRECT_URI, CLIENT_SECRET, CLIENT_ID
 from rest_framework.views import APIView
 from .models import SpotifyToken
-from api.models import Room
+from api.models import Alias
 from requests import Request, post
 from rest_framework import status
 from rest_framework.response import Response
@@ -15,7 +15,8 @@ from .utils import (
     skip_song,
     get_songs,
     get_oembed,
-    get_track
+    get_track,
+    get_user_token
 )
 
 # Create your views here.
@@ -56,10 +57,20 @@ def spotify_callback(request, format=None):
 
     return redirect('frontend:')
 
+
 class IsAuthenticated(APIView):
     def get(self, request, format=None):
-        is_authenticated = is_spotify_authenticated(self.request.session.session_key)
-        return Response({'status': is_authenticated}, status=status.HTTP_200_OK)
+        is_authenticated, meta = is_spotify_authenticated(self.request.session.session_key)
+        return Response({'status': is_authenticated, 'spotify_user_details': meta}, status=status.HTTP_200_OK)
+
+
+class LogoutSpotify(APIView):
+    def post(self, request, format=None):
+        token = get_user_token(self.request.session.session_key)
+        if not token:
+            return Response({'Success': 'User already logged out'}, status=status.HTTP_200_OK)
+        token.delete()
+        return Response({'Success': 'Deleted user tokens'}, status=status.HTTP_200_OK)
 
 
 class CurrentSong(APIView):
@@ -69,7 +80,7 @@ class CurrentSong(APIView):
         if room.exists():
             room = room[0]
         else:
-            return Response({'Ivalid Request': 'User not currently in a room'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'Invalid Request': 'User not currently in a room'}, status=status.HTTP_400_BAD_REQUEST)
         host = room.host
         if not is_spotify_authenticated(host):
             return Response({'Invalid Request': 'Host not Currently Authenticated'}, status=status.HTTP_400_BAD_REQUEST)

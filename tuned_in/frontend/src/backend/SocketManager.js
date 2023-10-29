@@ -55,7 +55,7 @@ class SocketManager {
         this.socket.close();
     }
     initialize(roomCode){
-        this.socket = new WebSocket(`wss://${window.location.host}/ws/room/${roomCode}/`);
+        this.socket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
         this.roomCode = roomCode;
         this.socket.onmessage = this.routeMessage;
     }

@@ -1,4 +1,4 @@
-import React, { useState,  useEffect, } from "react";
+import React, { useState,  useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";  
 import { Typography } from '@mui/material';
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,18 @@ const randomAvatar = () => {
     return `${BASE_URL}${imageUrl}`
 };
 
+const checkUserWaiting = (players) => {
+    const filtered = Object.keys(players)
+    .filter(key => key!=user.user_id)
+    .reduce((obj, key) => {
+        obj[key] = players[key];
+        return obj;
+    }, {});
+
+    return user.is_ready && filtered.some()
+
+}
+
 export default function Room(props) {
     const { roomCode } = useParams();
     const [user, setUser] = useObjectState({isHost: null, isWaiting: null, isReady: false, alias: ""});
@@ -37,8 +49,13 @@ export default function Room(props) {
     
     const leave = () => {
         props.leaveRoomCallback();
+        console.log('leave room called');
         navigate('/');
     }
+
+    const addPlayer = (newPlayer) => {
+        setPlayers((prev) => prev.some(player => player.id == newPlayer.id) ? prev : [...prev, newPlayer]);
+    };
 
     useEffect(() => {
         SocketManager.initialize(roomCode);
@@ -55,9 +72,11 @@ export default function Room(props) {
                 }
             },
             player_add: (data) => {
-                setPlayers(prev =>  (Array.from(new Set([...prev, data.alias]))));
+                console.log(data.player);
+                addPlayer(data.player);
             },
             host_leave: (_) => {
+                console.log('host leave called');
                 leave();
             },
         });
@@ -66,39 +85,41 @@ export default function Room(props) {
             try {
                 const response = await API.get('get-room?code=' + roomCode);
                 const data = response.data;
-                setPlayers(data.players);
+                setPlayers([data.user, ...data.players]);
                 setGamestate(data.gamestate);
-                setUser({isWaiting: data.is_waiting, isReady: data.is_ready, isHost: data.is_host, alias: data.players[0]});
-                return data.isHost;
+                setUser({isWaiting: data.user.is_ready && data.players.some(elem => !elem.is_ready), ...data.user});
+                return data.user.isHost;
             } catch {
                 leave();
             }
         }
 
-        const getAuthenticatedStatus = async () => {
-            const response = await SPOTIFY_API.get('is-authenticated');
-            return response.data.status;
-        };
+        // const getAuthenticatedStatus = async () => {
+        //     const response = await SPOTIFY_API.get('is-authenticated');
+        //     return response.data.status;
+        // };
 
-        const setUp = async () => {
-            const isHost = await setRoomAndUserDetails();
-            if (isHost){
-                const isSpotifyAuthenticated = await getAuthenticatedStatus();
-                if (!isSpotifyAuthenticated){
-                    await authenticateUsersSpotify();
-                }
-            }
-        };
+        // const setUp = async () => {
+        //     const isHost = await setRoomAndUserDetails();
+        //     if (isHost){
+        //         const isSpotifyAuthenticated = await getAuthenticatedStatus();
+        //         if (!isSpotifyAuthenticated){
+        //             await authenticateUsersSpotify();
+        //         }
+        //     }
+        // };
 
         setIsLoading(true);
-        setUp();
+        setRoomAndUserDetails();
         setIsLoading(false);
        
     }, []);
 
+    console.log(user.isHost);
+
     if (user.alias && !playerAddTriggered){
         setPlayerAddTriggered(true);
-        SocketManager.send('player_add', {alias: user.alias});
+        SocketManager.send('player_add', {player: user});
     }
 
     const setUserReady = async () => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import API, { BASE_URL} from "../backend/API";
+import API, { BASE_URL, SPOTIFY_API} from "../backend/API";
 import CreatePromptsPage from "./EnterPromptsPage";
 import EmbedSpotify from "./SpotifyEmbed";
 import Room from "./Room";
@@ -11,6 +11,8 @@ import ModalDialog from '@mui/joy/ModalDialog';
 import ModalClose from '@mui/joy/ModalClose';
 import RoomJoinComponent from "../components/RoomJoinComponent";
 import useImage from "../hooks/useImage";
+import { authenticateUsersSpotify } from "../backend/API";
+import HomePageHeader from "../components/HomePageHeader";
 import {
   BrowserRouter as Router,
   Route,
@@ -19,24 +21,68 @@ import {
 } from "react-router-dom";
 
 
+const fetchRoomCode = async () => {
+  return API.get('user-in-room').then((response) => {
+    // console.log(response.data);
+    return response.data;
+  }).catch((err) => {
+    console.log(err); 
+  });
+}
+
+const fetchUsersSpotify = async () => {
+  return SPOTIFY_API.get('is-authenticated').then((response) => {
+    return response.data;
+  }).catch((err) => {
+    console.log(err)
+  });
+}
+
+const LogoutSpotify = async () => {
+  return SPOTIFY_API.post('logout')
+}
+
 export default function HomePage(props) {
   const [roomCode, setRoomCode] = useState(null);
   const [buttonPressed, setButtonPressed] = useState(undefined);
+  const [isSpotifyAuthenticated, setIsSpotifyAuthenticated] = useState(false);
+  const [spotifyUserDetails, setSpotifyUserDetails] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    API.get('user-in-room').then((response) => {
-      setRoomCode(response.data.code)
-    });
+    const setUp = async () => {
+      await fetchRoomCode().then((data) => {
+        if (data.code){
+          setRoomCode(data.code);
+        }
+      });
+      await fetchUsersSpotify().then((data) => {
+        console.log(data.status);
+        console.log(data.spotify_user_details);
+        setIsSpotifyAuthenticated(data.status);
+        setSpotifyUserDetails(data.spotify_user_details);
+      });
+    }
+    setUp();
+    setIsLoading(false);
   }, []);
 
   const leaveRoomCallback = () => {
     setRoomCode(null);
     setButtonPressed(undefined);
+    API.post('clear-room-session');
+    // setIsSpotifyAuthenticated(false);
+    // setSpotifyUserDetails({});
   };
 
-  const getTheme = (theme) => {
-    console.log(theme.typography.h4.fontSize);
-    return { color: "white "};
+  const handleSpotifyLogout = async () => {
+    await LogoutSpotify().then((response) => {
+      setIsSpotifyAuthenticated(false);
+      setSpotifyUserDetails({});
+    }).catch((err) => {
+      console.log(err)
+      alert("Error logging out of Spotify");
+    })
   }
 
   const renderHomePage = () => {
@@ -45,6 +91,7 @@ export default function HomePage(props) {
     } else {
       return (
       <MainBox>
+        {isSpotifyAuthenticated && <HomePageHeader spotifyAvatarUrl={spotifyUserDetails.image_url} />}
         <Grid container spacing={1} alignItems="center">
           <Grid item xs={12}>
             <Typography variant="h2" compact="h2"> 
@@ -83,6 +130,26 @@ export default function HomePage(props) {
                     </Button>
                 </ButtonGroup>
               </Grid>
+              <Grid item xs={12}>
+                <Button 
+                  variant="outlined"
+                  onClick={() => {
+                    isSpotifyAuthenticated ? handleSpotifyLogout() : authenticateUsersSpotify();
+                  }}  
+                  sx={(theme) => ({
+                  backgroundColor: theme.palette.primary.alternative,
+                  color: "white",
+                  borderColor: theme.palette.primary.alternative,
+                  "&:hover": {
+                    backgroundColor: theme.palette.primary.alternative,
+                    opacity: .6,
+                    color: "white",
+                    borderColor: theme.palette.secondary.main,
+                  }
+                })}>
+                  {isSpotifyAuthenticated ? "Logout of Spotify" : "Login with Spotify"}
+                </Button>
+              </Grid>
             </Grid>
             <Modal
              open={!!buttonPressed}
@@ -114,18 +181,18 @@ export default function HomePage(props) {
   };
 
   const renderRoomPage = (props) => {
-    return <Room {...props} leaveRoomCallback={leaveRoomCallback} />
+    return <Room {...props} leaveRoomCallback={leaveRoomCallback} isAuthenticated={isSpotifyAuthenticated}/>
   };
   
   return (
-    <Router>
-      <Routes>
-        <Route exact path="/" element={renderHomePage()} />
-        <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
-        <Route exact path="/embed" element={<EmbedSpotify />} />
-        <Route path='room/:roomCode' element={renderRoomPage(props)} />
-        <Route exact path="/select-song" element={<SelectSongPage />} />
-      </Routes>
-    </Router>
+      <Router>
+        <Routes>
+          <Route exact path="/" element={!isLoading && renderHomePage()} />
+          <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
+          <Route exact path="/embed" element={<EmbedSpotify />} />
+          <Route path='room/:roomCode' element={renderRoomPage(props)} />
+          <Route exact path="/select-song" element={<SelectSongPage />} />
+        </Routes>
+      </Router>
   );
 }

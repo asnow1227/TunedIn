@@ -9,7 +9,8 @@ from .views import (
     SkipSong,
     GetSongs,
     GetOembed,
-    GetTrack
+    GetTrack,
+    LogoutSpotify
 )
 
 urlpatterns = [
@@ -22,5 +23,6 @@ urlpatterns = [
     path('skip', SkipSong.as_view()),
     path('get-songs', GetSongs.as_view()),
     path('get-oembed', GetOembed.as_view()),
-    path('get-track', GetTrack.as_view())
+    path('get-track', GetTrack.as_view()),
+    path('logout', LogoutSpotify.as_view())
 ]

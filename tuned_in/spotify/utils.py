@@ -1,4 +1,4 @@
-from .models import SpotifyToken
+from .models import SpotifyToken, UsersSpotify
 from django.utils import timezone
 from datetime import timedelta
 from .credentials import CLIENT_ID, CLIENT_SECRET
@@ -17,51 +17,80 @@ CLIENT_URL = "https://accounts.spotify.com/api/token"
 OEMBED_URL = "https://open.spotify.com/oembed"
 
 
-def get_user_tokens(session_id):
+def get_user_token(session_id):
     user_tokens = SpotifyToken.objects.filter(user=session_id)
     if user_tokens.exists():
         return user_tokens[0]
     return None
 
-
 def update_or_create_user_tokens(session_id, access_token, token_type, expires_in, refresh_token):
-    tokens = get_user_tokens(session_id)
+    token = get_user_token(session_id)
     expires_in = timezone.now() + timedelta(seconds=expires_in)
     
-    if tokens:
-        tokens.access_token = access_token
-        tokens.refresh_token = refresh_token
-        tokens.expires_in = expires_in
-        tokens.token_type = token_type
-        tokens.save(update_fields=[
+    if token:
+        token.access_token = access_token
+        token.refresh_token = refresh_token
+        token.expires_in = expires_in
+        token.token_type = token_type
+        token.save(update_fields=[
             'access_token',
             'refresh_token',
             'expires_in',
             'token_type'
         ])
     else:
-        tokens = SpotifyToken(
+        token = SpotifyToken(
             user=session_id,
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=expires_in,
             token_type=token_type
         )
-        tokens.save()
+        token.save()
 
+def get_users_spotify_meta(session_id):
+    res = execute_spotify_api_request(session_id)
+    has_image = res.get('images')
+    return {
+        'display_name': res.get('display_name'),
+        'image_url': res.get('images')[0]['url'] if has_image else None,
+        'spotify_id': res.get('id')
+    }
+
+# def set_users_spotify_meta(session_id):
+#     meta = get_users_spotify_meta(session_id)
+#     result_set = UsersSpotify.objects.filter(user=session_id)
+#     if result_set:
+#         users_spotify = result_set[0]
+#         users_spotify.display_name = meta.get('display_name')
+#         users_spotify.image_url = meta.get('image_url')
+#         users_spotify.spotify_id = meta.get('spotify_id')
+#         users_spotify.save()
+#     else:
+#         users_spotify = UsersSpotify(
+#             user=session_id,
+#             display_name = meta.get('display_name'),
+#             image_url = meta.get('image_url'),
+#             spotify_id = meta.get('spotify_id')
+#         )
+#         users_spotify.save()
+#     return meta
+
+# def get_cached_spotify_meta(session_id):
+#     result_set = UsersSpotify.objects.filter(user=sess)
 
 def is_spotify_authenticated(session_id):
-    tokens = get_user_tokens(session_id)
-    if tokens:
-        expiry = tokens.expires_in
+    token = get_user_token(session_id)
+    if token:
+        expiry = token.expires_in
         if expiry <= timezone.now():
             refresh_spotify_token(session_id)
-        return True
-    return False
-
+        meta = get_users_spotify_meta(session_id)
+        return True, meta
+    return False, None
 
 def refresh_spotify_token(session_id):
-    refresh_token = get_user_tokens(session_id).refresh_token
+    refresh_token = get_user_token(session_id).refresh_token
 
     response = post('https://accounts.spotify.com/api/token', data={
         'grant_type': 'refresh_token',
@@ -77,11 +106,11 @@ def refresh_spotify_token(session_id):
     update_or_create_user_tokens(session_id, access_token, token_type, expires_in, refresh_token)
 
 
-def execute_spotify_api_request(session_id, endpoint, post_=False, put_=False):
-    tokens = get_user_tokens(session_id)
+def execute_spotify_api_request(session_id, endpoint='', post_=False, put_=False):
+    token = get_user_token(session_id)
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + tokens.access_token
+        'Authorization': 'Bearer ' + token.access_token
     }
 
     if post_:
