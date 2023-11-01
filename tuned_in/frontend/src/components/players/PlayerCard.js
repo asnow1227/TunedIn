@@ -1,13 +1,12 @@
 import React from "react";
 import { Grid } from "@mui/material";
-import { Card, CardContent, Typography, AspectRatio, Button, CardCover } from "@mui/joy";
-import { BASE_URL } from "../backend/API";
-import useImage from "../hooks/useImage";
+import { Card, CardContent, Typography, Button, CardCover } from "@mui/joy";
+import useImage from "../../hooks/useImage";
 import Avatar from "@mui/joy/Avatar";
-import useWindowDimensions from "../hooks/useWindowSize";
+import useWindowDimensions from "../../hooks/useWindowSize";
 
 export default function PlayerCard(props){
-    const { width, height } = useWindowDimensions();
+    const { height } = useWindowDimensions();
     const cardHeight = Math.floor(height/5);
     console.log(`Card Height: ${cardHeight}`)
     const avatarSize = Math.floor(4*cardHeight/5);

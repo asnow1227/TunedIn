@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import API, { BASE_URL, SPOTIFY_API} from "../backend/API";
+import { useNavigate } from "react-router-dom";
 import CreatePromptsPage from "./EnterPromptsPage";
 import EmbedSpotify from "./SpotifyEmbed";
 import Room from "./Room";
@@ -15,6 +16,9 @@ import useImage from "../hooks/useImage";
 import { authenticateUsersSpotify } from "../backend/API";
 import HomePageHeader from "../components/HomePageHeader";
 import LandingPage from "./Landing";
+import { withRouter } from "../wrappers/withRouter";
+import HomePageContext, { useHomePageContext } from "../contexts/HomePageContext";
+import SocketProvider from "../components/SocketLayer";
 import {
   BrowserRouter as Router,
   Route,
@@ -45,6 +49,7 @@ const LogoutSpotify = async () => {
 }
 
 export default function HomePage(props) {
+  // const navigate = useNavigate();
   const [roomCode, setRoomCode] = useState(null);
   // const [buttonPressed, setButtonPressed] = useState(undefined);
   // const [isSpotifyAuthenticated, setIsSpotifyAuthenticated] = useState(false);
@@ -53,12 +58,15 @@ export default function HomePage(props) {
 
   useEffect(() => {
     const setUp = async () => {
-      const roomCode = await fetchRoomCode();
-      if (roomCode.code) {
-        setRoomCode(roomData.code);
-        const roomDetails = await getRoom(roomData.code);
-        console.log('room Details called', roomDetails);
-      }
+      const roomCode = await fetchRoomCode().then((data) => {
+        if (data.code) setRoomCode(data.code);
+      });
+      // if (roomCode.code) {
+      //   // props.navigate('/room/' + roomCode.code);
+      //   setRoomCode(roomData.code);
+      //   // const roomDetails = await getRoom(roomData.code);
+      //   console.log('room Details called', roomDetails);
+      // }
       // const roomDetails = await getRoomDetails();
       
       // await fetchRoomCode().then((data) => {
@@ -105,7 +113,13 @@ export default function HomePage(props) {
   };
 
   const renderRoomPage = (props) => {
-    return <Room {...props} leaveRoomCallback={leaveRoomCallback} />
+    return (
+      <HomePageContext.Provider value={leaveRoomCallback}>
+        <SocketProvider>
+          <Room {...props} />
+        </SocketProvider>
+      </HomePageContext.Provider>
+    )
   };
   
   return (

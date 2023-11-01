@@ -1,18 +1,31 @@
 import React, { useState, useEffect } from "react";
 import SocketManager from '../backend/SocketManager';
-import { useParams } from "react-router-dom";  
+import { useNavigate, useParams } from "react-router-dom";  
 import useObjectState from "./useObjectState";
+import { useSocketContext } from "../contexts/SocketContext";
+import { useHomePageContext } from "../contexts/HomePageContext";
+import API from "../backend/API";
 
-export default function useRoom(){
+export default function useRoom() {
     const { roomCode } = useParams();
     const [user, setUser] = useObjectState({isHost: null, isWaiting: null, isReady: false, alias: ""});
     const [players, setPlayers] = useState(new Array());
     const [gamestate, setGamestate] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [playerAddTriggered, setPlayerAddTriggered] = useState(false);
+    const socketManager = useSocketContext();
+    const leaveRoomCallback = useHomePageContext();
+    const navigate = useNavigate();
+    
+    const leave = () => {
+        console.log('Leave Room Called within Room')
+        leaveRoomCallback();
+        navigate('/');
+    }
 
     useEffect(() => {
-        SocketManager.initialize(roomCode);
-        SocketManager.onEvents({
+        // SocketManager.initialize(roomCode);
+        socketManager.onEvents({
             gamestate_update: (data) => {
                 setGamestate(data.gamestate);
                 setUser({isWaiting: false, isReady: false});
@@ -43,7 +56,6 @@ export default function useRoom(){
                 setGamestate(data.gamestate);
                 const user = {isWaiting: data.user.is_ready && data.players.some(player => !player.is_ready), ...data.user}
                 setUser(user);
-                SocketManager.send('player_add', user);
             } catch {
                 leave();
             }
@@ -68,7 +80,13 @@ export default function useRoom(){
         setRoomAndUserDetails();
         setIsLoading(false);
        
+        console.log('This Useeffect was called');
     }, []);
 
+    if (user.alias && !playerAddTriggered){
+        setPlayerAddTriggered(true);
+        socketManager.send('player_add', {player: user});
+    }
+
     return { roomCode, user, players, gamestate, isLoading }
-}
+};

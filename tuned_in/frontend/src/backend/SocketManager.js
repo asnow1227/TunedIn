@@ -1,15 +1,16 @@
 
 class SocketManager {
-    constructor(){
-        this.socket = null;
+    constructor({ roomCode }){
+        this.socket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
         this.functions = new Map();
         this.routeMessage = this.routeMessage.bind(this);
         this.removeEvent = this.removeEvent.bind(this);
         this.onEvent = this.onEvent.bind(this);
         this.send = this.send.bind(this);
         this.removeEvents = this.removeEvents.bind(this);
-        this.roomCode = null;
+        this.roomCode = roomCode;
         this.onEvents = this.onEvents.bind(this);
+        this.socket.onmessage = this.routeMessage;
     }
     routeMessage(e){
         let data = JSON.parse(e.data);
@@ -41,7 +42,6 @@ class SocketManager {
             type: event_type,
             data: data
         });
-        console.log(message);
         if (this.socket.readyState === 1) {
             this.socket.send(message);
         } else {
@@ -61,7 +61,7 @@ class SocketManager {
     }
 }
 
-export default new SocketManager();
+export default SocketManager;
 
 
 

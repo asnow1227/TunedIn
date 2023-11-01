@@ -8,10 +8,28 @@ import Tooltip from '@mui/material/Tooltip';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Logout from '@mui/icons-material/Logout';
 import useWindowDimensions from "../hooks/useWindowSize";
+import { useSocketContext } from "../contexts/SocketContext";
+import { useUserContext } from "../contexts/UserContext";
+import { useParams } from "react-router-dom";
 
 export default function RoomHeader({ children, ...props }) {
     const { width, height } = useWindowDimensions();
     const [anchorEl, setAnchorEl] = useState(null);
+    const socketManager = useSocketContext();
+    const user = useUserContext();
+    const { roomCode } = useParams();
+
+    const leaveButtonPressed = () => {
+        if (user.isHost) {
+            console.log('Host Leave Called from Within the Room Page');
+            socketManager.send('host_leave', {room_code: roomCode});
+        }
+        else {
+            socketManager.send('player_leave', {alias: user.alias});
+        }
+    };
+
+
     const open = Boolean(anchorEl);
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -19,6 +37,7 @@ export default function RoomHeader({ children, ...props }) {
     const handleClose = () => {
         setAnchorEl(null);
     };
+
 
     const avatarSize = Math.max(Math.floor(width/15), '30')
 
@@ -70,7 +89,7 @@ export default function RoomHeader({ children, ...props }) {
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
             <MenuItem onClick={handleClose}>
-                <ListItemIcon onClick={props.leaveButtonPressed}>
+                <ListItemIcon onClick={leaveButtonPressed}>
                     <Logout fontSize="small" color="secondary"/>
                 </ListItemIcon>
                     End Game

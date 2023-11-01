@@ -1,14 +1,17 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useContext, useState } from "react";
 import { Button, ButtonGroup, Typography, Box, Grid, TextField } from '@mui/material';
 import { Footer } from "../components/Layout";
 import { Row} from "../components/Layout"
-import PlayerCard from "../components/PlayerCard";
+import PlayerCard from "../components/players/PlayerCard";
 import ToggableComponent from "../components/ToggableComponent";
 import makeArray from "../utils/makeArray";
 import ConditionalButton from "../components/ConditionalButton";
 import API from "../backend/API";
 import Divider from '@mui/material/Divider';
 import RoomHeader from "../components/RoomHeader";
+import PlayerFeed from "../components/players/PlayerFeed";
+import { useParams } from "react-router-dom";
+import { usePlayersContext } from "../contexts/PlayersContext";
 
 const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
 const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";
@@ -45,6 +48,8 @@ const ContentDivider = ({ children }) => {
 function QueuePage(props){
     const [formValues, setFormValues] = useState(makeArray(3).map((_, i) => {return {key: i, text: "", submitted: false}}));
     const [currIndex, setCurrIndex] = useState(0);
+    const { roomCode } = useParams();
+    const players = usePlayersContext();
     const anyBlank = formValues.some((elem) => !elem.text);
 
     const handleChange = (e) => {
@@ -105,7 +110,7 @@ function QueuePage(props){
                 Lobby
             </Typography>
             <Typography variant="subtitle2">
-                {`Code: ${props.roomCode}`}
+                {`Code: ${roomCode}`}
             </Typography>
             <QueueBox sx={{marginTop: "30px", marginBottom: "30px"}}>
                 <ContentDivider>Enter your prompts:</ContentDivider>
@@ -128,17 +133,7 @@ function QueuePage(props){
             </QueueBox>
             <QueueBox>
                 <ContentDivider>Current Players:</ContentDivider>
-                <Grid container spacing={1}>
-                    {props.players.map((player, i) => {
-                        return (
-                            <Fragment key={i}>
-                                <Grid item xs={12} md={6} lg={6}>
-                                    <PlayerCard alias={player.alias} avatarUrl={props.avatarUrl} score={0}/>
-                                </Grid>
-                            </Fragment>
-                        )
-                    })}
-                </Grid>
+                <PlayerFeed players={players} />
             </QueueBox>
         </Row>
         <Footer>
