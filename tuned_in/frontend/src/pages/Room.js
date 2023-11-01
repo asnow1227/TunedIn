@@ -65,11 +65,12 @@ export default function Room(props) {
                 setUser({isWaiting: false, isReady: false});
             },
             player_leave: (data) => {
-                if (data.alias == user.alias){
-                    leave();
-                } else {
-                    setPlayers(prev => (prev.filter(alias => alias != data.alias)));
-                }
+                leave();
+                // if (data.alias == user.alias){
+                //     leave();
+                // } else {
+                //     setPlayers(prev => (prev.filter(alias => alias != data.alias)));
+                // }
             },
             player_add: (data) => {
                 console.log(data.player);

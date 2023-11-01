@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from "react";
 import API from "../backend/API";
-import { TextField, Button, Grid, Typography } from "@mui/material";
+import { TextField, Button, Grid, Typography, getAccordionSummaryUtilityClass } from "@mui/material";
 import { withRouter } from "../wrappers/withRouter";
 
 
@@ -10,8 +10,8 @@ function RoomJoinComponent(props){
   const [alias, setAlias] = useState("");
   const [aliasError, setAliasError] = useState("");
 
-  const createRoom = () => {
-    API.post('create-room', {alias: alias}).then((response) => { 
+  const createRoom = async () => {
+    await API.post('create-room', {alias: alias}).then((response) => {
         props.navigate('/room/' + response.data.code);
     }).catch((error) => {
         setAliasError("Error creating room");
