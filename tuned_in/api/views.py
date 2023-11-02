@@ -116,6 +116,19 @@ class CreateRoomView(APIView):
         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class CheckUserAuthenticated(APIView):
+    def get(self, request):
+        player_id = request.GET.get('id')
+        if player_id is None:
+            return Response({'status': False, 'spotify_details': {}}, status=status.HTTP_200_OK)
+        players = Alias.objects.filter(id=player_id)
+        if not players:
+            return Response({'status': False, 'spotify_details': {}}, status=status.HTTP_200_OK)
+        player_alias = players[0]
+        is_authenticated, spotify_meta = is_spotify_authenticated(player_alias.user)
+        print(is_authenticated, spotify_meta)
+        return Response({'status': is_authenticated, 'spotify_details': spotify_meta}, status=status.HTTP_200_OK)
+
 def get_player(player_alias, host_id):
     is_authenticated, spotify_meta = is_spotify_authenticated(player_alias.user)
     player = {
@@ -164,6 +177,8 @@ class GetRoom(APIView):
             'user': get_player(user_alias, room.host),
             'players': [get_player(player_alias, room.host) for player_alias in current_players if player_alias.user != user_alias.user]
         }
+
+        print(self.request.session.session_key)
   
         return Response(data, status=status.HTTP_200_OK)
         
@@ -232,6 +247,7 @@ class UserInRoom(APIView):
         data = {
             'code': self.request.session.get('room_code')
         }
+        print(self.request.session.session_key)
         return JsonResponse(data, status=status.HTTP_200_OK)
 
 

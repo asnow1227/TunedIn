@@ -11,7 +11,8 @@ from .views import (
     ReadyUp,
     GetPrompts,
     SubmitSongSelections,
-    ClearRoomSession
+    ClearRoomSession,
+    CheckUserAuthenticated
 )
 
 urlpatterns = [
@@ -26,5 +27,6 @@ urlpatterns = [
     path('ready-up', ReadyUp.as_view()),
     path('prompt', GetPrompts.as_view()),
     path('submit-song-selections', SubmitSongSelections.as_view()),
-    path('clear-room-session', ClearRoomSession.as_view())
+    path('clear-room-session', ClearRoomSession.as_view()),
+    path('check-user-authenticated', CheckUserAuthenticated.as_view())
 ]

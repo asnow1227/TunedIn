@@ -11,6 +11,8 @@ import useWindowDimensions from "../hooks/useWindowSize";
 import { useSocketContext } from "../contexts/SocketContext";
 import { useUserContext } from "../contexts/UserContext";
 import { useParams } from "react-router-dom";
+import { SPOTIFY_API } from "../backend/API";
+import { authenticateUsersSpotify } from "../backend/API";
 
 export default function RoomHeader({ children, ...props }) {
     const { width, height } = useWindowDimensions();
@@ -29,7 +31,6 @@ export default function RoomHeader({ children, ...props }) {
         }
     };
 
-
     const open = Boolean(anchorEl);
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -38,6 +39,15 @@ export default function RoomHeader({ children, ...props }) {
         setAnchorEl(null);
     };
 
+    const handleSpotifyLogout = async () => {
+        SPOTIFY_API.post('logout');
+        socketManager.send('check_user_authenticated', {player_id: user.id});
+    }
+
+    const handleSpotifyLogin = async () => {
+        await authenticateUsersSpotify();
+        socketManager.send('check_user_authenticated', {player_id: user.id});
+    }
 
     const avatarSize = Math.max(Math.floor(width/15), '30')
 
@@ -93,7 +103,10 @@ export default function RoomHeader({ children, ...props }) {
                     <Logout fontSize="small" color="secondary"/>
                 </ListItemIcon>
                     End Game
-                </MenuItem>
+            </MenuItem>
+            <MenuItem onClick={user.isAuthenticated ? handleSpotifyLogout : handleSpotifyLogin}>
+                {user.isAuthenticated ? "Logout of Spotify" : "Login with Spotify"}
+            </MenuItem>
         </Menu>
     </div>
     )

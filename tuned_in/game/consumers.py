@@ -103,5 +103,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             })
         )
     
+    async def check_user_authenticated(self, event):
+        player_id = event['data']['player_id']
+        await self.send(
+            text_data=jsonSocketMessage('check_user_authenticated', data={
+                'player_id': player_id
+            })
+        )
+    
 
     

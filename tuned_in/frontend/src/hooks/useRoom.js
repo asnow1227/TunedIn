@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
-import SocketManager from '../backend/SocketManager';
 import { useNavigate, useParams } from "react-router-dom";  
-import useObjectState from "./useObjectState";
 import { useSocketContext } from "../contexts/SocketContext";
 import { useHomePageContext } from "../contexts/HomePageContext";
 import API from "../backend/API";
 
 export default function useRoom() {
     const { roomCode } = useParams();
-    const [user, setUser] = useObjectState({isHost: null, isWaiting: null, isReady: false, alias: ""});
     const [players, setPlayers] = useState(new Array());
     const [gamestate, setGamestate] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +21,6 @@ export default function useRoom() {
     }
 
     useEffect(() => {
-        // SocketManager.initialize(roomCode);
         socketManager.onEvents({
             gamestate_update: (data) => {
                 setGamestate(data.gamestate);
@@ -32,20 +28,23 @@ export default function useRoom() {
             },
             player_leave: (data) => {
                 leave();
-                // if (data.alias == user.alias){
-                //     leave();
-                // } else {
-                //     setPlayers(prev => (prev.filter(alias => alias != data.alias)));
-                // }
             },
             player_add: (data) => {
                 console.log(data.player);
+                console.log(user.id);
                 setPlayers((prev) => prev.some(player => player.id == data.player.id) ? prev : [...prev, data.player]);
             },
             host_leave: (_) => {
                 console.log('host leave called');
                 leave();
             },
+            check_user_authenticated: async (data) => {
+                const playerId = data.player_id;
+                const response = await API.get('check-user-authenticated', {'params': {'id': playerId}});
+                console.log(response);
+                setPlayers((prev) => prev.map(player => player.id == playerId ? {...player, isAuthenticated: response.data.status, ...response.data.spotify_details} : player))
+                /// add another level for the spotify params so that they can easily be set to null when user logs out
+            }
         });
 
         const setRoomAndUserDetails = async () => {
@@ -54,39 +53,27 @@ export default function useRoom() {
                 const data = response.data;
                 setPlayers([data.user, ...data.players]);
                 setGamestate(data.gamestate);
-                const user = {isWaiting: data.user.is_ready && data.players.some(player => !player.is_ready), ...data.user}
-                setUser(user);
             } catch {
                 leave();
             }
         }
 
-        // const getAuthenticatedStatus = async () => {
-        //     const response = await SPOTIFY_API.get('is-authenticated');
-        //     return response.data.status;
-        // };
-
-        // const setUp = async () => {
-        //     const isHost = await setRoomAndUserDetails();
-        //     if (isHost){
-        //         const isSpotifyAuthenticated = await getAuthenticatedStatus();
-        //         if (!isSpotifyAuthenticated){
-        //             await authenticateUsersSpotify();
-        //         }
-        //     }
-        // };
-
-        // setIsLoading(true);
         setRoomAndUserDetails();
         setIsLoading(false);
        
-        console.log('This Useeffect was called');
+        return ()  => {
+            socketManager.removeEvents(['gamestate_update', 'player_leave', 'player_add', 'host_leave'])
+        }
     }, []);
 
-    if (user.alias && !playerAddTriggered){
-        setPlayerAddTriggered(true);
-        socketManager.send('player_add', {player: user});
+    const user = players.length ? players[0] : {}
+    if (user) {
+        user.isWaiting = user.isReady && players.some(player => !player.isReady)
+        if (!playerAddTriggered){
+            socketManager.send('player_add', { player: user })
+            setPlayerAddTriggered(true);
+        }
     }
-
+   
     return { roomCode, user, players, gamestate, isLoading }
 };
