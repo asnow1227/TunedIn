@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .credentials import REDIRECT_URI, CLIENT_SECRET, CLIENT_ID
 from rest_framework.views import APIView
 from .models import SpotifyToken
-from api.models import Alias
+from api.models import Alias, Room
 from requests import Request, post
 from rest_framework import status
 from rest_framework.response import Response
@@ -53,9 +53,17 @@ def spotify_callback(request, format=None):
     if not request.session.exists(request.session.session_key):
         request.session.create()
 
-    update_or_create_user_tokens(request.session.session_key, access_token, token_type, expires_in, refresh_token)
+    print('redirected')
 
-    return redirect('frontend:')
+    update_or_create_user_tokens(request.session.session_key, access_token, token_type, expires_in, refresh_token)
+    
+    redirect_uri = 'frontend:'
+    alias_set = Alias.objects.filter(user=request.session.session_key)
+    if alias_set.exists():
+        room_code = alias_set[0].room_code
+        redirect_uri = f'/room/{room_code}'
+
+    return redirect(redirect_uri)
 
 
 class IsAuthenticated(APIView):

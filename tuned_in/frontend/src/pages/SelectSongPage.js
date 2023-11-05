@@ -1,9 +1,9 @@
 import React, { Fragment, useEffect, useRef } from "react";
-import SpotifySearch from "../components/SpotifySearch";
+import SpotifySearch from "../components/songs/SpotifySearch";
 import API from "../backend/API";
 import useObjectState from "../hooks/useObjectState";
 import { Typography, Button } from "@mui/material";
-import { Footer } from "../components/Layout";
+import { Footer } from "../components/shared/Layout";
 // import { Button } from "@mui/material";
 
 export default function SelectSongPage(props){

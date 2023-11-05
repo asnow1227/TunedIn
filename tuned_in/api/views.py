@@ -177,8 +177,6 @@ class GetRoom(APIView):
             'user': get_player(user_alias, room.host),
             'players': [get_player(player_alias, room.host) for player_alias in current_players if player_alias.user != user_alias.user]
         }
-
-        print(self.request.session.session_key)
   
         return Response(data, status=status.HTTP_200_OK)
         
@@ -244,10 +242,24 @@ class UserInRoom(APIView):
             self.request.session.create()
         # if the user has joined a room, we would have stored the room_code on the 
         # session object. Send this back to the client as a response.
+        room_code = self.request.session.get('room_code')
+        user_id = None
+        is_host = None
+        if room_code:
+            room_set = Room.objects.filter(code=room_code)
+            alias_set = Alias.objects.filter(user=self.request.session.session_key, room_code=room_code)
+            if room_set.exists:
+                room = room_set[0]
+                is_host = room.host == self.request.session.session_key
+            if alias_set.exists:
+                user_id = alias_set[0].id
+        
         data = {
-            'code': self.request.session.get('room_code')
+            'code': self.request.session.get('room_code'),
+            'id': user_id,
+            'isHost': is_host
         }
-        print(self.request.session.session_key)
+        
         return JsonResponse(data, status=status.HTTP_200_OK)
 
 

@@ -110,6 +110,13 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'player_id': player_id
             })
         )
-    
+
+    async def user_logout_spotify(self, event):
+        player_id = event['data']['player_id']
+        await self.send(
+            text_data=jsonSocketMessage('user_logout_spotify', data={
+                'player_id': player_id
+            })
+        )
 
     

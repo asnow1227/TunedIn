@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState, Fragment } from "react";
 import { Grid, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import { SPOTIFY_API } from "../backend/API";
+import { SPOTIFY_API } from "../../backend/API";
 import InfiniteScroll from "react-infinite-scroll-component";
-import MusicCard from "./songs/MusicCard";
-import useDebounce from "../hooks/useDebounce";
-import { Row, Header } from "./Layout";
-import { flexBoxProps } from "./Layout";
-import SongFeed from "./songs/SongFeed";
+import MusicCard from "./MusicCard";
+import useDebounce from "../../hooks/useDebounce";
+import { Row, Header } from "../shared/Layout";
+import { flexBoxProps } from "../shared/Layout";
+import SongFeed from "./SongFeed";
 
 const InputForm = forwardRef((props, ref) => {
     const inputRef = useRef(null);

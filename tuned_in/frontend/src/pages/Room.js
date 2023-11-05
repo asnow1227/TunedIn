@@ -1,4 +1,4 @@
-import React, { useState,  useEffect, useRef, useContext } from "react";
+import React, { useState,  useEffect, useRef, useContext, Fragment } from "react";
 import { useParams } from "react-router-dom";  
 import { Typography } from '@mui/material';
 import { useNavigate } from "react-router-dom";
@@ -6,17 +6,17 @@ import API, { SPOTIFY_API, authenticateUsersSpotify } from "../backend/API"
 // import SocketManager from "../backend/SocketManager";
 import useObjectState from "../hooks/useObjectState";
 import QueuePage from "./QueuePage";
-import AVATARS from "../components/Avatars";
+import AVATARS from "../components/shared/Avatars";
 import { BASE_URL } from "../backend/API";
 import CreatePromptsPage from "./EnterPromptsPage";
 import SelectSongPage from "./SelectSongPage"
-import { MainBox } from "../components/Layout";
-import RoomHeader from "../components/RoomHeader";
-import { useHomePageContext } from "../contexts/HomePageContext";
-import { useSocketContext } from "../contexts/SocketContext";
+import { MainBox } from "../components/shared/Layout";
+import RoomHeader from "../components/room/RoomHeader";
+import { useHomePageContext } from "../providers/HomePageContext";
+import { useSocketContext } from "../providers/SocketContext";
 import useRoom from "../hooks/useRoom";
-import UserContext from "../contexts/UserContext";
-import PlayersContext from "../contexts/PlayersContext";
+import UserContext from "../providers/UserContext";
+import PlayersContext from "../providers/PlayersContext";
 
 
 const PAGES = {
@@ -36,11 +36,9 @@ export default function Room(props) {
     const navigate = useNavigate();
 
     const renderGameState = () => {
-        if (user.isWaiting){;
-            return <Typography variant="h4" component="h4">Waiting...</Typography>
-        }
-        const Component = gamestate ? PAGES[gamestate] : null;
-        return Component ? <Component /> : null;
+        if (user.isWaiting) return <Typography variant="h4" component="h4">Waiting...</Typography>;
+        const Component = PAGES[gamestate] || Fragment;
+        return <Component />;
     }
 
     return (

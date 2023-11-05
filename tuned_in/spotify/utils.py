@@ -20,6 +20,9 @@ OEMBED_URL = "https://open.spotify.com/oembed"
 def get_user_token(session_id):
     user_tokens = SpotifyToken.objects.filter(user=session_id)
     if user_tokens.exists():
+        if len(user_tokens) > 1:
+            for token in user_tokens[1:]:
+                token.delete()
         return user_tokens[0]
     return None
 

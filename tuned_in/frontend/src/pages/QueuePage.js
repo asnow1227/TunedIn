@@ -1,17 +1,17 @@
 import React, { Fragment, useContext, useState } from "react";
 import { Button, ButtonGroup, Typography, Box, Grid, TextField } from '@mui/material';
-import { Footer } from "../components/Layout";
-import { Row} from "../components/Layout"
+import { Footer } from "../components/shared/Layout";
+import { Row} from "../components/shared/Layout"
 import PlayerCard from "../components/players/PlayerCard";
-import ToggableComponent from "../components/ToggableComponent";
+import ToggableComponent from "../components/shared/ToggableComponent";
 import makeArray from "../utils/makeArray";
-import ConditionalButton from "../components/ConditionalButton";
+import ConditionalButton from "../components/shared/ConditionalButton";
 import API from "../backend/API";
 import Divider from '@mui/material/Divider';
-import RoomHeader from "../components/RoomHeader";
+import RoomHeader from "../components/room/RoomHeader";
 import PlayerFeed from "../components/players/PlayerFeed";
 import { useParams } from "react-router-dom";
-import { usePlayersContext } from "../contexts/PlayersContext";
+import { usePlayersContext } from "../providers/PlayersContext";
 
 const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
 const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";

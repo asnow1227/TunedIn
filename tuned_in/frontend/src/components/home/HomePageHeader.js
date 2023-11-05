@@ -1,6 +1,6 @@
 import React from "react";
 import Avatar from "@mui/joy/Avatar";
-import useWindowDimensions from "../hooks/useWindowSize";
+import useWindowDimensions from "../../hooks/useWindowSize";
 
 export default function HomePageHeader({ spotifyAvatarUrl }) {
     const { width } = useWindowDimensions();

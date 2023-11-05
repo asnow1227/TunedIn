@@ -4,21 +4,12 @@ import { useNavigate } from "react-router-dom";
 import CreatePromptsPage from "./EnterPromptsPage";
 import EmbedSpotify from "./SpotifyEmbed";
 import Room from "./Room";
-import { Grid, Button, ButtonGroup, Typography, Box, getAccordionSummaryUtilityClass } from '@mui/material';
 import SelectSongPage from "./SelectSongPage";
-import getRoom from '../features/getRoom';
-import  { Header, Footer, MainBox } from "../components/Layout";
-import Modal from '@mui/joy/Modal';
-import ModalDialog from '@mui/joy/ModalDialog';
-import ModalClose from '@mui/joy/ModalClose';
-import RoomJoinComponent from "../components/RoomJoinComponent";
-import useImage from "../hooks/useImage";
-import { authenticateUsersSpotify } from "../backend/API";
-import HomePageHeader from "../components/HomePageHeader";
 import LandingPage from "./Landing";
-import { withRouter } from "../wrappers/withRouter";
-import HomePageContext, { useHomePageContext } from "../contexts/HomePageContext";
-import SocketProvider from "../components/SocketLayer";
+import HomePageContext from "../providers/HomePageContext";
+import SocketProvider from "../providers/SocketProvider";
+import UserContext from "../providers/UserContext";
+import RoomContext from "../providers/RoomContext";
 import {
   BrowserRouter as Router,
   Route,
@@ -29,84 +20,44 @@ import {
 
 const fetchRoomCode = async () => {
   return API.get('user-in-room').then((response) => {
-    // console.log(response.data);
     return response.data;
   }).catch((err) => {
     console.log(err); 
   });
-}
-
-const fetchUsersSpotify = async () => {
-  return SPOTIFY_API.get('is-authenticated').then((response) => {
-    return response.data;
-  }).catch((err) => {
-    console.log(err)
-  });
-}
-
-const LogoutSpotify = async () => {
-  return SPOTIFY_API.post('logout')
-}
+};
 
 export default function HomePage(props) {
-  // const navigate = useNavigate();
-  const [roomCode, setRoomCode] = useState(null);
-  // const [buttonPressed, setButtonPressed] = useState(undefined);
-  // const [isSpotifyAuthenticated, setIsSpotifyAuthenticated] = useState(false);
-  // const [spotifyUserDetails, setSpotifyUserDetails] = useState({});
+  const [room, setRoom] = useState({code: null, isHost: null, id: null});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const setUp = async () => {
       const roomCode = await fetchRoomCode().then((data) => {
-        if (data.code) setRoomCode(data.code);
+        if (data.code) setRoom(data);
       });
-      // if (roomCode.code) {
-      //   // props.navigate('/room/' + roomCode.code);
-      //   setRoomCode(roomData.code);
-      //   // const roomDetails = await getRoom(roomData.code);
-      //   console.log('room Details called', roomDetails);
-      // }
-      // const roomDetails = await getRoomDetails();
-      
-      // await fetchRoomCode().then((data) => {
-      //   if (data.code){
-      //     setRoomCode(data.code);
-      //   }
-      // });
-      // await fetchUsersSpotify().then((data) => {
-      //   console.log(data.status);
-      //   console.log(data.spotify_user_details);
-      //   setIsSpotifyAuthenticated(data.status);
-      //   setSpotifyUserDetails(data.spotify_user_details);
-      // });
-    }
+    };
     setUp();
     setIsLoading(false);
   }, []);
 
   const leaveRoomCallback = () => {
-    setRoomCode(null);
-    // setButtonPressed(undefined);
+    setRoom({});
     API.post('clear-room-session');
     console.log('calling leave callback');
-    // setIsSpotifyAuthenticated(false);
-    // setSpotifyUserDetails({});
   };
 
-  // const handleSpotifyLogout = async () => {
-  //   await LogoutSpotify().then((response) => {
-  //     setIsSpotifyAuthenticated(false);
-  //     setSpotifyUserDetails({});
-  //   }).catch((err) => {
-  //     console.log(err)
-  //     alert("Error logging out of Spotify");
-  //   })
-  // }
-
   const renderHomePage = () => {
-    if (roomCode) {
-      return <Navigate to={`/room/${roomCode}`} replace={true}/>
+    if (room.code) {
+      console.log(room.code);
+      return (
+        <SocketProvider code={room.code}>
+          <HomePageContext.Provider value={leaveRoomCallback}>
+            <UserContext.Provider value={{ isHost: room.isHost, id: room.id }}>
+              <LandingPage roomCode={room.code}/>
+            </UserContext.Provider>
+          </HomePageContext.Provider>
+        </SocketProvider>
+      )
     } else {
       return <LandingPage />
     };
@@ -129,6 +80,7 @@ export default function HomePage(props) {
           <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
           <Route exact path="/embed" element={<EmbedSpotify />} />
           <Route path='room/:roomCode' element={renderRoomPage(props)} />
+          <Route path='room/:roomCode/:authenticate' element={renderRoomPage(props)} />
           <Route exact path="/select-song" element={<SelectSongPage />} />
         </Routes>
       </Router>

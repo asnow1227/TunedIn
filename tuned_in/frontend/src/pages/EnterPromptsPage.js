@@ -1,10 +1,10 @@
 import React, { Fragment, useState } from "react";
 import API from "../backend/API";
 import { TextField, Grid, Typography } from "@mui/material";
-import ConditionalButton from "../components/ConditionalButton";
-import ToggableComponent from "../components/ToggableComponent";
+import ConditionalButton from "../components/shared/ConditionalButton";
+import ToggableComponent from "../components/shared/ToggableComponent";
 import makeArray from "../utils/makeArray";
-import { Centered, Row, Header, Footer } from "../components/Layout";
+import { Centered, Row, Header, Footer } from "../components/shared/Layout";
 
 const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
 const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";
