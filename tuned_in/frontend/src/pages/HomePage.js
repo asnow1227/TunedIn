@@ -10,6 +10,7 @@ import HomePageContext from "../providers/HomePageContext";
 import SocketProvider from "../providers/SocketProvider";
 import UserContext from "../providers/UserContext";
 import RoomContext from "../providers/RoomContext";
+import SpotifyAuthRoute from "../components/room/SpotifyAuthRoute";
 import {
   BrowserRouter as Router,
   Route,
@@ -80,7 +81,7 @@ export default function HomePage(props) {
           <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
           <Route exact path="/embed" element={<EmbedSpotify />} />
           <Route path='room/:roomCode' element={renderRoomPage(props)} />
-          <Route path='room/:roomCode/:authenticate' element={renderRoomPage(props)} />
+          <Route path='room/authenticate/:roomCode' element={<SpotifyAuthRoute />} />
           <Route exact path="/select-song" element={<SelectSongPage />} />
         </Routes>
       </Router>

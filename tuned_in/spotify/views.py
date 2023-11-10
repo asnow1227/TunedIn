@@ -61,7 +61,7 @@ def spotify_callback(request, format=None):
     alias_set = Alias.objects.filter(user=request.session.session_key)
     if alias_set.exists():
         room_code = alias_set[0].room_code
-        redirect_uri = f'/room/{room_code}'
+        redirect_uri = f'/room/authenticate/{room_code}'
 
     return redirect(redirect_uri)
 
@@ -105,16 +105,8 @@ class CurrentSong(APIView):
         is_playing = response.get('is_playing')
         song_id = item.get('id')
 
-        # artist_string = ""
-
         artists = [artist.get('name') for artist in item.get('artists')]
         artist_string = ', '.join(artists)
-
-        # for i, artist in enumerate(item.get('artist')):
-        #     if i > 0:
-        #         artist_string += ', '
-        #     name = artist.get('name')
-        #     artist_string += name
 
         song = {
             'title': item.get('name'),

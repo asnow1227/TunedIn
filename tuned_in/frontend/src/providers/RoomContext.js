@@ -4,9 +4,9 @@ const RoomContext = createContext(undefined);
 export default RoomContext;
 
 export function useRoomContext(){
-    const RoomContext = useContext(RoomContext);
-    if (RoomContext === undefined){
-        throw Error("useHomePageContext requires HomePageContext Provider");
+    const roomContext = useContext(RoomContext);
+    if (roomContext === undefined){
+        throw Error("useRoomContext requires RoomContext Provider");
     }
-    return RoomContext;
+    return roomContext;
 };

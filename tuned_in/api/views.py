@@ -126,7 +126,7 @@ class CheckUserAuthenticated(APIView):
             return Response({'status': False, 'spotify_details': {}}, status=status.HTTP_200_OK)
         player_alias = players[0]
         is_authenticated, spotify_meta = is_spotify_authenticated(player_alias.user)
-        print(is_authenticated, spotify_meta)
+        
         return Response({'status': is_authenticated, 'spotify_details': spotify_meta}, status=status.HTTP_200_OK)
 
 def get_player(player_alias, host_id):

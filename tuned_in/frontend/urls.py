@@ -9,7 +9,7 @@ urlpatterns = [
     path('create', index),
     path('create-prompts', index),
     path('room/<str:roomCode>', index),
-    path('room/<str:roomCode>/<int:authenticate>', index),
+    path('room/authenticate/<str:roomCode>', index),
     path('select-song', index),
     path('embed', index),
     path('box', index)

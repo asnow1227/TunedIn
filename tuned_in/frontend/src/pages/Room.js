@@ -1,22 +1,17 @@
-import React, { useState,  useEffect, useRef, useContext, Fragment } from "react";
-import { useParams } from "react-router-dom";  
+import React, { useState, Fragment } from "react"; 
 import { Typography } from '@mui/material';
-import { useNavigate } from "react-router-dom";
-import API, { SPOTIFY_API, authenticateUsersSpotify } from "../backend/API"
-// import SocketManager from "../backend/SocketManager";
-import useObjectState from "../hooks/useObjectState";
+import { useNavigate, useLocation } from "react-router-dom";
 import QueuePage from "./QueuePage";
 import AVATARS from "../components/shared/Avatars";
 import { BASE_URL } from "../backend/API";
-import CreatePromptsPage from "./EnterPromptsPage";
 import SelectSongPage from "./SelectSongPage"
 import { MainBox } from "../components/shared/Layout";
 import RoomHeader from "../components/room/RoomHeader";
-import { useHomePageContext } from "../providers/HomePageContext";
-import { useSocketContext } from "../providers/SocketContext";
 import useRoom from "../hooks/useRoom";
 import UserContext from "../providers/UserContext";
 import PlayersContext from "../providers/PlayersContext";
+import RoomContext from "../providers/RoomContext";
+import GameState from "../components/room/Gamestate";
 
 
 const PAGES = {
@@ -33,20 +28,15 @@ const randomAvatar = () => {
 export default function Room(props) {
     const { roomCode, user, players, gamestate, isLoading } = useRoom();
     const [avatarUrl, setAvatarUrl] = useState(randomAvatar());
-    const navigate = useNavigate();
-
-    const renderGameState = () => {
-        if (user.isWaiting) return <Typography variant="h4" component="h4">Waiting...</Typography>;
-        const Component = PAGES[gamestate] || Fragment;
-        return <Component />;
-    }
-
+    
     return (
         <MainBox>
             <UserContext.Provider value={user}>
                 <PlayersContext.Provider value={players}>
-                    <RoomHeader avatarUrl={avatarUrl} />
-                    {!isLoading && renderGameState()}
+                    <RoomContext.Provider value={gamestate}>
+                        <RoomHeader avatarUrl={avatarUrl} />
+                        {!isLoading && <GameState />}
+                    </RoomContext.Provider>
                 </PlayersContext.Provider>
             </UserContext.Provider>
         </MainBox>

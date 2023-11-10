@@ -50,6 +50,8 @@ export default function useRoom() {
 
         setRoomAndUserDetails();
         setIsLoading(false);
+
+        console.log('My use effect is running again');
        
         return ()  => {
             socketManager.removeEvents(['gamestate_update', 'player_leave', 'host_leave', 'check_user_authenticated'])
