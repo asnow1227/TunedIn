@@ -49,8 +49,8 @@ export default function SpotifySearch({selectedSongRef}) {
             setHasMore(false);
             return;
         }
-        setItems([...items, ...response.data.data]);
-        setCurrPage(currPage + 1);
+        setItems(prev => [...prev, ...response.data.data]);
+        setCurrPage(prev => prev + 1);
     };
 
     const setSelectedCallback = (selectedProps) => {
@@ -83,11 +83,21 @@ export default function SpotifySearch({selectedSongRef}) {
                 loader={<h4>Loading...</h4>}
                 scrollableTarget="scrollableDiv"
                 >
-                <SongFeed songs={items} />
+               <Grid container spacing={1}>
+                    {items.map((i, index) => (
+                        <Fragment key={i}>
+                            <Grid item xs={12} md={6} lg={6}>
+                            <MusicCard 
+                            {...i} 
+                            key={index} 
+                            setSelectedCallback={setSelectedCallback} 
+                            selectedId={selectedProps.id}/>
+                            </Grid>
+                        </Fragment> 
+                    ))}
+                </Grid>
                 </InfiniteScroll>
             </Box>
         </Row>
-    </Fragment>
-    )
-
-}
+    </Fragment>)
+};

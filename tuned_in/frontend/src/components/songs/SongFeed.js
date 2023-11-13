@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useState } from "react";
 import { Grid } from "@mui/material";
 import MusicCard from "./MusicCard";
 
@@ -11,7 +11,7 @@ export default function SongFeed({ songs }){
     return (
         <Grid container spacing={1}>
             {songs.map((i, index) => (
-                <Fragment key={i}>
+                <Fragment key={index}>
                     <Grid item xs={12} md={6} lg={6}>
                     <MusicCard 
                     {...i} 
@@ -19,7 +19,7 @@ export default function SongFeed({ songs }){
                     setSelectedCallback={setSelectedCallback} 
                     selectedId={selectedProps.id}/>
                     </Grid>
-                </Fragment> 
+                </Fragment>
             ))}
         </Grid>
     )

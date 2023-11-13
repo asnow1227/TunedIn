@@ -3,12 +3,12 @@ import SpotifySearch from "../components/songs/SpotifySearch";
 import API from "../backend/API";
 import useObjectState from "../hooks/useObjectState";
 import { Typography, Button } from "@mui/material";
-import { Footer } from "../components/shared/Layout";
+import { Footer, MainBox } from "../components/shared/Layout";
 // import { Button } from "@mui/material";
 
 export default function SelectSongPage(props){
     const [prompt, setPrompt] = useObjectState({id: null, text: ""});
-    const selectedSongRef = useRef('');
+    const selectedSongRef = useRef('')
 
     useEffect(() => {
         const setUp = async () => {
@@ -23,15 +23,19 @@ export default function SelectSongPage(props){
     }, []);
 
     return (
-        <Fragment>
-            <Typography variant="h6" component="h6">
-                {'Assigned Prompt: ' + prompt.text}
-            </Typography>
+        // <Fragment>
+        // <div>
+        //     <Typography variant="h6" component="h6">
+        //         {'Assigned Prompt: ' + prompt.text}
+        //     </Typography>
+        <MainBox>
             <SpotifySearch selectedSongRef={selectedSongRef} />
-            <Footer>
-                {props.isHost && <Button color="secondary" onClick={props.leaveButtonPressed}>End</Button>}
-            </Footer>
-        </Fragment>
+        </MainBox>
+            //* <Footer>
+                //{props.isHost && <Button color="secondary" onClick={props.leaveButtonPressed}>End</Button>}
+            //</Footer> */}
+        // </div>
+        // </Fragment>
     );
 };
 

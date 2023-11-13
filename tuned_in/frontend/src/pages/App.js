@@ -10,5 +10,5 @@ appDiv.render(
     <ThemeProvider>
       <HomePage />
     </ThemeProvider>
-  // </React.StrictMode>
+  //* </React.StrictMode> */}
 );

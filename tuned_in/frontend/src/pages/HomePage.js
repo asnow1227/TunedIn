@@ -82,7 +82,7 @@ export default function HomePage(props) {
           <Route exact path="/embed" element={<EmbedSpotify />} />
           <Route path='room/:roomCode' element={renderRoomPage(props)} />
           <Route path='room/authenticate/:roomCode' element={<SpotifyAuthRoute />} />
-          <Route exact path="/select-song" element={<SelectSongPage />} />
+          <Route exact path="/select-song" element={<SelectSongPage leaveButtonPressed={leaveRoomCallback}/>} />
         </Routes>
       </Router>
   );
