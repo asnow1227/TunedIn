@@ -13,15 +13,25 @@ function RoomJoinComponent(props){
 
   const createRoom = async () => {
     await API.post('create-room', {alias: alias}).then((response) => {
-        props.navigate('/room/' + response.data.code);
+      if (response.data.isAuthenticated){
+        props.navigate(`/room/${response.data.roomCode}`);
+      } else {
+        props.navigate('/authenticate', { state: { roomCode: response.data.roomCode }});
+        // pushing the state to the authenticate lets us know that we reached it from this component.
+      }
     }).catch((error) => {
         setAliasError("Error creating room");
     }) 
   };
 
   const joinRoom = () => {
-    API.post('join-room', {room_code: roomCode, alias: alias}).then((_) => {  
-        props.navigate('/room/' + roomCode);
+    API.post('join-room', {room_code: roomCode, alias: alias}).then((response) => {  
+      if (response.data.isAuthenticated){
+        props.navigate(`/room/${roomCode}`);
+      } else {
+        props.navigate('/authenticate', { state: { roomCode: roomCode }});
+        // pushing the state to the authenticate lets us know that we reached it from this component.
+      }
     }).catch((error) => {
         const data = error.response.data;
         setAliasError(data.type == 'alias' ? data.message : "");

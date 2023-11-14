@@ -61,7 +61,7 @@ def spotify_callback(request, format=None):
     alias_set = Alias.objects.filter(user=request.session.session_key)
     if alias_set.exists():
         room_code = alias_set[0].room_code
-        redirect_uri = f'/room/authenticate/{room_code}'
+        redirect_uri = f'/room/{room_code}'
 
     return redirect(redirect_uri)
 

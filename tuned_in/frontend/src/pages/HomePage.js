@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import API, { BASE_URL, SPOTIFY_API} from "../backend/API";
-import { useNavigate } from "react-router-dom";
+import API from "../backend/API";
 import CreatePromptsPage from "./EnterPromptsPage";
 import EmbedSpotify from "./SpotifyEmbed";
 import Room from "./Room";
@@ -9,13 +8,11 @@ import LandingPage from "./Landing";
 import HomePageContext from "../providers/HomePageContext";
 import SocketProvider from "../providers/SocketProvider";
 import UserContext from "../providers/UserContext";
-import RoomContext from "../providers/RoomContext";
-import SpotifyAuthRoute from "../components/room/SpotifyAuthRoute";
+import PromptSpotifyLogin from "../components/room/PromptSpotifyLogin";
 import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Navigate
 } from "react-router-dom";
 
 
@@ -81,7 +78,7 @@ export default function HomePage(props) {
           <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
           <Route exact path="/embed" element={<EmbedSpotify />} />
           <Route path='room/:roomCode' element={renderRoomPage(props)} />
-          <Route path='room/authenticate/:roomCode' element={<SpotifyAuthRoute />} />
+          <Route path='/authenticate' element={<PromptSpotifyLogin />} />
           <Route exact path="/select-song" element={<SelectSongPage leaveButtonPressed={leaveRoomCallback}/>} />
         </Routes>
       </Router>

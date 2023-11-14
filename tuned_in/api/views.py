@@ -109,8 +109,14 @@ class CreateRoomView(APIView):
             # add the room code and alias to the request session object for ease of access
             self.request.session['room_code'] = room.code
             self.request.session['alias'] = alias.alias
+            is_authenticated, _ = is_spotify_authenticated(host)
             # return the room data back to the client
-            return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
+            return Response({
+                    'roomCode': room.code,
+                    'isAuthenticated': is_authenticated
+                }, 
+                status=status.HTTP_200_OK
+            )
         
         # if the data is not valid through the serializer, send a response back that it's a bad request
         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
@@ -230,8 +236,9 @@ class JoinRoom(APIView):
 
         # set the room code for the user's session
         self.request.session['room_code'] = room_code
+        is_authenticated, _ = is_spotify_authenticated(self.request.session.session_key)
         # return a success response
-        return Response({'message': 'Room Joined'}, status=status.HTTP_200_OK)
+        return Response({'isAuthenticated': is_authenticated}, status=status.HTTP_200_OK)
     
 
 class UserInRoom(APIView):
