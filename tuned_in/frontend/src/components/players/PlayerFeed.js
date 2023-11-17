@@ -10,7 +10,7 @@ export default function PlayerFeed({ players }) {
                 return (
                     <Fragment key={i}>
                         <Grid item xs={12} md={6} lg={6}>
-                            <PlayerCard alias={player.alias} avatarUrl={player.image_url} score={0}/>
+                            <PlayerCard alias={player.alias} avatarUrl={player.avatarUrl} score={0}/>
                         </Grid>
                     </Fragment>
                 )

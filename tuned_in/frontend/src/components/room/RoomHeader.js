@@ -19,7 +19,7 @@ export default function RoomHeader({ children, ...props }) {
     const { width, height } = useWindowDimensions();
     const [anchorEl, setAnchorEl] = useState(null);
     const { toggleSpotifyAuth } = useSpotifyAuth();
-    const user = useUserContext();
+    const { user } = useUserContext();
     const leaveRoom = useLeaveRoom();
 
     const open = Boolean(anchorEl);
@@ -103,7 +103,7 @@ export default function RoomHeader({ children, ...props }) {
                 <ListItemIcon onClick={leaveRoom}>
                     <ExitToAppIcon fontSize="small" color="secondary"/>
                 </ListItemIcon>
-                End Game
+                { user.isHost ? "End Game" : "Leave Game"}
             </MenuItem>
             <MenuItem onClick={handleClose} divider={true}>
                 <ListItemIcon onClick={toggleSpotifyAuth}>

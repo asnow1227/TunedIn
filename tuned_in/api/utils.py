@@ -162,3 +162,4 @@ def update_gamestate(room):
     # finally, save the room and return
     room.save()
     return room
+

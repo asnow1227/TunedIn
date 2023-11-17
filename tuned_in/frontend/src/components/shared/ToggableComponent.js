@@ -6,7 +6,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 export default function ToggableComponent(props){
     return (
         <Fragment>
-            <Grid container spacing={0} align="center">
+            <Grid container spacing={0} align="center" alignItems="center">
                 <Grid item xs={2}>
                     {
                         props.displayLeftIcon && 

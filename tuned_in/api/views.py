@@ -6,7 +6,7 @@ from .serializers import (
     SubmitPromptsSerializer,
     UpdateRoomSerializer
 )
-from .models import Room, Prompt, Alias, PromptAssignments
+from .models import Room, Prompt, Alias, PromptAssignments, Image
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import JsonResponse
@@ -17,6 +17,7 @@ from decorator import decorator
 from .exceptions import RoomNotReadyError
 from .utils import update_gamestate
 from spotify.utils import is_spotify_authenticated
+from spotify.models import UsersSpotify
 
 
 # convenience method to clear room data on host leave
@@ -30,6 +31,7 @@ def clear_all_room_data(room):
 def clear_all_user_data(user):
     for model in (Prompt, Alias):
         model.objects.filter(user=user).all().delete()
+    PromptAssignments.objects.filter(assigned_user=user).all().delete()
 
 
 @decorator
@@ -142,7 +144,8 @@ def get_player(player_alias, host_id):
         'isReady': player_alias.ready,
         'isHost': player_alias.user == host_id,
         'alias': player_alias.alias,
-        'isAuthenticated': is_authenticated
+        'isAuthenticated': is_authenticated,
+        'avatarUrl': player_alias.avatar_url
     }
     if spotify_meta:
         player.update(spotify_meta)
@@ -151,7 +154,6 @@ def get_player(player_alias, host_id):
 # view to get details about the room
 class GetRoom(APIView):
     serializer_class = RoomSerializer
-
     def get(self, request, format=None):
         code = request.GET.get('code')
         if code is None:
@@ -166,18 +168,6 @@ class GetRoom(APIView):
         room = room_set[0]
         current_players = Alias.objects.filter(room_code=room.code).all()
         user_alias = [alias for alias in current_players if alias.user == self.request.session.session_key][0]
-        # user_id = user_alias.id
-        # others = 
-        # players = [player_alias.alias]
-        # players.extend([alias.alias for alias in current_players if alias.alias != player_alias.alias])
-        # data = {
-        #     'is_ready': player_alias.ready,
-        #     'is_host': self.request.session.session_key == room.host,
-            # 'is_waiting': player_alias.ready and any([not alias.ready for alias in current_players if alias.alias != player_alias.alias]) and room.gamestate != Room.GameState.QUEUE,
-        #     'gamestate': room.gamestate,
-        #     'players': players
-        # }
-
         data = {
             'gamestate': room.gamestate,
             'user': get_player(user_alias, room.host),
@@ -185,7 +175,39 @@ class GetRoom(APIView):
         }
   
         return Response(data, status=status.HTTP_200_OK)
-        
+
+
+class SetPlayerAvatarUrl(APIView):
+    @check_request_key_and_room_status
+    def post(self, request, format=None, **kwargs):
+        room = kwargs.get('room')
+        avatar_name = request.data.get('avatarName')
+        avatar_url = request.data.get('avatarUrl')
+        if not avatar_url:
+            return Response({'Bad Request': 'No avatar url provided'}, status=status.HTTP_400_BAD_REQUEST)
+        alias_set = Alias.objects.filter(user=self.request.session.session_key, room_code=room.code)
+        if not alias_set.exists():
+            return Response({'Bad Request': 'Player not in Room'}, status=status.HTTP_400_BAD_REQUEST)
+        alias = alias_set[0]
+        alias.avatar_name = avatar_name.lower()
+        alias.avatar_url = avatar_url
+        alias.save()
+        return Response({'Message': 'Success'}, status=status.HTTP_200_OK)
+
+
+class GetAvailableAvatars(APIView):
+    @check_request_key_and_room_status
+    def get(self, request, format=None, **kwargs):
+        room = kwargs.get('room')
+        all_avatars = [image.name for image in Image.objects.all()]
+        alias_set = Alias.objects.filter(room_code=room.code)
+        if not alias_set.exists():
+            return Response({'Bad Request': 'Player not in Room'}, status=status.HTTP_400_BAD_REQUEST)
+        chosen_avatars = set([alias.avatar_name for alias in alias_set])
+        available_avatars = sorted([name for name in all_avatars if name not in chosen_avatars])
+
+        return Response({'avatars': available_avatars}, status=status.HTTP_200_OK)
+
 # view to join the room
 class JoinRoom(APIView):
 
@@ -279,7 +301,7 @@ class ClearRoomSession(APIView):
 class LeaveRoom(APIView):
     # view to leave a room
     @check_request_key_and_room_status
-    def post(self, request, format=None, room=None):
+    def post(self, request, format=None, **kwargs):
         room_code = room.code
         session_id = self.request.session.session_key
         room_results = Room.objects.filter(host=session_id)
@@ -295,10 +317,21 @@ class LeaveRoom(APIView):
         self.request.session.pop('room_code')
             
         return Response({'Message': 'Success'}, status=status.HTTP_200_OK)
+    
+
+class PlayerLeave(APIView):
+    @check_request_key_and_room_status
+    def post(self, request, format=None, **kwargs):
+        room = kwargs.get('room')
+        user_set = Alias.objects.filter(room_code=room.code, id=request.data.get('id'))
+        if not user_set.exists():
+            return Response({'Bad Request': 'Player not in Room'}, status=status.HTTP_400_BAD_REQUEST)
+        user = user_set[0].user
+        clear_all_user_data(user)
+        return Response({'Message': 'Success'}, status=status.HTTP_200_OK)
 
 
 class SubmitPrompts(APIView):
-
     @check_request_key_and_room_status
     def post(self, request, format=None, **kwargs):
         room = kwargs.get('room')

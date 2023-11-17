@@ -88,10 +88,10 @@ class GameConsumer(AsyncWebsocketConsumer):
         )
 
     async def player_leave(self, event):
-        alias = event['data']['alias']
+        id = event['data']['id']
         await self.send(
             text_data=jsonSocketMessage('player_leave', data={
-                'alias': alias
+                'id': id
             })
         )
 

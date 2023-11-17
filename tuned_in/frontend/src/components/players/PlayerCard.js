@@ -8,7 +8,6 @@ import useWindowDimensions from "../../hooks/useWindowSize";
 export default function PlayerCard(props){
     const { height } = useWindowDimensions();
     const cardHeight = Math.floor(height/5);
-    console.log(`Card Height: ${cardHeight}`)
     const avatarSize = Math.floor(4*cardHeight/5);
     return (
     <Card

@@ -26,10 +26,6 @@ export default function useRoom() {
                 setGamestate(data.gamestate);
                 setUser({isWaiting: false, isReady: false});
             },
-            // player_leave: (data) => {
-            //     return;
-            //     // leaveRoom(data.player);
-            // },
             host_leave: (_) => {
                 console.log('host leave called');
                 exitRoom();
@@ -77,19 +73,35 @@ export default function useRoom() {
             if (player.id == user.id) setUser({...user, isAuthenticated: false, ...spotifyProps});
         });
 
+        socketManager.onEvent('player_leave', async (data) => {
+            if (data.id == user.id){
+                exitRoom();
+                return
+            }
+            setPlayers(prev => prev.filter(player => player.id != data.id));
+            if (user.isHost) {
+                API.post('player-leave', {id: data.id});
+            }
+        })
+
         return () => {
-            socketManager.removeEvents(['player_add', 'use_spotify_logout']);
+            socketManager.removeEvents(['player_add', 'use_spotify_logout', 'player_leave']);
         };
 
     }, [players, user]);
     
-    if (user.alias) {
+    if (user.avatarUrl) {
         user.isWaiting = user.isReady && players.some(player => !player.isReady);
         if (!playerAddTriggered){
             socketManager.send('player_add', { player: user });
             setPlayerAddTriggered(true);
         }
     }
+
+    const setUserAndPlayers = (newUser) => {
+        setUser(newUser);
+        setPlayers(prev => [newUser, ...prev.slice(1)]);
+    }
    
-    return { roomCode, user, players, gamestate, isLoading }
+    return { roomCode, user, players, setUserAndPlayers, gamestate, isLoading }
 };

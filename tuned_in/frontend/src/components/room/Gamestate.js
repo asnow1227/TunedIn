@@ -13,7 +13,7 @@ const PAGES = {
 }
 
 export default function GameState(){
-    const user = useUserContext();
+    const { user } = useUserContext();
     const gamestate = useRoomContext();
     const location = useLocation();
     if (location.state && location.state.fromHistory){

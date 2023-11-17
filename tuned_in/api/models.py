@@ -107,6 +107,9 @@ class Alias(models.Model):
     # convenience for checking if user is spotify authenticated
     authenticated = models.BooleanField(default=False)
 
+    avatar_name = models.CharField(max_length=50, null=True)
+    avatar_url = models.CharField(max_length=200, null=True)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -114,6 +117,10 @@ class Alias(models.Model):
                 name='unique_aliasing'
             )
         ]
+
+
+class Image(models.Model):
+    name = models.CharField(max_length=50, unique=True)
 
 
     

@@ -12,7 +12,10 @@ from .views import (
     GetPrompts,
     SubmitSongSelections,
     ClearRoomSession,
-    CheckUserAuthenticated
+    CheckUserAuthenticated,
+    GetAvailableAvatars,
+    SetPlayerAvatarUrl,
+    PlayerLeave
 )
 
 urlpatterns = [
@@ -28,5 +31,8 @@ urlpatterns = [
     path('prompt', GetPrompts.as_view()),
     path('submit-song-selections', SubmitSongSelections.as_view()),
     path('clear-room-session', ClearRoomSession.as_view()),
-    path('check-user-authenticated', CheckUserAuthenticated.as_view())
+    path('check-user-authenticated', CheckUserAuthenticated.as_view()),
+    path('available-avatars', GetAvailableAvatars.as_view()),
+    path('select-avatar', SetPlayerAvatarUrl.as_view()),
+    path('player-leave', PlayerLeave.as_view())
 ]

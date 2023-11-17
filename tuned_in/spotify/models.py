@@ -12,7 +12,7 @@ class SpotifyToken(models.Model):
 
 class UsersSpotify(models.Model):
     user = models.CharField(max_length=50, unique=True)
-    image_url = models.CharField(max_length=200)
+    image_url = models.CharField(max_length=200, null=True)
     display_name = models.CharField(max_length=50)
     spotify_id = models.CharField(max_length=200)
     
