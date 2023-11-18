@@ -17,6 +17,7 @@ export default function useRoom() {
     const [gamestate, setGamestate] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [playerAddTriggered, setPlayerAddTriggered] = useState(false);
+    const [settings, setSettings] = useState({});
     const socketManager = useSocketContext();
     const exitRoom = useExitRoom();
 
@@ -39,6 +40,7 @@ export default function useRoom() {
                 setPlayers([data.user, ...data.players]);
                 setUser({...data.user});
                 setGamestate(data.gamestate);
+                setSettings(data.settings);
             } catch {
                 exitRoom();
             }
@@ -50,7 +52,7 @@ export default function useRoom() {
         console.log('My use effect is running again');
        
         return ()  => {
-            socketManager.removeEvents(['gamestate_update', 'player_leave', 'host_leave', 'check_user_authenticated'])
+            socketManager.removeEvents(['gamestate_update', 'host_leave'])
         }
     }, []);
 
@@ -85,7 +87,7 @@ export default function useRoom() {
         })
 
         return () => {
-            socketManager.removeEvents(['player_add', 'use_spotify_logout', 'player_leave']);
+            socketManager.removeEvents(['player_add', 'user_spotify_logout', 'player_leave']);
         };
 
     }, [players, user]);
@@ -103,5 +105,5 @@ export default function useRoom() {
         setPlayers(prev => [newUser, ...prev.slice(1)]);
     }
    
-    return { roomCode, user, players, setUserAndPlayers, gamestate, isLoading }
+    return { roomCode, user, players, setUserAndPlayers, gamestate, isLoading, settings, setSettings }
 };

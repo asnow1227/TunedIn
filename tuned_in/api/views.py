@@ -151,6 +151,14 @@ def get_player(player_alias, host_id):
         player.update(spotify_meta)
     return player
 
+
+def get_settings(room):
+    return {
+        'numRounds': room.num_rounds,
+        'hostDeviceOnly': room.host_device_only,
+        'songSelectionTimer': room.song_selection_timer
+    }
+
 # view to get details about the room
 class GetRoom(APIView):
     serializer_class = RoomSerializer
@@ -171,8 +179,11 @@ class GetRoom(APIView):
         data = {
             'gamestate': room.gamestate,
             'user': get_player(user_alias, room.host),
-            'players': [get_player(player_alias, room.host) for player_alias in current_players if player_alias.user != user_alias.user]
+            'players': [get_player(player_alias, room.host) for player_alias in current_players if player_alias.user != user_alias.user],
+            'settings': get_settings(room)
         }
+
+        print(data)
   
         return Response(data, status=status.HTTP_200_OK)
 

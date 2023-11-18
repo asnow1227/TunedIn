@@ -1,15 +1,12 @@
 import React, { useState, Fragment } from "react";
-import ToggableComponent from "../shared/ToggableComponent";
+import { TogglableWithNavigateIcons } from "../shared/ToggableComponent";
 import Avatar from "@mui/joy/Avatar";
 import { Typography, Grid } from "@mui/material";
-import useWindowDimensions from "../../hooks/useWindowSize";
 
 
 
 export default function AvatarToggler({ avatars, currentAvatarRef }){
     const [currIndex, setCurrIndex] = useState(0);
-    const { width, height } = useWindowDimensions();
-    const avatarSize = Math.max(Math.floor(width/8), '30')
 
     currentAvatarRef.current = avatars[currIndex];
 
@@ -17,7 +14,7 @@ export default function AvatarToggler({ avatars, currentAvatarRef }){
     <Fragment>
         <Grid container spacing={1}>
             <Grid item xs={12}>
-                <ToggableComponent 
+                <TogglableWithNavigateIcons 
                     onLeftIcon={() => setCurrIndex(currIndex - 1)} 
                     displayLeftIcon={currIndex != 0}
                     onRightIcon={() => setCurrIndex(currIndex + 1)}
@@ -29,7 +26,7 @@ export default function AvatarToggler({ avatars, currentAvatarRef }){
                         '--Avatar-size': {xs: '80px', sm: '100px', md: '150px', lg: '200px'}
                     }}
                 />
-                </ToggableComponent>
+                </TogglableWithNavigateIcons>
             </Grid>
             <Grid item xs={12} >
                 <Typography >

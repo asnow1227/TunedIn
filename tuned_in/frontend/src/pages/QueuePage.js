@@ -12,6 +12,7 @@ import RoomHeader from "../components/room/RoomHeader";
 import PlayerFeed from "../components/players/PlayerFeed";
 import { useParams } from "react-router-dom";
 import { usePlayersContext } from "../providers/PlayersContext";
+import { TogglableWithNavigateIcons } from "../components/shared/ToggableComponent";
 
 const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
 const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";
@@ -116,7 +117,7 @@ function QueuePage(props){
                 <ContentDivider>Enter your prompts:</ContentDivider>
             </QueueBox>
             <QueueBox>
-                <ToggableComponent 
+                <TogglableWithNavigateIcons
                 onLeftIcon={() => setCurrIndex(currIndex - 1)} 
                 displayLeftIcon={currIndex != 0}
                 onRightIcon={() => setCurrIndex(currIndex + 1)}
@@ -129,7 +130,7 @@ function QueuePage(props){
                     onChange={e => handleChange(e)}
                     sx={{width: "100%"}}
                     />
-                </ToggableComponent>
+                </TogglableWithNavigateIcons>
             </QueueBox>
             <QueueBox>
                 <ContentDivider>Current Players:</ContentDivider>

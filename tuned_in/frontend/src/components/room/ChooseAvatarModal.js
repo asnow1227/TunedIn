@@ -1,20 +1,16 @@
-import React, { Fragment, useState, useEffect, useRef } from 'react';
-import API, { SPOTIFY_API } from '../../backend/API';
+import React, { useState, useEffect, useRef } from 'react';
+import API from '../../backend/API';
 import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import { Button, Typography, Grid } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { authenticateUsersSpotify } from '../../backend/API';
 import { useUserContext } from '../../providers/UserContext';
 import useImage from '../../hooks/useImage';
-import Avatar from "@mui/joy/Avatar";
 import AvatarToggler from './AvatarToggler';
 
 
 const USER_SPOTIFY_AVATAR_NAME = "My Spotify"
 
 export default function ChooseAvatarModal() {
-    const navigate = useNavigate();
     const { user, setUserAndPlayers } = useUserContext();
     const [avatars, setAvatars] = useState([{avatarName: '', avatarUrl: ''}]);
     const [isLoading, setIsLoading] = useState(true);

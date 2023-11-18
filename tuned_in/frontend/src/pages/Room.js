@@ -1,19 +1,16 @@
-import React, { useState, useEffect, Fragment } from "react"; 
-import { Typography } from '@mui/material';
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { Fragment, useState } from "react"; 
 import QueuePage from "./QueuePage";
-import AVATARS from "../components/shared/Avatars";
-import { BASE_URL } from "../backend/API";
 import SelectSongPage from "./SelectSongPage"
 import { MainBox } from "../components/shared/Layout";
 import RoomHeader from "../components/room/RoomHeader";
 import useRoom from "../hooks/useRoom";
 import UserContext from "../providers/UserContext";
 import PlayersContext from "../providers/PlayersContext";
-import RoomContext from "../providers/RoomContext";
-import GameState from "../components/room/Gamestate";
-import useImage from "../hooks/useImage";
+import Gamestate from "../components/room/Gamestate";
 import ChooseAvatarModal from "../components/room/ChooseAvatarModal";
+import GlobalSettingsContext from "../providers/GlobalSettingsProvider";
+import UpdateSettingsModal from "../components/settings/UpdateSettingsModal";
+import GamestateContext from "../providers/GameStateContext";
 
 
 const PAGES = {
@@ -22,36 +19,35 @@ const PAGES = {
     'SEL': SelectSongPage,
 }
 
-const randomAvatar = () => {
-    const imageUrl = AVATARS[Math.floor(Math.random() * AVATARS.length)];
-    return `${BASE_URL}${imageUrl}`
-};
-
 export default function Room(props) {
-    const { roomCode, user, players, setUserAndPlayers, gamestate, isLoading } = useRoom();
+    const { roomCode, user, players, setUserAndPlayers, gamestate, isLoading, settings, setSettings } = useRoom();
+    const [settingsOpen, setSettingsOpen] = useState(false);
     
     const showRoom = () => {
         if (!user.avatarUrl){
             return <Fragment>
                 <ChooseAvatarModal />
             </Fragment>
-        }
+        };
+        console.log()
         return (
             <Fragment>
                  <RoomHeader avatarUrl={user.avatarUrl} />
-                 <GameState />
+                 <UpdateSettingsModal />
+                 <Gamestate />
             </Fragment>
         )
     }
-    console.log('room rerendering');
     
     return (
         <MainBox>
             <UserContext.Provider value={{ user, setUserAndPlayers }}>
                 <PlayersContext.Provider value={players}>
-                    <RoomContext.Provider value={gamestate}>
-                        {user.alias && showRoom() }
-                    </RoomContext.Provider>
+                    <GamestateContext.Provider value={gamestate}>
+                        <GlobalSettingsContext.Provider value={{ settings, setSettings, settingsOpen, setSettingsOpen }}>
+                            { user.alias && showRoom() }
+                        </GlobalSettingsContext.Provider>
+                    </GamestateContext.Provider>
                 </PlayersContext.Provider>
             </UserContext.Provider>
         </MainBox>

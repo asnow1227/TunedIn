@@ -55,6 +55,12 @@ class Room(models.Model):
     voting_round = models.IntegerField(default=1)
     # prompts per player, decided by the number of players
     prompts_per_player = models.IntegerField(default=3)
+    # whether to use the host device or allow play through others speakers
+    host_device_only = models.BooleanField(null=True)
+    # timer in seconds for choosing songs during prompt phase
+    song_selection_timer = models.IntegerField(default=120)
+    # number of rounds
+    num_rounds = models.IntegerField(default=2)
 
     # objects = RoomManager()
 
