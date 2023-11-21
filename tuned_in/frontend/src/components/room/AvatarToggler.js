@@ -10,6 +10,8 @@ export default function AvatarToggler({ avatars, currentAvatarRef }){
 
     currentAvatarRef.current = avatars[currIndex];
 
+    console.log(currIndex, avatars.length - 1);
+
     return (
     <Fragment>
         <Grid container spacing={1}>

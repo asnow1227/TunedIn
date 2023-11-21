@@ -13,6 +13,7 @@ import PlayerFeed from "../components/players/PlayerFeed";
 import { useParams } from "react-router-dom";
 import { usePlayersContext } from "../providers/PlayersContext";
 import { TogglableWithNavigateIcons } from "../components/shared/ToggableComponent";
+import { useGlobalSettingsContext } from "../providers/GlobalSettingsProvider";
 
 const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
 const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";
@@ -47,7 +48,8 @@ const ContentDivider = ({ children }) => {
 }
 
 function QueuePage(props){
-    const [formValues, setFormValues] = useState(makeArray(3).map((_, i) => {return {key: i, text: "", submitted: false}}));
+    const { settings } = useGlobalSettingsContext();
+    const [formValues, setFormValues] = useState(makeArray(settings.numRounds).map((_, i) => {return {key: i, text: "", submitted: false}}));
     const [currIndex, setCurrIndex] = useState(0);
     const { roomCode } = useParams();
     const players = usePlayersContext();
@@ -119,9 +121,9 @@ function QueuePage(props){
             <QueueBox>
                 <TogglableWithNavigateIcons
                 onLeftIcon={() => setCurrIndex(currIndex - 1)} 
-                displayLeftIcon={currIndex != 0}
+                displayLeftIcon={currIndex >= 1}
                 onRightIcon={() => setCurrIndex(currIndex + 1)}
-                displayRightIcon={currIndex != 2}
+                displayRightIcon={currIndex <= formValues.length - 2}
                 >
                     <TextField
                     placeholder="Enter a Prompt"

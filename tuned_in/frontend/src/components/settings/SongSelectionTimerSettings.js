@@ -5,18 +5,28 @@ import Slider from '@mui/material/Slider';
 
 
 export default function SongSelectionTimerSettings() {
-    const { localSettingsRef } = useLocalSettingsContext();
+    const { localSettingsRef, setLocalSettingsRef } = useLocalSettingsContext();
     const [userSelectionTimer, setUserSelectionTimer] = useState(localSettingsRef.current.songSelectionTimer);
 
     const setNewValue = (event, newValue) => {
       setUserSelectionTimer(newValue);
-      localSettingsRef.current = {...localSettingsRef.current, songSelectionTimer: newValue }
+      setLocalSettingsRef({ songSelectionTimer: newValue });
     };
 
     return (
       <Fragment >
         <Typography variant='h6'>
           { `Selection Timer: ${userSelectionTimer}s` }
+        </Typography>
+        <Typography 
+          variant='subtitle1' 
+          sx={(theme) => (
+          {
+            color: "#b3b3b3"
+          }
+        )}
+        >
+          Controls the alloted time for the song selection phase. (2 songs are selected during this phase)
         </Typography>
         <Slider 
         color='secondary'

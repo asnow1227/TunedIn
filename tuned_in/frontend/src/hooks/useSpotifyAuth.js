@@ -4,7 +4,7 @@ import { authenticateUsersSpotify } from "../backend/API";
 import { SPOTIFY_API } from "../backend/API";
 
 export default function useSpotifyAuth(){
-    const user = useUserContext();
+    const { user } = useUserContext();
     const socketManager = useSocketContext();
 
     const spotifyLogout = async () => {
@@ -18,6 +18,7 @@ export default function useSpotifyAuth(){
     };
 
     const toggleSpotifyAuth =  async () => {
+        console.log(user.isAuthenticated);
         if (user.isAuthenticated){
             await spotifyLogout();
         } else {

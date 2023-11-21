@@ -15,7 +15,8 @@ from .views import (
     CheckUserAuthenticated,
     GetAvailableAvatars,
     SetPlayerAvatarUrl,
-    PlayerLeave
+    PlayerLeave,
+    UpdateSettings
 )
 
 urlpatterns = [
@@ -34,5 +35,6 @@ urlpatterns = [
     path('check-user-authenticated', CheckUserAuthenticated.as_view()),
     path('available-avatars', GetAvailableAvatars.as_view()),
     path('select-avatar', SetPlayerAvatarUrl.as_view()),
-    path('player-leave', PlayerLeave.as_view())
+    path('player-leave', PlayerLeave.as_view()),
+    path('update-settings', UpdateSettings.as_view())
 ]

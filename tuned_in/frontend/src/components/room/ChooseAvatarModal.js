@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import API from '../../backend/API';
 import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
-import { Button, Typography, Grid } from '@mui/material';
+import ModalOverflow from '@mui/joy/ModalOverflow';
+import { Button, Typography, Grid, Box } from '@mui/material';
 import { useUserContext } from '../../providers/UserContext';
 import useImage from '../../hooks/useImage';
 import AvatarToggler from './AvatarToggler';
@@ -53,22 +54,26 @@ export default function ChooseAvatarModal() {
         open={true}
         color="primary"
         >
-            <ModalDialog variant='solid' color="primary">
-                <Grid container spacing={2} align="center">
-                    <Grid item xs={12}>
-                        <Typography variant='h6'>
-                            Choose an Avatar
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <AvatarToggler avatars={avatars} currentAvatarRef={currentAvatarRef}/>
-                    </Grid>
-                    <Grid item xs={12} >
-                        <Button variant="contained" color="secondary" onClick={handleAvatarSelected}>
-                            Select
-                        </Button>
-                    </Grid>
-                </Grid>
-            </ModalDialog>
+            <ModalOverflow>
+                <ModalDialog variant='solid' color="primary">
+                    <Box sx={{ width: {xs: '240px', sm: '300px', md: '450px', lg: '600px'}}}>
+                        <Grid container spacing={2} align="center">
+                            <Grid item xs={12}>
+                                <Typography variant='h6'>
+                                    Choose an Avatar
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <AvatarToggler avatars={avatars} currentAvatarRef={currentAvatarRef}/>
+                            </Grid>
+                            <Grid item xs={12} >
+                                <Button variant="contained" color="secondary" onClick={handleAvatarSelected}>
+                                    Select
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Box>
+                </ModalDialog>
+            </ModalOverflow>
         </Modal>
     )};

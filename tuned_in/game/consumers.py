@@ -119,4 +119,9 @@ class GameConsumer(AsyncWebsocketConsumer):
             })
         )
 
+    async def settings_update(self, event):
+        settings = event['data']
+        await self.send(
+            text_data=jsonSocketMessage('settings_update', data=settings)
+        )
     

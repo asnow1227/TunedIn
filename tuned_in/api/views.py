@@ -478,3 +478,16 @@ class VotingRound(APIView):
             'assigned_user_2_song_selection': prompt.assigned_user_2_song_selection
         }
         return Response({'prompt' : data}, status=status.HTTP_200_OK)
+
+
+class UpdateSettings(APIView):
+    @check_request_key_and_room_status
+    def post(self, request, format=None, **kwargs):
+        room = kwargs.get('room')
+        if not self.request.session.session_key == room.host:
+            return Response({'Invalid Request': 'Only host can update game settings'}, status=status.HTTP_400_BAD_REQUEST)
+        room.host_device_only = request.data.get('hostDeviceOnly')
+        room.num_rounds = request.data.get('numRounds')
+        room.song_selection_timer = request.data.get('songSelectionTimer')
+        room.save()
+        return Response({'Success': 'Successfully updated room settings'}, status=status.HTTP_200_OK)

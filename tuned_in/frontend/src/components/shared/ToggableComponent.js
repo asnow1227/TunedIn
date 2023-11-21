@@ -6,6 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
 export default function ToggableComponent({ LeftIcon, RightIcon, ...props}){
+    console.log(props.displayLeftIcon, props.displayLeftIcon);
     return (
         <Fragment>
             <Grid container spacing={0} align="center" alignItems="center">
@@ -34,16 +35,16 @@ export default function ToggableComponent({ LeftIcon, RightIcon, ...props}){
 }
 
 
-export function TogglableWithNavigateIcons({ children }){
-    return <ToggableComponent LeftIcon={NavigateBeforeIcon} RightIcon={NavigateNextIcon}>
+export function TogglableWithNavigateIcons({ children, ...props }){
+    return <ToggableComponent LeftIcon={NavigateBeforeIcon} RightIcon={NavigateNextIcon} {...props}>
         { children }
     </ToggableComponent>
 }
 
 
 
-export function TogglableWithAdditionIcons({ children }){
-    return <ToggableComponent LeftIcon={AddIcon} RightIcon={RemoveIcon}>
+export function TogglableWithAdditionIcons({ children, ...props }){
+    return <ToggableComponent LeftIcon={RemoveIcon} RightIcon={AddIcon} {...props}>
         { children }
     </ToggableComponent>
 }

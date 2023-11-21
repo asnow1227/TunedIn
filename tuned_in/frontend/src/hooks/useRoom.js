@@ -31,6 +31,9 @@ export default function useRoom() {
                 console.log('host leave called');
                 exitRoom();
             },
+            settings_update: (data) => {
+                setSettings(data);
+            }
         });
 
         const setRoomAndUserDetails = async () => {
@@ -52,7 +55,7 @@ export default function useRoom() {
         console.log('My use effect is running again');
        
         return ()  => {
-            socketManager.removeEvents(['gamestate_update', 'host_leave'])
+            socketManager.removeEvents(['gamestate_update', 'host_leave', 'settings_update'])
         }
     }, []);
 
