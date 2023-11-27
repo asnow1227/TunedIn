@@ -19,39 +19,39 @@ const Options = [
     NumRoundsSettings
 ]
 
-export default function UpdateSettingsModal() {
+export default function UpdateSettingsModal({ isOpen, setIsOpen }) {
     const { user } = useUserContext();
     const socketManager = useSocketContext();
-    const { settings, setSettings, settingsOpen, setSettingsOpen } = useGlobalSettingsContext();
-    const [localSettings, setLocalSettings] = useState({
-        ...settings,
-        hostDeviceOnly: settings.hostDeviceOnly === null ? user.isAuthenticated : settings.hostDeviceOnly,
-    });
-    const localSettingsRef = useRef(localSettings);
+    const { settings } = useGlobalSettingsContext();
+    const localSettingsRef = useRef({...settings, hostDeviceOnly: settings.hostDeviceOnly === null ? user.isAuthenticated : settings.hostDeviceOnly});
     const setLocalSettingsRef = (newAttrs) => {
         localSettingsRef.current = {...localSettingsRef.current, ...newAttrs};
-    }
+    };
 
     const handleSave = () => {
         API.post('update-settings', localSettingsRef.current).then((_) => {
             socketManager.send('settings_update', localSettingsRef.current);
+            setIsOpen(false);
         }).catch((error) => {
             console.log(error);
         });
+    };
+
+    const close = () => {
+        setIsOpen(false);
     }
 
     return  (
     <LocalSettingsContext.Provider value={{ localSettingsRef, setLocalSettingsRef }}>
         <Modal
-        open={ settingsOpen || settings.hostDeviceOnly === null }
+        open={isOpen}
         color="primary"
-        onClose={() => setSettingsOpen(false)}
+        onClose={close}
         sx={{ align: "center" }}
         >
             <ModalOverflow>
                 <ModalDialog variant='solid' color="primary">
                     <Box sx={{ width: {xs: '240px', sm: '300px', md: '450px', lg: '600px'}}}>
-                        { settings.hostDeviceOnly != null && <ModalClose />}
                         <Grid container spacing={3} align="center">
                             <Grid item xs={12}>
                                 <Typography variant='h3'>

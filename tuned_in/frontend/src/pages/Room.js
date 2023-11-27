@@ -29,13 +29,11 @@ export default function Room(props) {
                 <ChooseAvatarModal />
             </Fragment>
         };
-        console.log()
         return (
-            <Fragment>
-                 <RoomHeader avatarUrl={user.avatarUrl} />
-                 <UpdateSettingsModal />
-                 <Gamestate />
-            </Fragment>
+            <MainBox>
+                <RoomHeader avatarUrl={user.avatarUrl} />
+                <Gamestate />
+            </MainBox>
         )
     }
     

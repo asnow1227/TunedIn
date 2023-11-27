@@ -21,19 +21,34 @@ export default function useRoom() {
     const socketManager = useSocketContext();
     const exitRoom = useExitRoom();
 
+    const updateGamestate = async () => {
+        try {
+            const response = await API.post('next-gamestate');
+            socketManager.send('gamestate_update', {
+                gamestate: response.data.gamestate
+            });
+        } catch {
+            console.log(response);
+        }
+    }
+   
+    if (!(players.some(player => !player.isReady)) && user.isHost){
+        updateGamestate();
+    }
+
     useEffect(() => {
         socketManager.onEvents({
             gamestate_update: (data) => {
                 setGamestate(data.gamestate);
-                setUser({isWaiting: false, isReady: false});
+                setUser(prev => ({...prev, isWaiting: false, isReady: false}));
+                setPlayers(prev => prev.map(player => ({...player, isReady: false})));
             },
             host_leave: (_) => {
-                console.log('host leave called');
                 exitRoom();
             },
             settings_update: (data) => {
                 setSettings(data);
-            }
+            },
         });
 
         const setRoomAndUserDetails = async () => {
@@ -87,16 +102,23 @@ export default function useRoom() {
             if (user.isHost) {
                 API.post('player-leave', {id: data.id});
             }
-        })
+        });
+
+        socketManager.onEvent('player_update', async (data) => {
+            console.log(data);
+            setPlayers(prev => prev.map(player => (player.id == data.player_id ? {...player, ...data.updates} : {...player})));
+            if (data.player_id == user.id) setUser(prev => ({...prev, ...data.updates}));
+        });
 
         return () => {
-            socketManager.removeEvents(['player_add', 'user_spotify_logout', 'player_leave']);
+            socketManager.removeEvents(['player_add', 'user_spotify_logout', 'player_leave', 'player_update']);
         };
 
     }, [players, user]);
     
     if (user.avatarUrl) {
         user.isWaiting = user.isReady && players.some(player => !player.isReady);
+        console.log(players);
         if (!playerAddTriggered){
             socketManager.send('player_add', { player: user });
             setPlayerAddTriggered(true);

@@ -5,7 +5,7 @@ import { SPOTIFY_API } from "../../backend/API";
 import InfiniteScroll from "react-infinite-scroll-component";
 import MusicCard from "./MusicCard";
 import useDebounce from "../../hooks/useDebounce";
-import { Row, Header } from "../shared/Layout";
+import { Row, Header, Footer } from "../shared/Layout";
 import { flexBoxProps } from "../shared/Layout";
 import SongFeed from "./SongFeed";
 

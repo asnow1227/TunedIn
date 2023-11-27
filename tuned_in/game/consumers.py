@@ -118,6 +118,15 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'player_id': player_id
             })
         )
+    
+    async def player_update(self, event):
+        player_id = event['data'].pop('player_id')
+        await self.send(
+            text_data=jsonSocketMessage('player_update', data={
+                'player_id': player_id,
+                'updates': event['data']
+            })
+        )
 
     async def settings_update(self, event):
         settings = event['data']

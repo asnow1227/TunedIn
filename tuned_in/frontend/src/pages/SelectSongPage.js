@@ -28,12 +28,12 @@ export default function SelectSongPage(props){
         //     <Typography variant="h6" component="h6">
         //         {'Assigned Prompt: ' + prompt.text}
         //     </Typography>
-        <MainBox>
+        // <MainBox>
             <SpotifySearch selectedSongRef={selectedSongRef} />
-        </MainBox>
-            //* <Footer>
-                //{props.isHost && <Button color="secondary" onClick={props.leaveButtonPressed}>End</Button>}
-            //</Footer> */}
+        // </MainBox>
+            // * <Footer>
+            //     {props.isHost && <Button color="secondary" onClick={props.leaveButtonPressed}>End</Button>}
+            // </Footer> */}
         // </div>
         // </Fragment>
     );

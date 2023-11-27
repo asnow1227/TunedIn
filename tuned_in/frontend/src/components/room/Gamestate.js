@@ -23,4 +23,4 @@ export default function Gamestate(){
     if (user.isWaiting) return <Typography variant="h4" component="h4">Waiting...</Typography>;
     const Component = PAGES[gamestate] || Fragment;
     return <Component />;
-}
+};

@@ -14,6 +14,8 @@ import { useParams } from "react-router-dom";
 import { usePlayersContext } from "../providers/PlayersContext";
 import { TogglableWithNavigateIcons } from "../components/shared/ToggableComponent";
 import { useGlobalSettingsContext } from "../providers/GlobalSettingsProvider";
+import { useSocketContext } from "../providers/SocketContext";
+import { useUserContext } from "../providers/UserContext";
 
 const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
 const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";
@@ -53,7 +55,11 @@ function QueuePage(props){
     const [currIndex, setCurrIndex] = useState(0);
     const { roomCode } = useParams();
     const players = usePlayersContext();
+    const socketManager = useSocketContext();
+    const { user } = useUserContext();
     const anyBlank = formValues.some((elem) => !elem.text);
+    const playerNotReady = (user.isHost && players.filter(player => player.id != user.id).some(player => !player.isReady));
+    console.log(players);
 
     const handleChange = (e) => {
         let formVals = formValues;
@@ -67,7 +73,11 @@ function QueuePage(props){
         });
         try {
             await API.post('submit-prompts', prompts);
-            props.setUserReady();
+            await API.post('ready-up');
+            socketManager.send('player_update', {
+                player_id: user.id,
+                isReady: true
+            });
         } catch (error){
             alert("Error Submitting Prompt");
             console.log(error);
@@ -81,7 +91,7 @@ function QueuePage(props){
 
     const readyButton = () => {
         return (
-            <ConditionalButton enabledMessage={ENABLED_MESSAGE} disabledMessage={DISABLED_MESSAGE} disabled={anyBlank}>
+            <ConditionalButton enabledMessage={ENABLED_MESSAGE} disabledMessage={DISABLED_MESSAGE} disabled={anyBlank || playerNotReady}>
                 <Button
                 variant="contained" 
                 color="secondary" 
@@ -98,7 +108,7 @@ function QueuePage(props){
                     marginTop: "10px", 
                     marginBottom: "10px"
                 })}
-                disabled={anyBlank}
+                disabled={anyBlank || playerNotReady}
                 > 
                     Ready
                 </Button>

@@ -11,16 +11,20 @@ import Login from '@mui/icons-material/Login';
 import useWindowDimensions from "../../hooks/useWindowSize";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { useUserContext } from "../../providers/UserContext";
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useParams } from "react-router-dom";
 import useSpotifyAuth from "../../hooks/useSpotifyAuth";
 import useLeaveRoom from "../../hooks/useLeaveRoom";
+import UpdateSettingsModal from "../settings/UpdateSettingsModal";
 
 export default function RoomHeader({ children, ...props }) {
     const { width, height } = useWindowDimensions();
     const [anchorEl, setAnchorEl] = useState(null);
-    const { toggleSpotifyAuth } = useSpotifyAuth();
+    const { toggleSpotifyAuth } = useSpotifyAuth()
     const { user } = useUserContext();
+    const [settingsOpen, setSettingsOpen] = useState(user.hostDeviceOnly === null);
     const leaveRoom = useLeaveRoom();
+
 
     const open = Boolean(anchorEl);
     
@@ -32,7 +36,7 @@ export default function RoomHeader({ children, ...props }) {
         setAnchorEl(null);
     };
 
-    const avatarSize = Math.max(Math.floor(width/15), '30')
+    const avatarSize = Math.max(Math.floor(width/15), '30');
 
     return (
     <div className="menu">
@@ -58,7 +62,7 @@ export default function RoomHeader({ children, ...props }) {
             id="account-menu"
             open={open}
             onClose={handleClose}
-            onClick={handleClose}
+            // onClick={handleClose}
             slotProps={{
                 paper: {
                     elevation: 0,
@@ -111,6 +115,16 @@ export default function RoomHeader({ children, ...props }) {
                 </ListItemIcon>
                 {user.isAuthenticated ? "Logout of Spotify" : "Login with Spotify"}
             </MenuItem>
+            {
+                user.isHost && 
+            <MenuItem divider={true}>
+                <ListItemIcon onClick={() => setSettingsOpen(true) }>
+                    <SettingsIcon color="secondary" />
+                    <UpdateSettingsModal isOpen={settingsOpen} setIsOpen={setSettingsOpen}/>
+                </ListItemIcon>
+                Settings
+            </MenuItem>
+            }
         </Menu>
     </div>
     )
