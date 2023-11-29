@@ -16,13 +16,14 @@ import { useParams } from "react-router-dom";
 import useSpotifyAuth from "../../hooks/useSpotifyAuth";
 import useLeaveRoom from "../../hooks/useLeaveRoom";
 import UpdateSettingsModal from "../settings/UpdateSettingsModal";
+import { useGlobalSettingsContext } from "../../providers/GlobalSettingsProvider";
 
 export default function RoomHeader({ children, ...props }) {
     const { width, height } = useWindowDimensions();
     const [anchorEl, setAnchorEl] = useState(null);
-    const { toggleSpotifyAuth } = useSpotifyAuth()
+    const { toggleSpotifyAuth } = useSpotifyAuth();
     const { user } = useUserContext();
-    const [settingsOpen, setSettingsOpen] = useState(user.hostDeviceOnly === null);
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const leaveRoom = useLeaveRoom();
 
 

@@ -29,6 +29,11 @@ export default function Room(props) {
                 <ChooseAvatarModal />
             </Fragment>
         };
+        if (settings.hostDeviceOnly === null){
+            return <Fragment>
+                <UpdateSettingsModal isOpen={true} />
+            </Fragment>
+        }
         return (
             <MainBox>
                 <RoomHeader avatarUrl={user.avatarUrl} />
@@ -38,16 +43,14 @@ export default function Room(props) {
     }
     
     return (
-        <MainBox>
-            <UserContext.Provider value={{ user, setUserAndPlayers }}>
-                <PlayersContext.Provider value={players}>
-                    <GamestateContext.Provider value={gamestate}>
-                        <GlobalSettingsContext.Provider value={{ settings, setSettings, settingsOpen, setSettingsOpen }}>
-                            { user.alias && showRoom() }
-                        </GlobalSettingsContext.Provider>
-                    </GamestateContext.Provider>
-                </PlayersContext.Provider>
-            </UserContext.Provider>
-        </MainBox>
+        <UserContext.Provider value={{ user, setUserAndPlayers }}>
+            <PlayersContext.Provider value={players}>
+                <GamestateContext.Provider value={gamestate}>
+                    <GlobalSettingsContext.Provider value={{ settings, setSettings, settingsOpen, setSettingsOpen }}>
+                        { user.alias && showRoom() }
+                    </GlobalSettingsContext.Provider>
+                </GamestateContext.Provider>
+            </PlayersContext.Provider>
+        </UserContext.Provider>
     )
 }

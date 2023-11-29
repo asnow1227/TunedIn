@@ -2,8 +2,9 @@ import React, { Fragment, useEffect, useRef } from "react";
 import SpotifySearch from "../components/songs/SpotifySearch";
 import API from "../backend/API";
 import useObjectState from "../hooks/useObjectState";
-import { Typography, Button } from "@mui/material";
+import { Typography, Button, Box } from "@mui/material";
 import { Footer, MainBox } from "../components/shared/Layout";
+import { HostTimerTest } from "../components/shared/HostTimer";
 // import { Button } from "@mui/material";
 
 export default function SelectSongPage(props){
@@ -23,19 +24,17 @@ export default function SelectSongPage(props){
     }, []);
 
     return (
-        // <Fragment>
-        // <div>
-        //     <Typography variant="h6" component="h6">
-        //         {'Assigned Prompt: ' + prompt.text}
-        //     </Typography>
-        // <MainBox>
+        <Fragment>
             <SpotifySearch selectedSongRef={selectedSongRef} />
-        // </MainBox>
-            // * <Footer>
-            //     {props.isHost && <Button color="secondary" onClick={props.leaveButtonPressed}>End</Button>}
-            // </Footer> */}
-        // </div>
-        // </Fragment>
+            <Footer>
+                <Box sx={{width: {sx: "100%", md: "90%", lg: "80%"}}}>
+                    <HostTimerTest />
+                    <Typography variant="h6" component="h6">
+                        {'Assigned Prompt: ' + prompt.text}
+                    </Typography>
+                </Box>
+            </Footer>
+        </Fragment>
     );
 };
 

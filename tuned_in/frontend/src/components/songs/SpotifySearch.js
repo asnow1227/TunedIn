@@ -8,6 +8,7 @@ import useDebounce from "../../hooks/useDebounce";
 import { Row, Header, Footer } from "../shared/Layout";
 import { flexBoxProps } from "../shared/Layout";
 import SongFeed from "./SongFeed";
+// import HostTimerTest from "../shared/HostTimer";
 
 const InputForm = forwardRef((props, ref) => {
     const inputRef = useRef(null);
@@ -62,7 +63,6 @@ export default function SpotifySearch({selectedSongRef}) {
         <Header align="center">
             <Box sx={flexBoxProps}>
                 <InputForm
-                InputProps={{style: {borderRadius: "30px"}}}
                 // FormControlProps={{style: {borderRadius: "12px"}}}
                 className="inputRounded"
                 id="filled-search"
@@ -83,19 +83,7 @@ export default function SpotifySearch({selectedSongRef}) {
                 loader={<h4>Loading...</h4>}
                 scrollableTarget="scrollableDiv"
                 >
-               <Grid container spacing={1}>
-                    {items.map((i, index) => (
-                        <Fragment key={i}>
-                            <Grid item xs={12} md={6} lg={6}>
-                            <MusicCard 
-                            {...i} 
-                            key={index} 
-                            setSelectedCallback={setSelectedCallback} 
-                            selectedId={selectedProps.id}/>
-                            </Grid>
-                        </Fragment> 
-                    ))}
-                </Grid>
+                <SongFeed songs={items}/>
                 </InfiniteScroll>
             </Box>
         </Row>

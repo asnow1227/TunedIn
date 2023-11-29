@@ -2,6 +2,8 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from api.models import Alias, Prompt, Room
 from asgiref.sync import sync_to_async
+import asyncio
+import time
 
 
 @sync_to_async
@@ -34,10 +36,21 @@ def clear_room_data(room_code):
     print('success')
 
 
+@sync_to_async
+def get_timer(room_code):
+    room_set = Room.objects.filter(code=room_code)
+    if not room_set.exists():
+        print('NO ROOOM')
+        return
+    return room_set[0].song_selection_timer
+
+
+
 class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_code = self.scope['url_route']['kwargs']['room_code']
         self.group_name = f"room_{self.room_code}"
+        self.stop_timer =  asyncio.Event()
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 
@@ -48,6 +61,8 @@ class GameConsumer(AsyncWebsocketConsumer):
         }))
 
     async def disconnect(self, close_code):
+        self.stop_timer.set()
+
         await self.channel_layer.group_discard(
             self.group_name,
             self.channel_name
@@ -56,12 +71,36 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message_type = text_data_json['type']
+        if message_type == 'start_host_timer':
+            await self.start_host_timer()
+            return
+
         data = text_data_json['data']
 
         await self.channel_layer.group_send(
             self.group_name,
             SocketMessage(message_type, data)
         )
+
+    async def start_host_timer(self):
+        self.timer_task = asyncio.create_task(self._start_host_timer())
+
+    async def _start_host_timer(self):
+        self.timer = 0
+        timer_max = 10
+        while self.timer < timer_max and not self.stop_timer.is_set():
+            await asyncio.sleep(1)
+            self.timer += 1
+            await self.channel_layer.group_send(
+                self.group_name,
+                SocketMessage('host_timer', {'timer': self.timer})
+            )
+    
+    async def host_timer(self, event):
+        timer = event['data']['timer']
+        await self.send(text_data=jsonSocketMessage('host_timer', data={
+            'timer': timer
+        }))
 
     async def host_leave(self, event):
         room_code = event['data']['room_code']

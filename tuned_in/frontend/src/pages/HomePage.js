@@ -9,6 +9,7 @@ import HomePageContext from "../providers/HomePageContext";
 import SocketProvider from "../providers/SocketProvider";
 import UserContext from "../providers/UserContext";
 import PromptSpotifyLogin from "../components/room/PromptSpotifyLogin";
+import { HostTimerTest } from "../components/shared/HostTimer";
 import {
   BrowserRouter as Router,
   Route,
@@ -78,6 +79,7 @@ export default function HomePage(props) {
           <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
           <Route exact path="/embed" element={<EmbedSpotify />} />
           <Route path='room/:roomCode' element={renderRoomPage(props)} />
+          <Route path='room/:roomCode/host-timer' element={<HostTimerTest />} />
           <Route path='/authenticate' element={<PromptSpotifyLogin />} />
           <Route exact path="/select-song" element={<SelectSongPage leaveButtonPressed={leaveRoomCallback}/>} />
         </Routes>

@@ -12,5 +12,6 @@ urlpatterns = [
     path('authenticate', index),
     path('select-song', index),
     path('embed', index),
-    path('box', index)
+    path('box', index),
+    path('room/<str:roomCode>/host-timer', index)
 ]
