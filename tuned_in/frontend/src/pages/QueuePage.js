@@ -1,14 +1,11 @@
-import React, { Fragment, useContext, useState } from "react";
-import { Button, ButtonGroup, Typography, Box, Grid, TextField } from '@mui/material';
+import React, { Fragment, useState } from "react";
+import { Button, Typography, Box, TextField } from '@mui/material';
 import { Footer } from "../components/shared/Layout";
 import { Row} from "../components/shared/Layout"
-import PlayerCard from "../components/players/PlayerCard";
-import ToggableComponent from "../components/shared/ToggableComponent";
 import makeArray from "../utils/makeArray";
 import ConditionalButton from "../components/shared/ConditionalButton";
 import API from "../backend/API";
 import Divider from '@mui/material/Divider';
-import RoomHeader from "../components/room/RoomHeader";
 import PlayerFeed from "../components/players/PlayerFeed";
 import { useParams } from "react-router-dom";
 import { usePlayersContext } from "../providers/PlayersContext";
@@ -16,6 +13,7 @@ import { TogglableWithNavigateIcons } from "../components/shared/ToggableCompone
 import { useGlobalSettingsContext } from "../providers/GlobalSettingsProvider";
 import { useSocketContext } from "../providers/SocketContext";
 import { useUserContext } from "../providers/UserContext";
+import { withRoomMenu } from "../wrappers/withRoomMenu";
 
 const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
 const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";
@@ -59,7 +57,6 @@ function QueuePage(props){
     const { user } = useUserContext();
     const anyBlank = formValues.some((elem) => !elem.text);
     const playerNotReady = (user.isHost && players.filter(player => player.id != user.id).some(player => !player.isReady));
-    console.log(players);
 
     const handleChange = (e) => {
         let formVals = formValues;

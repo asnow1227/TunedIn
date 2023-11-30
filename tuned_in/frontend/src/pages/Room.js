@@ -2,7 +2,6 @@ import React, { Fragment, useState } from "react";
 import QueuePage from "./QueuePage";
 import SelectSongPage from "./SelectSongPage"
 import { MainBox } from "../components/shared/Layout";
-import RoomHeader from "../components/room/RoomHeader";
 import useRoom from "../hooks/useRoom";
 import UserContext from "../providers/UserContext";
 import PlayersContext from "../providers/PlayersContext";
@@ -11,6 +10,7 @@ import ChooseAvatarModal from "../components/room/ChooseAvatarModal";
 import GlobalSettingsContext from "../providers/GlobalSettingsProvider";
 import UpdateSettingsModal from "../components/settings/UpdateSettingsModal";
 import GamestateContext from "../providers/GameStateContext";
+import RoomHeader from "../components/room/RoomHeader";
 
 
 const PAGES = {
@@ -36,7 +36,7 @@ export default function Room(props) {
         }
         return (
             <MainBox>
-                <RoomHeader avatarUrl={user.avatarUrl} />
+                <RoomHeader />
                 <Gamestate />
             </MainBox>
         )

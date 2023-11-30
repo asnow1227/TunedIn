@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState, Fragment } from "react";
-import { Grid, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { SPOTIFY_API } from "../../backend/API";
 import InfiniteScroll from "react-infinite-scroll-component";
-import MusicCard from "./MusicCard";
 import useDebounce from "../../hooks/useDebounce";
-import { Row, Header, Footer } from "../shared/Layout";
+import { Row } from "../shared/Layout";
 import { flexBoxProps } from "../shared/Layout";
+import RoomHeader from "../room/RoomHeader";
 import SongFeed from "./SongFeed";
+import SongSelectionContext from "../../providers/SelectedSongContext";
 // import HostTimerTest from "../shared/HostTimer";
 
 const InputForm = forwardRef((props, ref) => {
@@ -24,16 +25,14 @@ const InputForm = forwardRef((props, ref) => {
 });
 
 
-export default function SpotifySearch({selectedSongRef}) {
+export default function SpotifySearch() {
     const [items, setItems] = useState(new Array());
     const [hasMore, setHasMore] = useState(true);
     const [q, setQ] = useState('');
     const debouncedQ = useDebounce(q, 500);
     const [currPage, setCurrPage] = useState(1);
-    const [selectedProps, setSelectedProps] = useState({});
     const inputRef = useRef(null);
-
-    selectedSongRef.current = selectedProps?.id
+    const [selectedSong, setSelectedSong] = useState(null);
 
     useEffect(() => {
         setCurrPage(1);
@@ -54,14 +53,23 @@ export default function SpotifySearch({selectedSongRef}) {
         setCurrPage(prev => prev + 1);
     };
 
-    const setSelectedCallback = (selectedProps) => {
-        setSelectedProps(selectedProps);
-    };
-
     return (
     <Fragment>
-        <Header align="center">
-            <Box sx={flexBoxProps}>
+        <RoomHeader align="center">
+            <Box sx={{  
+                ...flexBoxProps, 
+                marginTop: { 
+                    xs: ".5rem",
+                    md: "1rem",
+                    lg: "2rem"
+                },
+                marginRight: "1rem",
+                marginBottom: { 
+                    xs: ".5rem",
+                    md: "1rem",
+                    lg: "2rem"
+                }
+                }}>
                 <InputForm
                 // FormControlProps={{style: {borderRadius: "12px"}}}
                 className="inputRounded"
@@ -73,7 +81,7 @@ export default function SpotifySearch({selectedSongRef}) {
                 ref={inputRef}
                 />
             </Box>
-        </Header>
+        </RoomHeader>
         <Row align="center">
             <Box sx={{width: {sx: "100%", md: "90%", lg: "80%"}, marginTop: "30px"}}>
                 <InfiniteScroll
@@ -83,9 +91,12 @@ export default function SpotifySearch({selectedSongRef}) {
                 loader={<h4>Loading...</h4>}
                 scrollableTarget="scrollableDiv"
                 >
-                <SongFeed songs={items}/>
+                    <SongSelectionContext.Provider value={{ selectedSong, setSelectedSong }}>
+                        <SongFeed songs={items}/>
+                    </SongSelectionContext.Provider>
                 </InfiniteScroll>
             </Box>
         </Row>
     </Fragment>)
 };
+

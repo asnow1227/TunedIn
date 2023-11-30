@@ -2,10 +2,21 @@ import React from "react";
 import { Grid } from "@mui/material";
 import { Card, CardContent, Typography, AspectRatio, Button, CardCover, CardOverflow, Box, Link } from "@mui/joy";
 import { BsThreeDots } from "react-icons/bs";
-
+import useTheme from "@mui/material/styles/useTheme";
+import IconButton from "@mui/material/IconButton"; 
+import { useSongSelectionContext } from "../../providers/SelectedSongContext";
+import { usePromptContext } from "../../providers/PromptContext";
 
 
 export default function MusicCard(props){
+    const theme = useTheme();
+    const { setSelectedSong } = useSongSelectionContext();
+    const { submitPrompt } = usePromptContext();
+
+    const onClick = () => {
+        setSelectedSong(props);
+        submitPrompt(props);
+    }
 
     return (
     <Card
@@ -27,14 +38,7 @@ export default function MusicCard(props){
             <CardContent orientation="horizontal">
                 <Box sx={{display: "flex", alignItems:"left", textAlign:"left", flexDirection: "column", justifyContent: "center"}}>
                     <Typography level="title-lg" textColor="white">
-                        <Link
-                        overlay
-                        underline="none"
-                        href="#interactive-card"
-                        sx={{color: "white"}}
-                        >
-                            {props.title}
-                        </Link>
+                        {props.title}
                     </Typography>
                     <Typography textColor="#b3b3b3" level="body-sm">
                         {props.artist}
@@ -43,7 +47,9 @@ export default function MusicCard(props){
             </CardContent>
         <CardOverflow>
             <Box sx={{display: "flex", alignItems:"left", textAlign:"left", flexDirection: "column", justifyContent: "center", marginRight: "5px"}}>
-                <BsThreeDots color="green"/>
+                <IconButton onClick={onClick}>
+                    <BsThreeDots color={theme.palette.secondary.main}/>
+                </IconButton>
             </Box>
         </CardOverflow>
     </Card>

@@ -5,11 +5,11 @@ import useObjectState from "../hooks/useObjectState";
 import { Typography, Button, Box } from "@mui/material";
 import { Footer, MainBox } from "../components/shared/Layout";
 import { HostTimerTest } from "../components/shared/HostTimer";
+import PromptContext from "../providers/PromptContext";
 // import { Button } from "@mui/material";
 
 export default function SelectSongPage(props){
-    const [prompt, setPrompt] = useObjectState({id: null, text: ""});
-    const selectedSongRef = useRef('')
+    const [prompt, setPrompt] = useObjectState({ id: null, text: "" });
 
     useEffect(() => {
         const setUp = async () => {
@@ -23,17 +23,23 @@ export default function SelectSongPage(props){
         setUp();
     }, []);
 
+    const submitPrompt = (data) => {
+        console.log(data);
+    }
+
     return (
         <Fragment>
-            <SpotifySearch selectedSongRef={selectedSongRef} />
-            <Footer>
-                <Box sx={{width: {sx: "100%", md: "90%", lg: "80%"}}}>
-                    <HostTimerTest />
-                    <Typography variant="h6" component="h6">
-                        {'Assigned Prompt: ' + prompt.text}
-                    </Typography>
-                </Box>
-            </Footer>
+            <PromptContext.Provider value={{ prompt, submitPrompt }}>
+                <SpotifySearch />
+                <Footer>
+                    <Box sx={{width: {sx: "100%", md: "90%", lg: "80%"}}}>
+                        <HostTimerTest />
+                        <Typography variant="h6" component="h6">
+                            {'Assigned Prompt: ' + prompt.text}
+                        </Typography>
+                    </Box>
+                </Footer>
+            </PromptContext.Provider>
         </Fragment>
     );
 };

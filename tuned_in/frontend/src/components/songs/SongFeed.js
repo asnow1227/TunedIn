@@ -1,26 +1,24 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment } from "react";
 import { Grid } from "@mui/material";
 import MusicCard from "./MusicCard";
+import SongOptionsModal from "./SongOptionsModal";
 
 export default function SongFeed({ songs }){
-    const [selectedProps, setSelectedProps] = useState({});
-    const setSelectedCallback = (selectedProps) => {
-        setSelectedProps(selectedProps);
-    };
-    
+
     return (
+    <Fragment>
+        <SongOptionsModal />
         <Grid container spacing={1}>
             {songs.map((i, index) => (
                 <Fragment key={index}>
                     <Grid item xs={12} md={6} lg={6}>
                     <MusicCard 
                     {...i} 
-                    key={index} 
-                    setSelectedCallback={setSelectedCallback} 
-                    selectedId={selectedProps.id}/>
+                    />
                     </Grid>
                 </Fragment>
             ))}
         </Grid>
+    </Fragment>
     )
 }

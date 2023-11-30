@@ -5,7 +5,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 
-export default function ToggableComponent({ LeftIcon, RightIcon, ...props}){
+export default function ToggableComponent({ LeftIcon, RightIcon, ...props }){
     console.log(props.displayLeftIcon, props.displayLeftIcon);
     return (
         <Fragment>
