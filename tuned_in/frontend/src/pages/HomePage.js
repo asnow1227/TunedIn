@@ -29,6 +29,8 @@ export default function HomePage(props) {
   const [room, setRoom] = useState({code: null, isHost: null, id: null});
   const [isLoading, setIsLoading] = useState(true);
 
+  const user = { isHost: room.isHost, id: room.id };
+
   useEffect(() => {
     const setUp = async () => {
       const roomCode = await fetchRoomCode().then((data) => {
@@ -47,11 +49,11 @@ export default function HomePage(props) {
 
   const renderHomePage = () => {
     if (room.code) {
-      console.log(room.code);
+      console.log();
       return (
         <SocketProvider code={room.code}>
           <HomePageContext.Provider value={leaveRoomCallback}>
-            <UserContext.Provider value={{ isHost: room.isHost, id: room.id }}>
+            <UserContext.Provider value={{ user, undefined }}>
               <LandingPage roomCode={room.code}/>
             </UserContext.Provider>
           </HomePageContext.Provider>

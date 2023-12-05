@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";  
 import { useSocketContext } from "../providers/SocketContext";
+import useUpdateGamestate from "./useUpdateGamestate";
 import useExitRoom from "./useExitRoom";
 import API from "../backend/API";
 
@@ -20,19 +21,10 @@ export default function useRoom() {
     const [settings, setSettings] = useState({});
     const socketManager = useSocketContext();
     const exitRoom = useExitRoom();
-
-    const updateGamestate = async () => {
-        try {
-            const response = await API.post('next-gamestate');
-            socketManager.send('gamestate_update', {
-                gamestate: response.data.gamestate
-            });
-        } catch {
-            console.log(response);
-        }
-    }
+    const updateGamestate = useUpdateGamestate();
    
     if (!(players.some(player => !player.isReady)) && user.isHost){
+        /// this line will naturally update the gamestate if the host finishes required tasks on a page when all users are ready
         updateGamestate();
     }
 
@@ -66,8 +58,6 @@ export default function useRoom() {
 
         setRoomAndUserDetails();
         setIsLoading(false);
-
-        console.log('My use effect is running again');
        
         return ()  => {
             socketManager.removeEvents(['gamestate_update', 'host_leave', 'settings_update'])
@@ -105,7 +95,6 @@ export default function useRoom() {
         });
 
         socketManager.onEvent('player_update', async (data) => {
-            console.log(data);
             setPlayers(prev => prev.map(player => (player.id == data.player_id ? {...player, ...data.updates} : {...player})));
             if (data.player_id == user.id) setUser(prev => ({...prev, ...data.updates}));
         });
@@ -118,7 +107,6 @@ export default function useRoom() {
     
     if (user.avatarUrl) {
         user.isWaiting = user.isReady && players.some(player => !player.isReady);
-        console.log(players);
         if (!playerAddTriggered){
             socketManager.send('player_add', { player: user });
             setPlayerAddTriggered(true);

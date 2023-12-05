@@ -2,6 +2,11 @@ import random
 from .models import Room, Alias, Prompt, PromptAssignments
 from .exceptions import RoomNotReadyError
 
+
+GAMESTATES_DRIVEN_BY_TIMER = {
+    Room.GameState.SELECT,
+}
+
 def get_slices(lst):
     # takes in a list (even numbers) and 
     # cuts it into a list of tuples. This will be user ids
@@ -78,6 +83,7 @@ def set_ready_statuses_to_false(room_code):
         alias.save(update_fields=['ready'])
 
 
+
 def update_gamestate(room):
     """method used to update the gamestate for a room"""
     aliases = Alias.objects.filter(room_code=room.code)
@@ -109,7 +115,7 @@ def update_gamestate(room):
     # for all other rounds, we will update the ready status on the user's alias for each user
     # this checks to ensure that all players are ready before updating the gamestate
     aliases = Alias.objects.filter(room_code=room.code)
-    if not all([alias.ready for alias in aliases]):
+    if room.gamestate not in GAMESTATES_DRIVEN_BY_TIMER and not all([alias.ready for alias in aliases]):
         raise RoomNotReadyError(room.code)
     
     
@@ -159,6 +165,7 @@ def update_gamestate(room):
     # since we are updating the gamestate or one of the main rounds/voting rounds, then we need to reset the ready 
     # statuses for each player
     set_ready_statuses_to_false(room.code)
+    room.current_timer = 0
     # finally, save the room and return
     room.save()
     return room

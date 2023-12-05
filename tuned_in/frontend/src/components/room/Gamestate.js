@@ -15,10 +15,6 @@ const PAGES = {
 export default function Gamestate(){
     const { user } = useUserContext();
     const gamestate = useGamestateContext();
-    const location = useLocation();
-    if (location.state && location.state.fromHistory){
-        console.log('From History')
-    }
 
     if (user.isWaiting) return <Typography variant="h4" component="h4">Waiting...</Typography>;
     const Component = PAGES[gamestate] || Fragment;

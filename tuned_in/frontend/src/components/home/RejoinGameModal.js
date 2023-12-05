@@ -13,7 +13,6 @@ export default function RejoinRoomModal({ roomCode }) {
     const leaveRoom = useLeaveRoom(roomCode);
     const exitRoom = useExitRoom();
     const [open, setOpen] = useState(!!roomCode);
-    console.log(roomCode);
 
     const leave = () => {
         setOpen(false);

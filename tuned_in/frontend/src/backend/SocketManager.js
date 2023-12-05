@@ -1,6 +1,6 @@
 
 class SocketManager {
-    constructor({ roomCode }){
+    constructor(roomCode){
         this.socket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
         this.functions = new Map();
         this.routeMessage = this.routeMessage.bind(this);
@@ -62,19 +62,3 @@ class SocketManager {
 }
 
 export default SocketManager;
-
-
-
-// export default createSocketManager(roomCode) => {
-
-// }
-
-// const socketManager = new SocketManager();
-
-// const initializeSocketManager = (roomCode) => {
-//     const chatSocket = new WebSocket(`ws://${window.location.host}/ws/room/${roomCode}/`);
-//     socketManager.onEvent('connection_established', (data) => {
-//         console.log(data);
-//     });
-//     socketManager.setSocket(chatSocket);
-// }

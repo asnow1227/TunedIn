@@ -288,10 +288,10 @@ class UserInRoom(APIView):
         if room_code:
             room_set = Room.objects.filter(code=room_code)
             alias_set = Alias.objects.filter(user=self.request.session.session_key, room_code=room_code)
-            if room_set.exists:
+            if room_set.exists():
                 room = room_set[0]
                 is_host = room.host == self.request.session.session_key
-            if alias_set.exists:
+            if alias_set.exists():
                 user_id = alias_set[0].id
         
         data = {
@@ -416,42 +416,49 @@ class GetPrompts(APIView):
         room = kwargs.get('room')
         user = self.request.session.session_key
         assigned_prompts = PromptAssignments.objects.filter(assigned_user=user, room_code=room.code)
-        prompts = Prompt.objects.filter(unique_id__in=[assigned_prompt.prompt_unique_id for assigned_prompt in assigned_prompts if assigned_prompt.assigned_user_song_choice is None],
-                                        prompt_key=room.main_round-1)
+        if not assigned_prompts:
+            print('no assigned prompts')
+            return Response({
+                'Invalid Request': 'User has no assigned prompts'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        unanswered_prompts = [assigned_prompt.prompt_unique_id for assigned_prompt in assigned_prompts if assigned_prompt.assigned_user_song_choice is None]
+
+        prompts = Prompt.objects.filter(unique_id__in=unanswered_prompts, prompt_key=room.main_round-1)
+        # only pull the prompts where we haven't submitted a song selection for the round
         
         if not prompts:
-            return Response({
-                'Invalid Request': 'User has no more prompts remaining'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+            print('no remaining prompts')
+            # if there are no unanswered prompts, return a successful response with a null prompt id and text
+            return Response({'text': None, 'id': None}, status=status.HTTP_200_OK)
+
         data = {'text': prompts[0].prompt_text, 'id': prompts[0].unique_id}
-        print(data)
         return Response(data, status=status.HTTP_200_OK)
 
 
-class SubmitSongSelections(APIView):
+class SubmitSongSelection(APIView):
     # view to submit the song selections
     # want to split this into separate endpoints, submit song selections
     # one at a time
     @check_request_key_and_room_status
     def post(self, request, format=None, **kwargs):
         user = self.request.session.session_key
-        prompts = request.data.get('prompts')
-        if prompts is None:
+        prompt_id = request.data.get('prompt_id')
+        song_id = request.data.get('song_id')
+        
+        if song_id is None or prompt_id is None:
             return Response({
-                'Invalid Request': 'No Prompts Submitted'
+                'Invalid Request': 'Either no prompt_id or song_id provided'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        assigned_prompts = PromptAssignments.objects.filter(prompt_unique_id__in=[prompt_info['prompt_id'] for prompt_info in prompts],
-                                                            assigned_user=user)
-        if not assigned_prompts or (len(assigned_prompts) != len(prompts)):
+        assigned_prompt_set = PromptAssignments.objects.filter(assigned_user=user, prompt_unique_id=prompt_id)
+        if not assigned_prompt_set.exists():
             return Response({
-                'Invalid Request': 'One or more prompt ids do not exist'
+                'Invalid Request': 'Error with prompt assignments'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        for assigned_prompt, prompt_info in zip(assigned_prompts, prompts):
-            assigned_prompt.assigned_user_song_choice = prompt_info['song_id']
-            assigned_prompt.save()
+        assigned_prompt = assigned_prompt_set[0]
+        assigned_prompt.assigned_user_song_choice = song_id
+        assigned_prompt.save()
 
         return Response({
                 'Success': 'Successfuly Updated Song Vote for User'

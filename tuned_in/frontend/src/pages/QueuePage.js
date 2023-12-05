@@ -13,7 +13,7 @@ import { TogglableWithNavigateIcons } from "../components/shared/ToggableCompone
 import { useGlobalSettingsContext } from "../providers/GlobalSettingsProvider";
 import { useSocketContext } from "../providers/SocketContext";
 import { useUserContext } from "../providers/UserContext";
-import { withRoomMenu } from "../wrappers/withRoomMenu";
+import useUserReady from "../hooks/useUserReady";
 
 const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
 const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";
@@ -53,7 +53,7 @@ function QueuePage(props){
     const [currIndex, setCurrIndex] = useState(0);
     const { roomCode } = useParams();
     const players = usePlayersContext();
-    const socketManager = useSocketContext();
+    const setUserReady = useUserReady();
     const { user } = useUserContext();
     const anyBlank = formValues.some((elem) => !elem.text);
     const playerNotReady = (user.isHost && players.filter(player => player.id != user.id).some(player => !player.isReady));
@@ -70,11 +70,7 @@ function QueuePage(props){
         });
         try {
             await API.post('submit-prompts', prompts);
-            await API.post('ready-up');
-            socketManager.send('player_update', {
-                player_id: user.id,
-                isReady: true
-            });
+            setUserReady();
         } catch (error){
             alert("Error Submitting Prompt");
             console.log(error);

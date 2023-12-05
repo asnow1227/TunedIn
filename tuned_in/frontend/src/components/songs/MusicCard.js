@@ -5,17 +5,14 @@ import { BsThreeDots } from "react-icons/bs";
 import useTheme from "@mui/material/styles/useTheme";
 import IconButton from "@mui/material/IconButton"; 
 import { useSongSelectionContext } from "../../providers/SelectedSongContext";
-import { usePromptContext } from "../../providers/PromptContext";
 
 
 export default function MusicCard(props){
     const theme = useTheme();
     const { setSelectedSong } = useSongSelectionContext();
-    const { submitPrompt } = usePromptContext();
 
     const onClick = () => {
         setSelectedSong(props);
-        submitPrompt(props);
     }
 
     return (

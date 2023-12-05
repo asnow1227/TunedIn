@@ -3,20 +3,38 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from api.models import Alias, Prompt, Room
 from asgiref.sync import sync_to_async
 import asyncio
-import time
+import math
 
 
 @sync_to_async
 def update_gamestate(room_code, gamestate):
     room_set = Room.objects.filter(room_code=room_code)
     if room_set.exists():
-        room = room[0]
+        room = room_set[0]
         room.gamestate = gamestate
         room.save(update_fields=['gamestate'])
 
 
+@sync_to_async
+def get_timer(room_code):
+    room_set = Room.objects.filter(code=room_code)
+    if room_set.exists():
+        room = room_set[0]
+        return room.current_timer or 0, room.song_selection_timer
+    return None, None
+
+
 def jsonSocketMessage(message_type, data=None):
     return json.dumps(SocketMessage(message_type, data=data))
+
+
+@sync_to_async
+def save_current_timer(room_code, timer):
+    room_set = Room.objects.filter(code=room_code)
+    if room_set.exists():
+        room = room_set[0]
+        room.current_timer = timer
+        room.save()
 
 
 class SocketMessage(dict):
@@ -36,21 +54,11 @@ def clear_room_data(room_code):
     print('success')
 
 
-@sync_to_async
-def get_timer(room_code):
-    room_set = Room.objects.filter(code=room_code)
-    if not room_set.exists():
-        print('NO ROOOM')
-        return
-    return room_set[0].song_selection_timer
-
-
-
 class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_code = self.scope['url_route']['kwargs']['room_code']
         self.group_name = f"room_{self.room_code}"
-        self.stop_timer =  asyncio.Event()
+        self.stop_timer = asyncio.Event()
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 
@@ -62,6 +70,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         self.stop_timer.set()
+        if hasattr(self, 'timer'):
+            await save_current_timer(self.room_code, self.timer)
 
         await self.channel_layer.group_discard(
             self.group_name,
@@ -86,15 +96,17 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.timer_task = asyncio.create_task(self._start_host_timer())
 
     async def _start_host_timer(self):
-        self.timer = 0
-        timer_max = 10
-        while self.timer < timer_max and not self.stop_timer.is_set():
+        self.timer, timer_max = await get_timer(self.room_code)
+        while self.timer < timer_max:
             await asyncio.sleep(1)
             self.timer += 1
-            await self.channel_layer.group_send(
-                self.group_name,
-                SocketMessage('host_timer', {'timer': self.timer})
-            )
+            if not self.stop_timer.is_set():
+                ## this is to prevent firing another send after the socket object has disconnected and then reconnected immediately (e.g. on page refresh)
+                await self.channel_layer.group_send(
+                    self.group_name,
+                    SocketMessage('host_timer', {'timer': math.floor(( self.timer / timer_max) * 100)})
+                )
+        # once the timer reaches max, the host will call updateGamestate from the frontend
     
     async def host_timer(self, event):
         timer = event['data']['timer']

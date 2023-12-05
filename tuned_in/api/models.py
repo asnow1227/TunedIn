@@ -61,6 +61,8 @@ class Room(models.Model):
     song_selection_timer = models.IntegerField(default=120)
     # number of rounds
     num_rounds = models.IntegerField(default=2)
+    # current timer 
+    current_timer = models.IntegerField(null=True)
 
     # objects = RoomManager()
 
