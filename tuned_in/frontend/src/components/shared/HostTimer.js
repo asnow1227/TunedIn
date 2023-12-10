@@ -19,6 +19,10 @@ export default function HostTimer() {
             setTimer(data.timer);
         });
         if (user.isHost) socketManager.send('start_host_timer');
+
+        return () => {
+            socketManager.removeEvent('host_timer');
+        }
     }, []);
 
     return (

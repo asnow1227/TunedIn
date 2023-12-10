@@ -80,7 +80,7 @@ class Prompt(models.Model):
     # when the user submits a prompt on the front end, this variable is included so that 
     # when they want to delete a specific prompt they can map it back to this prompt key. 
     # change this to be 'main_round' aligned with the main_round on the room object
-    prompt_key = models.IntegerField(null=False)
+    main_round = models.IntegerField(null=False)
     # unique id for the prompt
     unique_id = models.CharField(max_length=10, default=generate_prompt_id, unique=True)
     # voting round for the prompt, will default to 0 and will align with the gamestate voting round
@@ -98,7 +98,12 @@ class PromptAssignments(models.Model):
     assigned_user_song_choice = models.TextField(null=True)
     # votes for the user's song choice
     assigned_user_votes = models.IntegerField(default=0)
-
+    # stroring the song props locally to avoid uneccessary requests
+    song_title = models.TextField(null=True)
+    
+    song_artist = models.TextField(null=True)
+    
+    song_image_url = models.TextField(null=True)
 
 # table to store the player aliases for each room
 class Alias(models.Model):
@@ -129,6 +134,12 @@ class Alias(models.Model):
 
 class Image(models.Model):
     name = models.CharField(max_length=50, unique=True)
+
+
+class Vote(models.Model):
+    prompt_unique_id = models.CharField(max_length=8, null=False) 
+    voting_user = models.CharField(max_length=50, unique=True)
+    voted_for_user = models.CharField(max_length=50, unique=False)
 
 
     

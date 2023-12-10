@@ -123,10 +123,10 @@ def update_gamestate(room):
         # if we are coming from the prompt page (where players enter prompts), then we need to assign the prompts
         # remember that we already confirmed that each player is ready. Note that users now enter the prompts on the QUEUE page
         players = [alias.user for alias in aliases]
-        for main_round in range(3):
+        for main_round in range(room.num_rounds):
             # get the prompts for the current round num
             # (will change the prompt_key field to be main_round on the prompt object)
-            prompts = Prompt.objects.filter(room_code=room.code, prompt_key=main_round)
+            prompts = Prompt.objects.filter(room_code=room.code, main_round=main_round)
             # assign the combos (see logic above)
             combos = assign_prompt_combos(players)
             for i, (prompt, combo) in enumerate(zip(prompts, combos)):
@@ -147,7 +147,7 @@ def update_gamestate(room):
         # if so, we need to reset the voting round and continue to the scoring stage
         # otherwise, we just increase the voting round and keep the gamestate the same.
         # max voting round is equal to the number of players since each player creates one prompt for each round
-        # i.e. if there are 3 players, there are 9 prompts spread over 3 rounds, 3 prompts per round
+        # i.e. if there are 3 players and 3 main rounds, there are 9 prompts spread over 3 rounds, 3 prompts per round
         if room.voting_round == room.num_players:
             room.voting_round = 1
             room.gamestate = Room.GameState.SCORE

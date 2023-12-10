@@ -3,7 +3,6 @@ import { Grid } from "@mui/material";
 import PlayerCard from "./PlayerCard";
 
 export default function PlayerFeed({ players }) {
-    console.log('player feed rerendered');
     return (
         <Grid container spacing={1}>
             {players.map((player, i) => {

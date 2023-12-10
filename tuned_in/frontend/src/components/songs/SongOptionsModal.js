@@ -13,7 +13,8 @@ export default function SongOptionsModal() {
     const { submit } = usePromptContext();
 
     const onSelect = () => {
-        submit(selectedSong.id);
+        submit(selectedSong);
+        console.log('submit is being called through the onSelect of the Button to choose a song');
         setSelectedSong(null);
     }
 

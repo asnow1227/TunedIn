@@ -1,10 +1,10 @@
 import React, { Fragment } from "react";
 import { useUserContext } from "../../providers/UserContext";
 import { useGamestateContext } from "../../providers/GameStateContext";
+import useUpdateGamestate from "../../hooks/useUpdateGamestate";
 import { Typography } from "@mui/material";
 import QueuePage from "../../pages/QueuePage";
 import SelectSongPage from "../../pages/SelectSongPage";
-import { useLocation } from "react-router-dom";
 
 const PAGES = {
     'Q': QueuePage,
@@ -14,9 +14,9 @@ const PAGES = {
 
 export default function Gamestate(){
     const { user } = useUserContext();
-    const gamestate = useGamestateContext();
+    const { gamestate } = useGamestateContext();
 
-    if (user.isWaiting) return <Typography variant="h4" component="h4">Waiting...</Typography>;
+    if (user.isWaiting) return <Typography variant="h4" component="h4">{gamestate}</Typography>;
     const Component = PAGES[gamestate] || Fragment;
     return <Component />;
 };

@@ -18,6 +18,7 @@ class SocketManager {
             return this.functions[data.type](data.data)
         } catch (error) {
             console.log(data.type);
+            console.log(data.data)
         }
     }
     onEvent(event_type, func){

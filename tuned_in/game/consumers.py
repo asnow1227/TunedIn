@@ -51,7 +51,6 @@ def clear_room_data(room_code):
     Room.objects.filter(code=room_code).all().delete()
     Alias.objects.filter(room_code=room_code).all().delete()
     Prompt.objects.filter(room_code=room_code).all().delete()
-    print('success')
 
 
 class GameConsumer(AsyncWebsocketConsumer):
@@ -82,9 +81,15 @@ class GameConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message_type = text_data_json['type']
         if message_type == 'start_host_timer':
+            self.stop_timer.clear()
             await self.start_host_timer()
             return
-
+        
+        if message_type == 'kill_host_timer':
+            # the timer will be set when we call this method, or disconnect
+            self.stop_timer.set()
+            return
+        
         data = text_data_json['data']
 
         await self.channel_layer.group_send(

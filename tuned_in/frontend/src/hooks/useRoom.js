@@ -23,17 +23,20 @@ export default function useRoom() {
     const exitRoom = useExitRoom();
     const updateGamestate = useUpdateGamestate();
    
-    if (!(players.some(player => !player.isReady)) && user.isHost){
+    if (!(players.some(player => !player.isReady)) && user.isHost && !isLoading){
+        console.log('Gamestate update was triggered by comparison');
         /// this line will naturally update the gamestate if the host finishes required tasks on a page when all users are ready
-        updateGamestate();
+        updateGamestate(user.isHost);
     }
 
     useEffect(() => {
         socketManager.onEvents({
             gamestate_update: (data) => {
+                console.log('Gamestate update was triggered by socket');
                 setGamestate(data.gamestate);
                 setUser(prev => ({...prev, isWaiting: false, isReady: false}));
                 setPlayers(prev => prev.map(player => ({...player, isReady: false})));
+                console.log('Gamestate Update Called');
             },
             host_leave: (_) => {
                 exitRoom();
@@ -66,13 +69,15 @@ export default function useRoom() {
 
 
     useEffect(() => {
+        ///defining these in a separate useeffect to ensure we can access the most recent copies of each state we need
         if (!players.length) return;
         
         socketManager.onEvent('player_add', (data) => {
+            console.log('player_add_triggered')
             if (!data.player.id) return;
             const player = players.find(player => player.id == data.player.id);
             if (!player) setPlayers([...players, data.player]);
-            if (player.id == user.id && player.isAuthenticated != user.isAuthenticated) setUser({player});
+            if (player.id == user.id && player.isAuthenticated != user.isAuthenticated) setUser({...player});
         });
 
         socketManager.onEvent('user_logout_spotify', async (data) => {
@@ -95,6 +100,7 @@ export default function useRoom() {
         });
 
         socketManager.onEvent('player_update', async (data) => {
+            console.log('player_update_called');
             setPlayers(prev => prev.map(player => (player.id == data.player_id ? {...player, ...data.updates} : {...player})));
             if (data.player_id == user.id) setUser(prev => ({...prev, ...data.updates}));
         });
@@ -118,5 +124,5 @@ export default function useRoom() {
         setPlayers(prev => [newUser, ...prev.slice(1)]);
     }
    
-    return { roomCode, user, players, setUserAndPlayers, gamestate, isLoading, settings, setSettings }
+    return { roomCode, user, players, setUserAndPlayers, gamestate, setGamestate, isLoading, settings, setSettings }
 };

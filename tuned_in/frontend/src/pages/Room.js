@@ -20,7 +20,7 @@ const PAGES = {
 }
 
 export default function Room(props) {
-    const { roomCode, user, players, setUserAndPlayers, gamestate, isLoading, settings, setSettings } = useRoom();
+    const { roomCode, user, players, setUserAndPlayers, gamestate, setGamestate, isLoading, settings, setSettings } = useRoom();
     const [settingsOpen, setSettingsOpen] = useState(false);
     
     const showRoom = () => {
@@ -45,7 +45,7 @@ export default function Room(props) {
     return (
         <UserContext.Provider value={{ user, setUserAndPlayers }}>
             <PlayersContext.Provider value={players}>
-                <GamestateContext.Provider value={gamestate}>
+                <GamestateContext.Provider value={{ gamestate, setGamestate }}>
                     <GlobalSettingsContext.Provider value={{ settings, setSettings, settingsOpen, setSettingsOpen }}>
                         { user.alias && showRoom() }
                     </GlobalSettingsContext.Provider>
