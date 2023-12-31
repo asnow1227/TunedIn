@@ -6,7 +6,7 @@ from .serializers import (
     SubmitPromptsSerializer,
     UpdateRoomSerializer
 )
-from .models import Room, Prompt, Alias, PromptAssignments, Image
+from .models import Room, Prompt, Alias, PromptAssignments, Image, Vote
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import JsonResponse
@@ -420,7 +420,7 @@ class GetPrompts(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         unanswered_prompts = [assigned_prompt.prompt_unique_id for assigned_prompt in assigned_prompts if assigned_prompt.assigned_user_song_choice is None]
 
-        prompts = Prompt.objects.filter(unique_id__in=unanswered_prompts, main_round=room.main_round-1)
+        prompts = Prompt.objects.filter(unique_id__in=unanswered_prompts, main_round=room.main_round)
         # only pull the prompts where we haven't submitted a song selection for the round
         
         if not prompts:
@@ -439,10 +439,12 @@ class SubmitSongSelection(APIView):
     def post(self, request, format=None, **kwargs):
         user = self.request.session.session_key
         prompt_id = request.data.get('prompt_id')
-        song_id = request.data.get('song_id')
+        song_id = request.data.get('id')
         song_title = request.data.get('title')
         song_image_url = request.data.get('image_url')
         song_artist = request.data.get('artist')
+
+        print(request.data)
         
         if song_id is None or prompt_id is None:
             return Response({
@@ -467,36 +469,90 @@ class SubmitSongSelection(APIView):
             }, status=status.HTTP_200_OK)
         
 
-class VotingRound(APIView):
+class SubmitVote(APIView):
     # want to split this into separate endpoints, one for each prompt
     # uniquely
     @check_request_key_and_room_status
-    def get(self, request, format=None, **kwargs):
-        # room_code = self.request.session['room_code']
-        # room = Room.objects.filter(code=room_code)
-        room = kwargs.get('room')
-        aliases = Alias.objects.filter(room_code=room.code)
-        alias_map = {alias.user: alias.alias for alias in aliases}
-        voting_round = room.voting_round
-        main_round = room.main_round
-        prompt_set = Prompt.objects.filter(room_code=room.code, voting_round=voting_round, main_round=main_round)
-        if not prompt_set.exists():
-            return Response({'Invalid Request': 'No prompts found for the voting round'}, status=status.HTTP_400_BAD_REQUEST)
-        prompt = prompt_set[0]
-        prompt_assignments = PromptAssignments.objects.filter(prompt_unique_id=prompt.unique_id)
-        song_data = [{
-            'prompt_assignment_id': prompt_assignment.id,
-            'song_id': prompt_assignment.assigned_user_song_choice,
-            'image_url': prompt_assignment.song_image_url,
-            'artist': prompt_assignment.song_artist,
-            'title': prompt_assignment.song_title
-        } for prompt_assignment in prompt_assignments]
+    def post(self, request, format=None, **kwargs):
+        assignment_id = request.data.get('prompt_assignment_id')
+        assignment_set = PromptAssignments.objects.filter(id=assignment_id)
+        if not assignment_set:
+            return 
         
+        assignment = assignment_set[0]
+        vote = Vote(
+            prompt_unique_id=assignment.prompt_unique_id,
+            voting_user = self.request.session.session_key,
+            voted_for_user = assignment.assigned_user
+        )
+        vote.save()
+
+
+class UpdateUsersScores(APIView):
+    ## this method should only be accessed by the host
+    @check_request_key_and_room_status
+    def post(self, request, format=None, **kwargs):
+        room = kwargs.get('room')
+        
+        # get the prompt for the voting round and main round
+        prompt_set = Prompt.objects.filter(room_code=room.code, voting_round=room.voting_round, main_round=room.main_round)
+        if not prompt_set:
+            return
+        prompt = prompt_set[0]
+
+        prompt_assignments_set = PromptAssignments.objects.filter(prompt_unique_id=prompt.unique_id)
+        if not prompt_assignments_set:
+            return 
+        
+        voted_for_users = [prompt_assignment.assigned_user for prompt_assignment in prompt_assignments_set]
+
+        # get the user aliases
+        alias_set = Alias.objects.filter(room_code=room.code, user_id__in=voted_for_users)
+        if not alias_set:
+            return
+            
+        for alias in alias_set:
+            # get the vote that were submitted for that user
+            vote_set = Vote.objects.filter(voted_for_user=alias.user, prompt_unique_id=prompt.unique_id)
+            if not vote_set:
+                # don't update the user's score
+                return 
+        
+            alias.score += 100 * len(vote_set)
+            alias.save()
+        
+        return Response({'Successful': "Successfully updated user's score"}, status=status.HTTP_200_OK)
+
+
+class VotingRound(APIView):
+    @check_request_key_and_room_status
+    def get(self, request, format=None, **kwargs):
+        room = kwargs.get('room')
+        print(room.main_round, room.voting_round)
+        
+        # get the prompt for the voting round and main round
+        prompt_set = Prompt.objects.filter(room_code=room.code, voting_round=room.voting_round, main_round=room.main_round)
+        if not prompt_set:
+            return
+        prompt = prompt_set[0]
+
+        prompt_assignments_set = PromptAssignments.objects.filter(prompt_unique_id=prompt.unique_id)
+        if not prompt_assignments_set:
+            return 
         
         data = {
-            'prompt_unique_id': prompt.prompt_unique_id,
             'prompt_text': prompt.prompt_text,
-            'songs': song_data
+            'can_vote': self.request.session.session_key not in [prompt_assignment.assigned_user for prompt_assignment in prompt_assignments_set],
+            'prompt_assignments': [
+                {
+                    'prompt_assignment_id': prompt_assignment.id,
+                    'image_url': prompt_assignment.song_image_url,
+                    'artist': prompt_assignment.song_artist,
+                    'title': prompt_assignment.song_title,
+                    'id': prompt_assignment.assigned_user_song_choice
+                }
+                for prompt_assignment in prompt_assignments_set
+            ]
         }
 
         return Response(data, status=status.HTTP_200_OK)
@@ -513,3 +569,4 @@ class UpdateSettings(APIView):
         room.song_selection_timer = request.data.get('songSelectionTimer')
         room.save()
         return Response({'Success': 'Successfully updated room settings'}, status=status.HTTP_200_OK)
+    

@@ -9,6 +9,7 @@ import { flexBoxProps } from "../shared/Layout";
 import RoomHeader from "../room/RoomHeader";
 import SongFeed from "./SongFeed";
 import SongSelectionContext from "../../providers/SelectedSongContext";
+import SelectSongOptionsModal from "./SelectSongOptionsModal";
 // import HostTimerTest from "../shared/HostTimer";
 
 const InputForm = forwardRef((props, ref) => {
@@ -92,6 +93,7 @@ export default function SpotifySearch() {
                 scrollableTarget="scrollableDiv"
                 >
                     <SongSelectionContext.Provider value={{ selectedSong, setSelectedSong }}>
+                        <SelectSongOptionsModal type="select"/>
                         <SongFeed songs={items}/>
                     </SongSelectionContext.Provider>
                 </InfiniteScroll>

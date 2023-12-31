@@ -13,17 +13,13 @@ import { useGamestateContext } from "../providers/GameStateContext";
 export default function SelectSongPage(props){
     const [prompt, setPrompt] = useObjectState({ id: null, text: "" });
     const setUserReady = useUserReady();
-    const gamestate = useGamestateContext();
 
     const fetchPrompt = async () => {
         try {
             const response = await API.get('prompt');
             if (response.data.text) {
                 setPrompt({ id: response.data.id, text: response.data.text });
-            }
-            else {
-                console.log('calling the set ready again');
-                console.log(gamestate);
+            } else {
                 setUserReady();
             }
         } catch (error) {
@@ -33,14 +29,12 @@ export default function SelectSongPage(props){
 
     useEffect(() => {
         fetchPrompt();
-        console.log('the component is remounting for some reason');
     }, []);
 
     const submit = async (song) => {
         await API.post('submit-song-selection', {
             prompt_id: prompt.id,
-            ...props,
-            song_id: song.id
+            ...song,
         });
         await fetchPrompt();
     }
@@ -50,7 +44,7 @@ export default function SelectSongPage(props){
             <PromptContext.Provider value={{ prompt, submit }}>
                 <SpotifySearch />
                 <Footer>
-                    <Box sx={{width: {sx: "100%", md: "90%", lg: "80%"}, marginTop: "10px"}}>
+                    <Box sx={{ width: {sx: "100%", md: "90%", lg: "80%"}, marginTop: "10px" }}>
                         <Typography variant="h6" component="h6">
                             {'Assigned Prompt: ' + prompt.text}
                         </Typography>

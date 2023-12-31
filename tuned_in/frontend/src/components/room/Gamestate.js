@@ -5,11 +5,13 @@ import useUpdateGamestate from "../../hooks/useUpdateGamestate";
 import { Typography } from "@mui/material";
 import QueuePage from "../../pages/QueuePage";
 import SelectSongPage from "../../pages/SelectSongPage";
+import VotingPage from "../../pages/VotingPage";
 
 const PAGES = {
     'Q': QueuePage,
     'P': QueuePage,
     'SEL': SelectSongPage,
+    'V': VotingPage
 }
 
 export default function Gamestate(){

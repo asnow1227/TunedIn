@@ -16,7 +16,8 @@ from .views import (
     GetAvailableAvatars,
     SetPlayerAvatarUrl,
     PlayerLeave,
-    UpdateSettings
+    UpdateSettings,
+    VotingRound
 )
 
 urlpatterns = [
@@ -36,5 +37,6 @@ urlpatterns = [
     path('available-avatars', GetAvailableAvatars.as_view()),
     path('select-avatar', SetPlayerAvatarUrl.as_view()),
     path('player-leave', PlayerLeave.as_view()),
-    path('update-settings', UpdateSettings.as_view())
+    path('update-settings', UpdateSettings.as_view()),
+    path('voting-round', VotingRound.as_view())
 ]

@@ -123,7 +123,7 @@ def update_gamestate(room):
         # if we are coming from the prompt page (where players enter prompts), then we need to assign the prompts
         # remember that we already confirmed that each player is ready. Note that users now enter the prompts on the QUEUE page
         players = [alias.user for alias in aliases]
-        for main_round in range(room.num_rounds):
+        for main_round in range(1, room.num_rounds + 1):
             # get the prompts for the current round num
             # (will change the prompt_key field to be main_round on the prompt object)
             prompts = Prompt.objects.filter(room_code=room.code, main_round=main_round)
@@ -133,7 +133,8 @@ def update_gamestate(room):
                 PromptAssignments(assigned_user=combo[0], room_code=room.code, prompt_unique_id=prompt.unique_id).save()
                 PromptAssignments(assigned_user=combo[1], room_code=room.code, prompt_unique_id=prompt.unique_id).save()
                 # set the voting round for the prompt. This determines the order its voted in within each main round
-                prompt.voting_round = i
+                prompt.voting_round = i + 1
+                prompt.main_round = main_round
                 prompt.save()
         # after assigning the prompts, we continue to the select song page from the Prompt page
         room.gamestate = Room.GameState.SELECT

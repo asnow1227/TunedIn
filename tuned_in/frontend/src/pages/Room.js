@@ -36,7 +36,7 @@ export default function Room(props) {
         }
         return (
             <MainBox>
-                <RoomHeader />
+                {/* <RoomHeader /> */}
                 <Gamestate />
             </MainBox>
         )

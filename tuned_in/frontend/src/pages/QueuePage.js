@@ -11,9 +11,9 @@ import { useParams } from "react-router-dom";
 import { usePlayersContext } from "../providers/PlayersContext";
 import { TogglableWithNavigateIcons } from "../components/shared/ToggableComponent";
 import { useGlobalSettingsContext } from "../providers/GlobalSettingsProvider";
-import { useSocketContext } from "../providers/SocketContext";
 import { useUserContext } from "../providers/UserContext";
 import useUserReady from "../hooks/useUserReady";
+import RoomHeader from "../components/room/RoomHeader";
 
 const ENABLED_MESSAGE = "Submit your prompts. Once submitted, prompts are final.";
 const DISABLED_MESSAGE = "Please ensure no prompts are blank before submitting";
@@ -111,6 +111,7 @@ function QueuePage(props){
 
     return (
     <Fragment>
+        <RoomHeader />
         <Row>
             <Typography variant="h3">
                 Lobby

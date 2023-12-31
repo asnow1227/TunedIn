@@ -120,6 +120,8 @@ class Alias(models.Model):
     # convenience for checking if user is spotify authenticated
     authenticated = models.BooleanField(default=False)
 
+    score = models.IntegerField(default=0)
+
     avatar_name = models.CharField(max_length=50, null=True)
     avatar_url = models.CharField(max_length=200, null=True)
 
