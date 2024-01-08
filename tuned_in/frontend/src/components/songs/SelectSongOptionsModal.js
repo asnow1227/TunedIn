@@ -4,9 +4,9 @@ import ModalDialog from '@mui/joy/ModalDialog';
 import ModalClose from '@mui/joy/ModalClose';
 import { Button, Box } from '@mui/material';
 import ModalOverflow from '@mui/joy/ModalOverflow';
-import { useSongSelectionContext } from '../../providers/SelectedSongContext';
+import { useSongSelectionContext } from '../../contexts/SelectedSongContext';
 import { Spotify } from 'react-spotify-embed';
-import { usePromptContext } from '../../providers/PromptContext';
+import { usePromptContext } from '../../contexts/PromptContext';
 
 export default function SelectSongOptionsModal({ type }) {
     const { selectedSong, setSelectedSong } = useSongSelectionContext();

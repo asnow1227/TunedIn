@@ -5,9 +5,9 @@ import useObjectState from "../hooks/useObjectState";
 import { Typography, Button, Box } from "@mui/material";
 import { Footer, MainBox } from "../components/shared/Layout";
 import HostTimer from "../components/shared/HostTimer";
-import PromptContext from "../providers/PromptContext";
+import PromptContext from "../contexts/PromptContext";
 import useUserReady from "../hooks/useUserReady";
-import { useGamestateContext } from "../providers/GameStateContext";
+import { useGamestateContext } from "../contexts/GameStateContext";
 // import { Button } from "@mui/material";
 
 export default function SelectSongPage(props){

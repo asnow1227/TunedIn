@@ -4,7 +4,7 @@ import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import ModalOverflow from '@mui/joy/ModalOverflow';
 import { Button, Typography, Grid, Box } from '@mui/material';
-import { useUserContext } from '../../providers/UserContext';
+import { useUserContext } from '../../contexts/UserContext';
 import useImage from '../../hooks/useImage';
 import AvatarToggler from './AvatarToggler';
 

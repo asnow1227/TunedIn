@@ -1,5 +1,5 @@
 import React from "react";
-import { useSocketContext } from "../providers/SocketContext";
+import { useSocketContext } from "../contexts/SocketContext";
 import API from "../backend/API";
 
 

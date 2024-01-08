@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import API from "../backend/API";
-import CreatePromptsPage from "./EnterPromptsPage";
-import EmbedSpotify from "./SpotifyEmbed";
 import Room from "./Room";
 import SelectSongPage from "./SelectSongPage";
 import LandingPage from "./Landing";
-import HomePageContext from "../providers/HomePageContext";
-import SocketProvider from "../providers/SocketProvider";
-import UserContext from "../providers/UserContext";
+import HomePageContext from "../contexts/HomePageContext";
+import SocketProvider from "../contexts/SocketProvider";
+import UserContext from "../contexts/UserContext";
 import PromptSpotifyLogin from "../components/room/PromptSpotifyLogin";
 import { HostTimerTest } from "../components/shared/HostTimer";
+import DisplayVotesPage from "./DisplayVotesPage";
 import {
   BrowserRouter as Router,
   Route,
@@ -78,12 +77,11 @@ export default function HomePage(props) {
       <Router>
         <Routes>
           <Route exact path="/" element={!isLoading && renderHomePage()} />
-          <Route exact path="/create-prompts" element={<CreatePromptsPage />} />
-          <Route exact path="/embed" element={<EmbedSpotify />} />
           <Route path='room/:roomCode' element={renderRoomPage(props)} />
           <Route path='room/:roomCode/host-timer' element={<HostTimerTest />} />
           <Route path='/authenticate' element={<PromptSpotifyLogin />} />
           <Route exact path="/select-song" element={<SelectSongPage leaveButtonPressed={leaveRoomCallback}/>} />
+          <Route exact path="/display-votes" element={<DisplayVotesPage />} />
         </Routes>
       </Router>
   );

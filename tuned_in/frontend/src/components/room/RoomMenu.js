@@ -10,7 +10,7 @@ import Logout from '@mui/icons-material/Logout';
 import Login from '@mui/icons-material/Login';
 import useWindowDimensions from "../../hooks/useWindowSize";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import { useUserContext } from "../../providers/UserContext";
+import { useUserContext } from "../../contexts/UserContext";
 import SettingsIcon from '@mui/icons-material/Settings';
 import useSpotifyAuth from "../../hooks/useSpotifyAuth";
 import useLeaveRoom from "../../hooks/useLeaveRoom";

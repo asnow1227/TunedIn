@@ -1,5 +1,5 @@
-import { useSocketContext } from "../providers/SocketContext";
-import { useUserContext } from "../providers/UserContext";
+import { useSocketContext } from "../contexts/SocketContext";
+import { useUserContext } from "../contexts/UserContext";
 import { authenticateUsersSpotify } from "../backend/API";
 import { SPOTIFY_API } from "../backend/API";
 

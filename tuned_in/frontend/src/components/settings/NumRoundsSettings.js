@@ -1,5 +1,5 @@
 import React, { Fragment, useRef, useState } from 'react';
-import { useLocalSettingsContext } from '../../providers/LocalSettingsProvider';
+import { useLocalSettingsContext } from '../../contexts/LocalSettingsProvider';
 import { TogglableWithAdditionIcons } from '../shared/ToggableComponent';
 import { Typography, Grid, Box } from '@mui/material';
   

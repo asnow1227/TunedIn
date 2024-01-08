@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
-import { useUserContext } from "../../providers/UserContext";
-import { useGamestateContext } from "../../providers/GameStateContext";
+import { useUserContext } from "../../contexts/UserContext";
+import { useGamestateContext } from "../../contexts/GameStateContext";
 import useUpdateGamestate from "../../hooks/useUpdateGamestate";
 import { Typography } from "@mui/material";
 import QueuePage from "../../pages/QueuePage";

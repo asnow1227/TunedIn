@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import ThemeProvider from "../providers/ThemeProvider";
+import ThemeProvider from "../contexts/ThemeProvider";
 
 import HomePage from "./HomePage";
 

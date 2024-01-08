@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     RoomView, 
     CreateRoomView, 
+    DisplayVotesData,
     GetRoom, 
     JoinRoom, 
     UserInRoom, 
@@ -38,5 +39,6 @@ urlpatterns = [
     path('select-avatar', SetPlayerAvatarUrl.as_view()),
     path('player-leave', PlayerLeave.as_view()),
     path('update-settings', UpdateSettings.as_view()),
-    path('voting-round', VotingRound.as_view())
+    path('voting-round', VotingRound.as_view()),
+    path('display-votes-page', DisplayVotesData.as_view())
 ]

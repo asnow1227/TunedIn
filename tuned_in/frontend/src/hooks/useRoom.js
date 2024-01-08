@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";  
-import { useSocketContext } from "../providers/SocketContext";
+import { useSocketContext } from "../contexts/SocketContext";
 import useUpdateGamestate from "./useUpdateGamestate";
 import useExitRoom from "./useExitRoom";
 import API from "../backend/API";

@@ -3,13 +3,13 @@ import QueuePage from "./QueuePage";
 import SelectSongPage from "./SelectSongPage"
 import { MainBox } from "../components/shared/Layout";
 import useRoom from "../hooks/useRoom";
-import UserContext from "../providers/UserContext";
-import PlayersContext from "../providers/PlayersContext";
+import UserContext from "../contexts/UserContext";
+import PlayersContext from "../contexts/PlayersContext";
 import Gamestate from "../components/room/Gamestate";
 import ChooseAvatarModal from "../components/room/ChooseAvatarModal";
-import GlobalSettingsContext from "../providers/GlobalSettingsProvider";
+import GlobalSettingsContext from "../contexts/GlobalSettingsProvider";
 import UpdateSettingsModal from "../components/settings/UpdateSettingsModal";
-import GamestateContext from "../providers/GameStateContext";
+import GamestateContext from "../contexts/GameStateContext";
 import RoomHeader from "../components/room/RoomHeader";
 
 

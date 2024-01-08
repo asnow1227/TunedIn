@@ -5,7 +5,7 @@ import { Button, ButtonGroup, Typography, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import useLeaveRoom from '../../hooks/useLeaveRoom';
 import useExitRoom from '../../hooks/useExitRoom';
-import { useRoomContext } from '../../providers/RoomContext';
+import { useRoomContext } from '../../contexts/RoomContext';
 
 
 export default function RejoinRoomModal({ roomCode }) {

@@ -3,8 +3,8 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
-import { useLocalSettingsContext } from '../../providers/LocalSettingsProvider';
-import { useUserContext } from '../../providers/UserContext';
+import { useLocalSettingsContext } from '../../contexts/LocalSettingsProvider';
+import { useUserContext } from '../../contexts/UserContext';
 import { Typography } from '@mui/material';
 import ConditionalButton from '../shared/ConditionalButton';
 

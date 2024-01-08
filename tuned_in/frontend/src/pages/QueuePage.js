@@ -8,10 +8,10 @@ import API from "../backend/API";
 import Divider from '@mui/material/Divider';
 import PlayerFeed from "../components/players/PlayerFeed";
 import { useParams } from "react-router-dom";
-import { usePlayersContext } from "../providers/PlayersContext";
+import { usePlayersContext } from "../contexts/PlayersContext";
 import { TogglableWithNavigateIcons } from "../components/shared/ToggableComponent";
-import { useGlobalSettingsContext } from "../providers/GlobalSettingsProvider";
-import { useUserContext } from "../providers/UserContext";
+import { useGlobalSettingsContext } from "../contexts/GlobalSettingsProvider";
+import { useUserContext } from "../contexts/UserContext";
 import useUserReady from "../hooks/useUserReady";
 import RoomHeader from "../components/room/RoomHeader";
 

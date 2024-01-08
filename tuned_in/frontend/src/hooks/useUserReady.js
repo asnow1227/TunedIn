@@ -1,7 +1,7 @@
 import React from "react";
-import { useUserContext } from "../providers/UserContext";
-import { useSocketContext } from "../providers/SocketContext";
-import { useGamestateContext } from "../providers/GameStateContext";
+import { useUserContext } from "../contexts/UserContext";
+import { useSocketContext } from "../contexts/SocketContext";
+import { useGamestateContext } from "../contexts/GameStateContext";
 import API from "../backend/API";
 
 

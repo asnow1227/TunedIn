@@ -8,7 +8,7 @@ import { Row } from "../shared/Layout";
 import { flexBoxProps } from "../shared/Layout";
 import RoomHeader from "../room/RoomHeader";
 import SongFeed from "./SongFeed";
-import SongSelectionContext from "../../providers/SelectedSongContext";
+import SongSelectionContext from "../../contexts/SelectedSongContext";
 import SelectSongOptionsModal from "./SelectSongOptionsModal";
 // import HostTimerTest from "../shared/HostTimer";
 

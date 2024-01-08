@@ -1,7 +1,7 @@
 import React from "react";
-import { useSocketContext } from "../providers/SocketContext";
+import { useSocketContext } from "../contexts/SocketContext";
 import { useParams } from "react-router-dom";
-import { useUserContext } from "../providers/UserContext";
+import { useUserContext } from "../contexts/UserContext";
 
 export default function useLeaveRoom(_roomCode=null){
     const socketManager = useSocketContext();

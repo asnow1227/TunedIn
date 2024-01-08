@@ -137,20 +137,33 @@ class CheckUserAuthenticated(APIView):
         
         return Response({'status': is_authenticated, 'spotify_details': spotify_meta}, status=status.HTTP_200_OK)
 
-def get_player(player_alias, host_id):
+def get_player(player_alias, room):
     is_authenticated, spotify_meta = is_spotify_authenticated(player_alias.user)
+    
     player = {
         'id': player_alias.id,
         'isReady': player_alias.ready,
-        'isHost': player_alias.user == host_id,
+        'isHost': player_alias.user == room.host,
         'alias': player_alias.alias,
         'isAuthenticated': is_authenticated,
-        'avatarUrl': player_alias.avatar_url
+        'avatarUrl': player_alias.avatar_url,
+        'score': get_score(player_alias.user, room)
     }
     if spotify_meta:
         player.update(spotify_meta)
     return player
 
+
+def get_score(user_id, room):
+    prompt_set = Prompt.objects.filter(room_code=room.code)
+    if not prompt_set:
+       return 0
+    vote_set = Vote.objects.filter(prompt_unique_id__in=[prompt.unique_id for prompt in prompt_set])
+    if not vote_set:
+        return 0
+    
+    return sum([100 for vote in vote_set if vote.assiged_user == user_id])
+    
 
 def get_settings(room):
     return {
@@ -178,12 +191,10 @@ class GetRoom(APIView):
         user_alias = [alias for alias in current_players if alias.user == self.request.session.session_key][0]
         data = {
             'gamestate': room.gamestate,
-            'user': get_player(user_alias, room.host),
-            'players': [get_player(player_alias, room.host) for player_alias in current_players if player_alias.user != user_alias.user],
+            'user': get_player(user_alias, room),
+            'players': [get_player(player_alias, room) for player_alias in current_players if player_alias.user != user_alias.user],
             'settings': get_settings(room)
         }
-
-        print(data)
   
         return Response(data, status=status.HTTP_200_OK)
 
@@ -443,8 +454,6 @@ class SubmitSongSelection(APIView):
         song_title = request.data.get('title')
         song_image_url = request.data.get('image_url')
         song_artist = request.data.get('artist')
-
-        print(request.data)
         
         if song_id is None or prompt_id is None:
             return Response({
@@ -481,7 +490,7 @@ class SubmitVote(APIView):
         
         assignment = assignment_set[0]
         vote = Vote(
-            prompt_unique_id=assignment.prompt_unique_id,
+            prompt_unique_id = assignment.prompt_unique_id,
             voting_user = self.request.session.session_key,
             voted_for_user = assignment.assigned_user
         )
@@ -524,11 +533,21 @@ class UpdateUsersScores(APIView):
         return Response({'Successful': "Successfully updated user's score"}, status=status.HTTP_200_OK)
 
 
+
+def get_prompt_assignment(prompt_assignment):
+    return {
+        'prompt_assignment_id': prompt_assignment.id,
+        'image_url': prompt_assignment.song_image_url,
+        'artist': prompt_assignment.song_artist,
+        'title': prompt_assignment.song_title,
+        'id': prompt_assignment.assigned_user_song_choice
+    }
+
+
 class VotingRound(APIView):
     @check_request_key_and_room_status
     def get(self, request, format=None, **kwargs):
         room = kwargs.get('room')
-        print(room.main_round, room.voting_round)
         
         # get the prompt for the voting round and main round
         prompt_set = Prompt.objects.filter(room_code=room.code, voting_round=room.voting_round, main_round=room.main_round)
@@ -544,16 +563,104 @@ class VotingRound(APIView):
             'prompt_text': prompt.prompt_text,
             'can_vote': self.request.session.session_key not in [prompt_assignment.assigned_user for prompt_assignment in prompt_assignments_set],
             'prompt_assignments': [
-                {
-                    'prompt_assignment_id': prompt_assignment.id,
-                    'image_url': prompt_assignment.song_image_url,
-                    'artist': prompt_assignment.song_artist,
-                    'title': prompt_assignment.song_title,
-                    'id': prompt_assignment.assigned_user_song_choice
-                }
+                get_prompt_assignment(prompt_assignment)
                 for prompt_assignment in prompt_assignments_set
             ]
         }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class DisplayVotesData(APIView):
+    # @check_request_key_and_room_status
+    def get(self, request, format=None, **kwargs):
+        # room = kwargs.get('room')
+        
+        # get the prompt for the voting round and main round
+        # prompt_set = Prompt.objects.filter(room_code=room.code, voting_round=room.voting_round, main_round=room.main_round)
+        # if not prompt_set:
+        #     return
+        # prompt = prompt_set[0]
+
+        # prompt_assignments_set = PromptAssignments.objects.filter(prompt_unique_id=prompt.unique_id)
+        # if not prompt_assignments_set:
+        #     return 
+        
+        # sorted_prompt_assignments = sorted(prompt_assignments_set, key=lambda prompt_assignment: prompt_assignment.assigned_user)
+        
+        # assigned_player_ids = [prompt_assignment.assigned_user for prompt_assignment in sorted_prompt_assignments]
+        # players_set = Alias.objects.filter(user__in=assigned_player_ids)
+        # if not players_set:
+        #     return
+
+        # sorted_players = sorted(players, key=lambda player: player.user)
+        # players = [get_player(player_alias=player) for player in sorted_players]
+        # players_map = {player.user: player for player in players}
+
+        # votes_set = Vote.objects.filter(prompt_unique_id=prompt.unique_id)
+        # votes_by_player = [[players_map[player.user].avatarUrl for vote in votes_set if vote.voted_for_user == player.id] for player in sorted_players]
+
+        # # data = {
+        #     'prompt_text': prompt.prompt_text,
+        #     'players': players,
+        #     'votes': votes_by_player,
+        #     'prompt_assignments': [
+        #         get_prompt_assignment(prompt_assignment)
+        #         for prompt_assignment in sorted_prompt_assignments
+        #     ]
+        # }
+
+        # prompt_set = Prompt.objects.all()
+        # prompt = prompt_set[0]
+
+        # players_set = Alias.objects.all()
+        # players = [get_player(players_set[0]), get_player(players_set[1])]
+
+        players = [
+            {
+                'avatarUrl': 'xxxx',
+                'alias': 'Alex',
+                'score': 150, 
+            },
+            {
+                'avatarUrl': 'xxxx',
+                'alias': 'Alex',
+                'score': 150, 
+            },
+        ],
+
+        songs = [
+            {
+                'image_url': 'image_url',
+                'title': 'title',
+                'artist': 'artist'
+            },
+            {
+                'image_url': 'image_url',
+                'title': 'title',
+                'artist': 'artist'
+            }
+        ]
+
+        votes = [
+            [
+                'image_url_1',
+                'image_url_2'
+            ],
+            [
+                'image_url_3',
+                'image_url_4'
+            ]
+        ]
+
+
+        data = {
+            'prompt': 'Hello',
+            'players': players,
+            'votes': votes,
+            'songs': songs
+        }
+
 
         return Response(data, status=status.HTTP_200_OK)
 

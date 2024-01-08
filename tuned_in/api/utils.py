@@ -87,30 +87,6 @@ def set_ready_statuses_to_false(room_code):
 def update_gamestate(room):
     """method used to update the gamestate for a room"""
     aliases = Alias.objects.filter(room_code=room.code)
-
-    # if room.gamestate == Room.GameState.QUEUE:
-    #     # if we are coming from the prompt page (where players enter prompts), then we need to assign the prompts
-    #     # remember that we already confirmed that each player is ready. Note that users now enter the prompts on the QUEUE page
-    #     players = [alias.user for alias in aliases]
-    #     for main_round in range(3):
-    #         # get the prompts for the current round num
-    #         # (will change the prompt_key field to be main_round on the prompt object)
-    #         prompts = Prompt.objects.filter(room_code=room.code, prompt_key=main_round)
-    #         # assign the combos (see logic above)
-    #         combos = assign_prompt_combos(players)
-    #         for i, (prompt, combo) in enumerate(zip(prompts, combos)):
-    #             PromptAssignments(assigned_user=combo[0], room_code=room.code, prompt_unique_id=prompt.unique_id).save()
-    #             PromptAssignments(assigned_user=combo[1], room_code=room.code, prompt_unique_id=prompt.unique_id).save()
-    #             # set the voting round for the prompt. This determines the order its voted in within each main round
-    #             prompt.voting_round = i
-    #             prompt.save()
-    #     # after assigning the prompts, we continue to the select song page from the Prompt page
-    #     room.gamestate = Room.GameState.SELECT
-    #     # room.gamestate = Room.GameState.PROMPT
-    #     room.num_players = len(aliases)
-    #     room.save()
-    #     set_ready_statuses_to_false(room.code)
-    #     return room
     
     # for all other rounds, we will update the ready status on the user's alias for each user
     # this checks to ensure that all players are ready before updating the gamestate

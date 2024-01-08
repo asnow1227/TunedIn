@@ -4,10 +4,10 @@ import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import ModalClose from '@mui/joy/ModalClose';
 import { Button, Typography, Grid, Box } from '@mui/material';
-import { useUserContext } from '../../providers/UserContext';
-import { useGlobalSettingsContext } from '../../providers/GlobalSettingsProvider';
-import { useSocketContext } from "../../providers/SocketContext"
-import LocalSettingsContext from '../../providers/LocalSettingsProvider';
+import { useUserContext } from '../../contexts/UserContext';
+import { useGlobalSettingsContext } from '../../contexts/GlobalSettingsProvider';
+import { useSocketContext } from "../../contexts/SocketContext"
+import LocalSettingsContext from '../../contexts/LocalSettingsProvider';
 import AudioPlaybackSettings from './AudioPlaybackSettings';
 import SongSelectionTimerSettings from './SongSelectionTimerSettings';
 import NumRoundsSettings from './NumRoundsSettings';

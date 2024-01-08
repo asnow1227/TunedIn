@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useSocketContext } from "../../providers/SocketContext";
-import SocketProvider from "../../providers/SocketProvider";
+import { useSocketContext } from "../../contexts/SocketContext";
+import SocketProvider from "../../contexts/SocketProvider";
 import LinearProgress from "@mui/material/LinearProgress";
-import { useUserContext } from "../../providers/UserContext";
+import { useUserContext } from "../../contexts/UserContext";
 import useUpdateGamestate from "../../hooks/useUpdateGamestate";
 
 

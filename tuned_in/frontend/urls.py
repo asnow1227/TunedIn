@@ -13,5 +13,6 @@ urlpatterns = [
     path('select-song', index),
     path('embed', index),
     path('box', index),
-    path('room/<str:roomCode>/host-timer', index)
+    path('room/<str:roomCode>/host-timer', index),
+    path('display-votes', index)
 ]
